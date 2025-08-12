@@ -30,7 +30,7 @@ import type {
     UserSex,
 } from "@prisma/client";
 import { z } from "zod";
-import { announcementSchema, assignmentSchema, attendanceSchema, classSchema, eventSchema, examSchema, gradeSchema, lessonSchema, parentSchema, profileUpdateSchema, resultSchema, studentSchema, subjectSchema, teacherSchema } from "@/lib/formValidationSchemas";
+import { loginSchema, announcementSchema, assignmentSchema, attendanceSchema, classSchema, eventSchema, examSchema, gradeSchema, lessonSchema, parentSchema, profileUpdateSchema, resultSchema, studentSchema, subjectSchema, teacherSchema } from "@/lib/formValidationSchemas";
 import type { Dispatch, SetStateAction } from "react";
 import { FieldErrors, SubmitHandler, UseFormHandleSubmit, UseFormRegister, UseFormSetValue } from "react-hook-form";import { type FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from "@reduxjs/toolkit";
@@ -216,6 +216,8 @@ export interface RegisterCredentials {
   role: Role;
   name?: string;
 }
+
+export type LoginSchema = z.infer<typeof loginSchema>;
 
 export type RegisterSchema = {
   name: string;

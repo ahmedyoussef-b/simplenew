@@ -10,8 +10,8 @@ const HASH_ROUNDS = 10;
 
 // Define the schema for the request body including the token
 const requestSchema = z.object({
-  password: resetPasswordSchema.shape.password,
-  confirmPassword: resetPasswordSchema.shape.confirmPassword,
+  password: z.string(), // Use z.string() or the original schema definition if needed
+  confirmPassword: z.string(), // Use z.string() or the original schema definition if needed
   token: z.string().min(1, { message: "Token is required." }),
 }).refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match.",
@@ -52,7 +52,7 @@ export async function POST(req: Request) {
         await prisma.user.update({
             where: { id: user.id },
             data: {
-                password: hashedPassword,
+                password: hashedPassword as string, // Ensure it's treated as string after await
                 passwordResetToken: null,
                 passwordResetExpires: null,
             },

@@ -1,0 +1,213 @@
+
+// src/components/schedule/TimetableDisplay/index.tsx
+'use client';
+
+import React, { useState, useMemo, useEffect } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Download, Printer } from 'lucide-react';
+import type { WizardData, Lesson, Subject } from '@/types';
+import { Day, type Lesson as PrismaLesson } from '@prisma/client';
+import DraggableLesson from './components/DraggableLesson';
+import InteractiveEmptyCell from './components/InteractiveEmptyCell';
+import { formatTimeSimple } from './components/utils';
+import { generateTimeSlots } from '@/lib/time-utils';
+import { mergeConsecutiveLessons } from '@/lib/lesson-utils';
+import { dayLabels } from '@/lib/constants';
+import ViewModeTabs from './components/ViewModeTabs';
+import { DndContext } from '@dnd-kit/core';
+import { useScheduleActions } from '../ScheduleEditor/hooks/useScheduleActions';
+import { useDndSensors } from '../ScheduleEditor/hooks/useDndSensors';
+import { useAppSelector } from '@/hooks/redux-hooks';
+
+interface TimetableDisplayProps {
+  wizardData: WizardData;
+  isEditable?: boolean;
+  onDeleteLesson?: (lessonId: number) => void;
+  onAddLesson?: (subject: Subject, day: Day, timeSlot: string) => void;
+  viewMode: 'class' | 'teacher';
+  selectedViewId: string;
+}
+
+const TimetableDisplay: React.FC<TimetableDisplayProps> = ({ 
+    wizardData, 
+    isEditable = false, 
+    viewMode,
+    selectedViewId,
+}) => {
+  const fullSchedule = useAppSelector((state) => state.schedule.items);
+  const [hoveredSubjectId, setHoveredSubjectId] = useState<number | null>(null);
+
+  const { handleDragEnd, handlePlaceLesson, handleDeleteLesson } = useScheduleActions(
+    wizardData,
+    fullSchedule,
+    viewMode,
+    selectedViewId
+  );
+  const sensors = useDndSensors();
+
+  const schoolDays = (wizardData.school.schoolDays || []).map(dayKey => dayLabels[dayKey.toUpperCase() as keyof typeof dayLabels] || dayKey);
+  const timeSlots = generateTimeSlots(
+    wizardData.school.startTime, 
+    wizardData.school.endTime || '18:00', 
+    wizardData.school.sessionDuration || 60,
+  );
+
+  const dayMapping: { [key: string]: Day } = { 
+    Lundi: 'MONDAY', 
+    Mardi: 'TUESDAY', 
+    Mercredi: 'WEDNESDAY', 
+    Jeudi: 'THURSDAY', 
+    Vendredi: 'FRIDAY', 
+    Samedi: 'SATURDAY' 
+  };
+  
+  const scheduleData = useMemo(() => {
+    if (viewMode === 'class' && selectedViewId) {
+      return fullSchedule.filter(l => l.classId === parseInt(selectedViewId));
+    }
+    if (viewMode === 'teacher' && selectedViewId) {
+      return fullSchedule.filter(l => l.teacherId === selectedViewId);
+    }
+    return [];
+  }, [fullSchedule, viewMode, selectedViewId]);
+
+  const { scheduleGrid, spannedSlots } = buildScheduleGrid(
+    scheduleData, 
+    wizardData, 
+    timeSlots
+  );
+  
+  const exportToPDF = () => { window.print(); };
+
+  return (
+    <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <Card className="p-4 print:shadow-none print:border-none">
+          <div className="relative w-full overflow-auto">
+          <Table className="min-w-full border-collapse">
+              <TableHeader>
+              <TableRow>
+                  <TableHead className="w-20 border">Horaires</TableHead>
+                  {schoolDays.map(day => <TableHead key={day} className="text-center border min-w-32">{day}</TableHead>)}
+              </TableRow>
+              </TableHeader>
+              <TableBody>
+              {timeSlots.map((time) => (
+                  <TableRow key={time}>
+                  <TableCell className="font-medium bg-muted/50 border h-24">{time}</TableCell>
+                  {schoolDays.map(day => {
+                      const dayEnum = dayMapping[day as keyof typeof dayMapping];
+                      if (!dayEnum) return null; // Defensive check
+                      
+                      const cellId = `${dayEnum}-${time}`;
+
+                      if (spannedSlots.has(cellId)) {
+                          return null;
+                      }
+
+                      const cellData = scheduleGrid[cellId];
+                      
+                      if (cellData) {
+                          return (
+                          <TableCell key={cellId} rowSpan={cellData.rowSpan} className="p-0 border align-top relative">
+                              <DraggableLesson 
+                                  lesson={cellData.lesson} 
+                                  wizardData={wizardData} 
+                                  onDelete={handleDeleteLesson} 
+                                  isEditable={isEditable} 
+                                  fullSchedule={fullSchedule}
+                              />
+                          </TableCell>
+                          );
+                      } else {
+                          return (
+                              <TableCell key={cellId} className="p-0 border align-top">
+                                  <InteractiveEmptyCell
+                                      day={dayEnum}
+                                      timeSlot={time}
+                                      viewMode={viewMode}
+                                      selectedViewId={selectedViewId}
+                                      wizardData={wizardData}
+                                      fullSchedule={fullSchedule}
+                                      onAddLesson={handlePlaceLesson}
+                                      isDropDisabled={!isEditable}
+                                      setHoveredSubjectId={setHoveredSubjectId}
+                                      hoveredSubjectId={hoveredSubjectId}
+                                  />
+                              </TableCell>
+                          );
+                      }
+                  })}
+                  </TableRow>
+              ))}
+              </TableBody>
+          </Table>
+          </div>
+      </Card>
+    </DndContext>
+  );
+};
+
+
+function buildScheduleGrid(
+  scheduleData: Lesson[],
+  wizardData: WizardData,
+  timeSlots: string[]
+) {
+  if (!Array.isArray(scheduleData)) {
+     return { scheduleGrid: {}, spannedSlots: new Set() };
+  }
+  
+  // Convert string dates from Redux state back to Date objects for calculation
+  const scheduleWithDates: PrismaLesson[] = scheduleData.map(l => ({
+    ...l,
+    startTime: new Date(l.startTime),
+    endTime: new Date(l.endTime),
+    createdAt: new Date(l.createdAt),
+    updatedAt: new Date(l.updatedAt),
+  }));
+
+
+  const mergedLessons = mergeConsecutiveLessons(scheduleWithDates, wizardData);
+  const grid: Record<string, { lesson: Lesson, rowSpan: number }> = {};
+  const localSpannedSlots = new Set();
+
+  mergedLessons.forEach((lesson) => {
+    const day = lesson.day;
+    const time = formatTimeSimple(lesson.startTime);
+    const cellId = `${day}-${time}`;
+
+    if (localSpannedSlots.has(cellId)) return;
+
+    const startTime = new Date(lesson.startTime);
+    const endTime = new Date(lesson.endTime);
+    const durationInMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
+    const rowSpan = Math.max(1, Math.round(durationInMinutes / (wizardData.school?.sessionDuration || 60)));
+
+    // Convert back to string-based Lesson for the grid
+    const gridLesson: Lesson = {
+      ...lesson,
+      startTime: lesson.startTime.toISOString(),
+      endTime: lesson.endTime.toISOString(),
+      createdAt: lesson.createdAt.toISOString(),
+      updatedAt: lesson.updatedAt.toISOString(),
+    };
+
+    grid[cellId] = { lesson: gridLesson, rowSpan };
+
+    if (rowSpan > 1) {
+      for (let i = 1; i < rowSpan; i++) {
+        const nextTimeSlotIndex = timeSlots.indexOf(time) + i;
+        if (nextTimeSlotIndex < timeSlots.length) {
+          const nextTimeSlot = timeSlots[nextTimeSlotIndex];
+          localSpannedSlots.add(`${day}-${nextTimeSlot}`);
+        }
+      }
+    }
+  });
+
+  return { scheduleGrid: grid, spannedSlots: localSpannedSlots };
+}
+
+export default TimetableDisplay;

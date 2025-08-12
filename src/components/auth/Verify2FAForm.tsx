@@ -1,88 +1,87 @@
-'use client';
+// src/components/auth/Verify2FAForm.tsx
+"use client";
 
-import { useForm } from 'react-hook-form';
+import { useEffect } from 'react';
+import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { verify2FASchema } from '@/lib/formValidationSchemas';
-import type { Verify2FASchema as Verify2FASchemaType } from '@/types';
-import { useVerify2faMutation } from '@/lib/redux/api/authApi';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
+import { z } from 'zod';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
-import { useEffect, useState } from 'react';
+import { useVerify2FAMutation } from '@/lib/redux/api/authApi'; // Use the correct hook
+import { useRouter } from 'next/navigation';
+import { Spinner } from '../ui/spinner';
+import { KeyRound } from 'lucide-react';
+import FormError from '@/components/forms/FormError';
 
-export default function Verify2FAForm() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [verify2fa, { isLoading }] = useVerify2faMutation();
-  const [tempToken, setTempToken] = useState<string | null>(null);
+const verify2FASchema = z.object({
+  code: z.string().length(6, "Le code doit contenir 6 chiffres."),
+  token: z.string(),
+});
+type Verify2FAFormData = z.infer<typeof verify2FASchema>;
 
-  useEffect(() => {
-      const token = sessionStorage.getItem('temp_token');
-      if (!token) {
-          toast({
-              variant: 'destructive',
-              title: 'Verification Failed',
-              description: 'No temporary token found. Please try logging in again.',
-          });
-          router.push('/login');
-      } else {
-          setTempToken(token);
-      }
-  }, [router, toast]);
+interface Verify2FAFormProps {
+  token: string;
+}
 
-  const form = useForm<Verify2FASchemaType>({
+export default function Verify2FAForm({ token }: Verify2FAFormProps) {
+  const { register, handleSubmit, formState: { errors } } = useForm<Verify2FAFormData>({
     resolver: zodResolver(verify2FASchema),
-    defaultValues: {
-      code: '',
-    },
+    defaultValues: { token },
   });
 
-  const onSubmit = async (data: Verify2FASchemaType) => {
-    if (!tempToken) return;
+  const [verify2FA, { isLoading, isSuccess, isError, error: verifyErrorData }] = useVerify2FAMutation();
+  const { toast } = useToast();
+  const router = useRouter();
 
-    try {
-      await verify2fa({ ...data, tempToken }).unwrap();
-      sessionStorage.removeItem('temp_token');
+  useEffect(() => {
+    console.log("➡️ [Verify2FAForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError);
+    if (isSuccess) {
+      console.log("✅ [Verify2FAForm] 2FA verification successful.");
       toast({
-        title: 'Login Successful',
-        description: 'You are now securely logged in.',
-      });
-      router.push('/dashboard');
-    } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Verification Failed',
-        description: err.data?.message || 'The code is invalid or has expired.',
+        title: 'Connexion réussie',
+        description: 'Vous êtes maintenant connecté.',
       });
     }
+    if (isError && verifyErrorData) {
+      console.log("❌ [Verify2FAForm] 2FA verification failed. Error:", verifyErrorData);
+      const errorMessage = (verifyErrorData as any)?.data?.message || 'Code de vérification invalide ou expiré.';
+      toast({
+        variant: "destructive",
+        title: "Échec de la vérification",
+        description: errorMessage,
+      });
+    }
+  }, [isSuccess, isError, verifyErrorData, toast, router]);
+
+  const onSubmit: SubmitHandler<Verify2FAFormData> = async (data) => {
+    console.log("➡️ [Verify2FAForm] Submitting 2FA form with data:", data);
+    await verify2FA(data);
   };
-  
-  if (!tempToken) {
-    return <p className='text-center text-destructive'>Redirecting to login...</p>
-  }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="code"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Authentication Code</FormLabel>
-              <FormControl>
-                <Input placeholder="123456" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <input type="hidden" {...register("token")} />
+      
+      <div className="space-y-2">
+        <Label htmlFor="code">Code de vérification à 6 chiffres</Label>
+        <Input
+          id="code"
+          type="text"
+          maxLength={6}
+          placeholder="123456"
+          {...register("code")}
+          className="text-center tracking-[0.5em]"
+          disabled={isLoading}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Verifying...' : 'Verify'}
-        </Button>
-      </form>
-    </Form>
+        <FormError error={errors.code} />
+      </div>
+
+      <Button type="submit" className="w-full" disabled={isLoading}>
+        {isLoading ? <Spinner size="sm" className="mr-2" /> : <KeyRound className="mr-2" />}
+        {isLoading ? "Vérification..." : "Vérifier et se connecter"}
+      </Button>
+    </form>
   );
 }

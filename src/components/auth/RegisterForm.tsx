@@ -1,143 +1,176 @@
-'use client';
+// src/components/auth/RegisterForm.tsx
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { registerSchema } from '@/lib/formValidationSchemas';
-import type { RegisterSchema as RegisterSchemaType } from '@/types';
-import { useRegisterMutation } from '@/lib/redux/api/authApi';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { Role } from '@prisma/client';
-import SocialSignInButtons from './SocialSignInButtons';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useRegisterMutation } from "@/lib/redux/api/authApi";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
+import { useRouter } from "next/navigation"; 
+import { Role } from "@/types/index"; 
+import { useEffect } from "react";
+import type { SerializedError } from '@reduxjs/toolkit';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { Spinner } from "@/components/ui/spinner";
+import SocialSignInButtons from "./SocialSignInButtons";
+import FormError from "@/components/forms/FormError";
+import { cn } from "@/lib/utils";
 
-export default function RegisterForm() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [register, { isLoading }] = useRegisterMutation();
+const registerSchema = z.object({
+  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }).optional(),
+  email: z.string().email({ message: "Adresse e-mail invalide." }),
+  password: z.string().min(8, { message: "Le mot de passe doit contenir au moins 8 caractères." }),
+  role: z.nativeEnum(Role, { errorMap: () => ({ message: "Veuillez sélectionner un rôle."}) }),
+});
 
-  const form = useForm<RegisterSchemaType>({
+type RegisterFormData = z.infer<typeof registerSchema>;
+
+interface ApiErrorData {
+  message: string;
+}
+
+function isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
+  return typeof error === 'object' && error != null && 'status' in error;
+}
+
+function isSerializedError(error: unknown): error is SerializedError {
+  return typeof error === 'object' && error != null && 'message' in error;
+}
+
+export function RegisterForm() {
+  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
-    defaultValues: {
-      email: '',
-      name: '',
-      password: '',
-      confirmPassword: '',
-      role: Role.PARENT,
-    },
   });
 
-  const onSubmit = async (data: RegisterSchemaType) => {
-    try {
-      await register(data).unwrap();
+  const [registerUser, { isLoading, isSuccess, isError, error: registerErrorData }] = useRegisterMutation();
+  const { toast } = useToast();
+  const router = useRouter();
+
+  const selectedRole = watch("role");
+
+  useEffect(() => {
+    if (isSuccess) {
       toast({
-        title: 'Registration Successful',
-        description: "You can now log in with your credentials.",
-      });
-      router.push('/login');
-    } catch (err: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Registration Failed',
-        description: err.data?.message || 'An unexpected error occurred.',
+        title: "Inscription réussie",
+        description: "Votre compte a été créé. Redirection...",
       });
     }
+    if (isError && registerErrorData) {
+      let errorMessage = "Une erreur inattendue s'est produite lors de l'inscription.";
+      if (isFetchBaseQueryError(registerErrorData)) {
+        const errorData = registerErrorData.data as ApiErrorData; 
+        errorMessage = errorData?.message || `Erreur: ${registerErrorData.status}`;
+      } else if (isSerializedError(registerErrorData)) {
+        errorMessage = registerErrorData.message || "Un problème est survenu lors de l'inscription.";
+      }
+      toast({
+        variant: "destructive",
+        title: "Échec de l'inscription",
+        description: errorMessage,
+      });
+    }
+  }, [isSuccess, isError, registerErrorData, toast, router]);
+
+  const onSubmit = async (data: RegisterFormData) => {
+    await registerUser(data);
   };
 
   return (
     <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Full Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="John Doe" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="pl-4">Nom complet (Optionnel)</Label>
+          <Input
+            id="name"
+            placeholder="John Doe"
+            {...register("name")}
+            aria-invalid={errors.name ? "true" : "false"}
+            className={cn(
+              "bg-background border-0 rounded-full shadow-neumorphic-inset transition-shadow focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-ring",
+              errors.name && "focus-visible:ring-destructive"
             )}
           />
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="you@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="confirmPassword"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Confirm Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>I am a...</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value={Role.PARENT}>Parent</SelectItem>
-                    <SelectItem value={Role.TEACHER}>Teacher</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Creating Account...' : 'Create Account'}
-          </Button>
-        </form>
-      </Form>
-      <div className="relative my-4">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
+          <FormError error={errors.name} className="pl-4" />
         </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-400">Or sign up with</span>
+
+        <div className="space-y-2">
+          <Label htmlFor="email" className="pl-4">E-mail</Label>
+          <Input
+            id="email"
+            type="email"
+            placeholder="vous@exemple.com"
+            {...register("email")}
+            aria-invalid={errors.email ? "true" : "false"}
+            className={cn(
+              "bg-background border-0 rounded-full shadow-neumorphic-inset transition-shadow focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-ring",
+              errors.email && "focus-visible:ring-destructive"
+            )}
+          />
+          <FormError error={errors.email} className="pl-4" />
         </div>
-      </div>
-      <SocialSignInButtons />
+
+        <div className="space-y-2">
+          <Label htmlFor="password" className="pl-4">Mot de passe</Label>
+          <Input
+            id="password"
+            type="password"
+            placeholder="•••••••• (min. 8 caractères)"
+            {...register("password")}
+            aria-invalid={errors.password ? "true" : "false"}
+            className={cn(
+              "bg-background border-0 rounded-full shadow-neumorphic-inset transition-shadow focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-ring",
+              errors.password && "focus-visible:ring-destructive"
+            )}
+          />
+          <FormError error={errors.password} className="pl-4" />
+        </div>
+        
+        <div className="space-y-2">
+          <Label htmlFor="role" className="pl-4">Rôle</Label>
+          <Select
+            onValueChange={(value) => setValue("role", value as Role, { shouldValidate: true })}
+            value={selectedRole}
+            disabled={isLoading}
+          >
+            <SelectTrigger 
+              id="role" 
+              aria-invalid={errors.role ? "true" : "false"}
+              className={cn(
+                "bg-background border-0 rounded-full shadow-neumorphic-inset transition-shadow focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-ring",
+                errors.role && "focus-visible:ring-destructive"
+              )}
+            >
+              <SelectValue placeholder="Sélectionnez votre rôle" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={Role.TEACHER}>Enseignant</SelectItem>
+              <SelectItem value={Role.PARENT}>Parent</SelectItem>
+            </SelectContent>
+          </Select>
+          <FormError error={errors.role} className="pl-4" />
+        </div>
+
+        <Button 
+          type="submit" 
+          className="w-full rounded-full bg-background text-foreground hover:bg-background hover:text-primary shadow-neumorphic active:shadow-neumorphic-inset transition-all" 
+          disabled={isLoading}
+        >
+          {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
+          {isLoading ? "Création du compte..." : "Créer un compte"}
+        </Button>
+
+        <p className="text-center text-sm text-muted-foreground">
+          Déjà un compte ?{" "}
+          <Link href={`/login`} className="font-medium text-primary hover:underline">
+            Se connecter
+          </Link>
+        </p>
+      </form>
     </>
   );
 }

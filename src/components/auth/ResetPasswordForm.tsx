@@ -1,98 +1,121 @@
-'use client';
+// src/components/auth/ResetPasswordForm.tsx
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { resetPasswordSchema } from '@/lib/formValidationSchemas';
-import type { ResetPasswordSchema as ResetPasswordSchemaType } from '@/types';
-import { useResetPasswordMutation } from '@/lib/redux/api/authApi';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { useEffect } from 'react';
+import { useState } from 'react';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/navigation";
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+import { resetPasswordSchema, type ResetPasswordSchema } from '@/lib/formValidationSchemas';
+import { CheckCircle, KeyRound, ArrowRight } from 'lucide-react';
+import Link from 'next/link';
+import FormError from '@/components/forms/FormError';
 
-export default function ResetPasswordForm() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const { toast } = useToast();
-  const [resetPassword, { isLoading }] = useResetPasswordMutation();
-  const token = searchParams.get('token');
+interface ResetPasswordFormProps {
+  token: string;
+}
 
-  useEffect(() => {
-    if (!token) {
-        toast({
-            variant: 'destructive',
-            title: 'Invalid Link',
-            description: 'The password reset link is missing a token.',
-        });
-        router.push('/forgot-password');
-    }
-  }, [token, router, toast]);
-
-  const form = useForm<ResetPasswordSchemaType>({
+export function ResetPasswordForm({ token }: ResetPasswordFormProps) {
+  const { register, handleSubmit, formState: { errors } } = useForm<ResetPasswordSchema>({
     resolver: zodResolver(resetPasswordSchema),
-    defaultValues: {
-      password: '',
-      confirmPassword: '',
-    },
+    defaultValues: { token }
   });
+  
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
 
-  const onSubmit = async (data: ResetPasswordSchemaType) => {
-    if (!token) return;
+  const onSubmit = async (data: ResetPasswordSchema) => {
+    setIsLoading(true);
     try {
-      await resetPassword({ ...data, token }).unwrap();
-      toast({
-        title: 'Password Reset Successful',
-        description: 'You can now log in with your new password.',
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
       });
-      router.push('/login');
-    } catch (err: any) {
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || "Une erreur est survenue.");
+      }
+      
       toast({
-        variant: 'destructive',
-        title: 'Reset Failed',
-        description: err.data?.message || 'An unexpected error occurred.',
+        title: "Succès !",
+        description: "Votre mot de passe a été réinitialisé. Vous pouvez maintenant vous connecter.",
       });
+      setIsSuccess(true);
+      
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Échec de la réinitialisation",
+        description: error.message || "Impossible de réinitialiser votre mot de passe.",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
-
-  if (!token) {
-      return <p className='text-center text-destructive'>Invalid or missing reset token.</p>
+  
+  if (isSuccess) {
+    return (
+      <div className="text-center space-y-4">
+        <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
+        <h3 className="text-xl font-semibold">Mot de passe réinitialisé !</h3>
+        <p className="text-muted-foreground text-sm">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+        <Button asChild className="w-full">
+            <Link href="/login">
+                Aller à la page de connexion <ArrowRight className="ml-2"/>
+            </Link>
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>New Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <input type="hidden" {...register("token")} />
+      
+      <div className="space-y-2">
+        <Label htmlFor="password" className="pl-4">Nouveau mot de passe</Label>
+        <Input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          {...register("password")}
+          disabled={isLoading}
+          className={cn(errors.password && "focus-visible:ring-destructive")}
         />
-        <FormField
-          control={form.control}
-          name="confirmPassword"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Confirm New Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="••••••••" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+        <FormError error={errors.password} className="pl-4" />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="confirmPassword" className="pl-4">Confirmer le nouveau mot de passe</Label>
+        <Input
+          id="confirmPassword"
+          type="password"
+          placeholder="••••••••"
+          {...register("confirmPassword")}
+          disabled={isLoading}
+          className={cn(errors.confirmPassword && "focus-visible:ring-destructive")}
         />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? 'Resetting Password...' : 'Reset Password'}
-        </Button>
-      </form>
-    </Form>
+        <FormError error={errors.confirmPassword} className="pl-4" />
+      </div>
+      
+      <Button 
+        type="submit" 
+        className="w-full rounded-full"
+        disabled={isLoading}
+      >
+        {isLoading ? <Spinner size="sm" className="mr-2" /> : <KeyRound className="mr-2"/>}
+        {isLoading ? "Modification..." : "Réinitialiser le mot de passe"}
+      </Button>
+    </form>
   );
 }

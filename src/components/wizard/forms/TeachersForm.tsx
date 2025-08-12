@@ -1,0 +1,187 @@
+// src/components/wizard/forms/TeachersForm.tsx
+'use client';
+
+import React from 'react';
+import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
+import { Users, BookOpen, AlertCircle, Trash2, Edit } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from '@/hooks/use-toast';
+import {
+    toggleClassAssignment,
+    selectTeacherAssignments,
+    removeAssignmentsForTeacher,
+} from '@/lib/redux/features/teacherAssignmentsSlice';
+import {
+  localDeleteTeacher,
+  selectAllProfesseurs,
+} from '@/lib/redux/features/teachers/teachersSlice';
+import { selectAllClasses } from '@/lib/redux/features/classes/classesSlice';
+import type { TeacherWithDetails, Subject } from '@/types';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
+
+const TeachersForm: React.FC = () => {
+    const dispatch = useAppDispatch();
+    const { toast } = useToast();
+    const teachers = useAppSelector(selectAllProfesseurs);
+    const classes = useAppSelector(selectAllClasses);
+    const teacherAssignments = useAppSelector(selectTeacherAssignments);
+
+    const handleClassToggle = (teacherId: string, subjectId: number, classId: number) => {
+        dispatch(toggleClassAssignment({ teacherId, subjectId, classId }));
+    };
+
+    const handleDeleteTeacher = (teacher: TeacherWithDetails) => {
+      dispatch(removeAssignmentsForTeacher(teacher.id));
+      dispatch(localDeleteTeacher(teacher.id));
+      toast({
+        title: "Enseignant supprimé (Brouillon)",
+        description: `L'enseignant ${teacher.name} ${teacher.surname} a été retiré de votre configuration.`
+      })
+    };
+
+    const isClassAssignedToOtherTeacher = (classId: number, subjectId: number, currentTeacherId: string): boolean => {
+        return teacherAssignments.some(assignment =>
+            assignment.subjectId === subjectId &&
+            assignment.classIds.includes(classId) &&
+            assignment.teacherId !== currentTeacherId
+        );
+    };
+
+    const isClassAssignedToCurrentTeacher = (classId: number, subjectId: number, currentTeacherId: string): boolean => {
+        return teacherAssignments.some(assignment =>
+            assignment.teacherId === currentTeacherId &&
+            assignment.subjectId === subjectId &&
+            assignment.classIds.includes(classId)
+        );
+    };
+
+    return (
+        <div className="space-y-6">
+            <Card>
+                <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <CardTitle>Assignations des Professeurs</CardTitle>
+                        <CardDescription>
+                            Pour chaque professeur, cliquez sur les classes qu'il enseignera pour chacune de ses matières.
+                        </CardDescription>
+                      </div>
+                    </div>
+                </CardHeader>
+                <CardContent>
+                    {teachers.length === 0 || classes.length === 0 ? (
+                        <Alert>
+                            <AlertCircle className="h-4 w-4" />
+                            <AlertTitle>Configuration requise</AlertTitle>
+                            <AlertDescription>
+                                Veuillez configurer les professeurs et les classes dans les étapes précédentes pour commencer les assignations.
+                            </AlertDescription>
+                        </Alert>
+                    ) : (
+                        <Accordion type="single" collapsible className="w-full">
+                            {teachers.map((teacher: TeacherWithDetails) => (
+                                <AccordionItem value={`teacher-${teacher.id}`} key={teacher.id}>
+                                    <AccordionTrigger className="hover:no-underline">
+                                        <div className="flex justify-between items-center w-full pr-4">
+                                            <span className="font-semibold text-lg flex items-center gap-2">
+                                                <Users className="h-5 w-5" />
+                                                {teacher.name} {teacher.surname}
+                                            </span>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-sm text-muted-foreground">
+                                                  {teacher.subjects.length} matière(s)
+                                              </span>
+                                              <AlertDialog>
+                                                <AlertDialogTrigger asChild>
+                                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:text-destructive" onClick={(e) => e.stopPropagation()}>
+                                                      <Trash2 size={16}/>
+                                                  </Button>
+                                                </AlertDialogTrigger>
+                                                <AlertDialogContent>
+                                                  <AlertDialogHeader>
+                                                    <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
+                                                    <AlertDialogDescription>
+                                                      Êtes-vous sûr de vouloir supprimer l'enseignant "{teacher.name} {teacher.surname}" ? Toutes ses assignations seront également supprimées.
+                                                    </AlertDialogDescription>
+                                                  </AlertDialogHeader>
+                                                  <AlertDialogFooter>
+                                                    <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                                    <AlertDialogAction onClick={() => handleDeleteTeacher(teacher)} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                                                  </AlertDialogFooter>
+                                                </AlertDialogContent>
+                                              </AlertDialog>
+                                            </div>
+                                        </div>
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="p-4 space-y-6">
+                                            {teacher.subjects.length > 0 ? teacher.subjects.map((subject: Subject) => {
+                                                return (
+                                                    <div key={subject.id} className="space-y-3 p-3 border rounded-md">
+                                                        <label className="font-medium flex items-center gap-2 text-primary">
+                                                          <BookOpen className="h-4 w-4" />
+                                                          {subject.name}
+                                                        </label>
+                                                        <div className="flex flex-wrap gap-2">
+                                                            {classes.map(cls => {
+                                                                const isAssignedToThis = isClassAssignedToCurrentTeacher(cls.id, subject.id, teacher.id);
+                                                                const isAssignedToOther = isClassAssignedToOtherTeacher(cls.id, subject.id, teacher.id);
+                                                                
+                                                                return (
+                                                                    <Button
+                                                                        key={cls.id}
+                                                                        variant={isAssignedToThis ? "default" : "outline"}
+                                                                        size="sm"
+                                                                        onClick={() => handleClassToggle(teacher.id, subject.id, cls.id)}
+                                                                        disabled={isAssignedToOther}
+                                                                        className={cn(
+                                                                            "transition-all duration-200",
+                                                                            isAssignedToThis && "bg-green-600 hover:bg-green-700",
+                                                                            isAssignedToOther && "bg-muted text-muted-foreground line-through"
+                                                                        )}
+                                                                        title={isAssignedToOther ? "Déjà assignée à un autre professeur pour cette matière" : cls.name}
+                                                                    >
+                                                                        {cls.name}
+                                                                    </Button>
+                                                                )
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )
+                                            }) : (
+                                                <p className="text-sm text-muted-foreground text-center py-4">
+                                                    Aucune matière de compétence définie pour cet enseignant.
+                                                </p>
+                                            )}
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    )}
+                </CardContent>
+            </Card>
+        </div>
+    );
+};
+
+export default TeachersForm;

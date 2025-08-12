@@ -1,63 +1,93 @@
 // src/components/auth/SocialSignInButtons.tsx
-'use client';
+"use client";
 
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { auth, googleProvider } from '@/lib/firebase';
-import { useSocialLoginMutation } from '@/lib/redux/api/authApi';
-import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import { signInWithPopup } from 'firebase/auth';
+import { useSocialLoginMutation } from '@/lib/redux/api/authApi';
+import { Spinner } from '@/components/ui/spinner';
+import { useToast } from '@/hooks/use-toast';
+import type { Role } from '@/types';
+import { useRouter } from 'next/navigation';
 
-const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
-  <svg role="img" viewBox="0 0 24 24" {...props}>
-    <path
-      d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.9 2.04-5.07 2.04-4.35 0-7.88-3.58-7.88-7.99s3.53-7.99 7.88-7.99c2.27 0 4.1.84 5.42 2.08l2.6-2.6C18.4 2.1 15.82 1 12.48 1 5.83 1 1 5.83 1 12.5s4.83 11.5 11.48 11.5c6.5 0 11.23-4.56 11.23-11.34 0-.74-.07-1.44-.2-2.14H12.48z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
-export default function SocialSignInButtons() {
-  const [socialLogin, { isLoading }] = useSocialLoginMutation();
-  const { toast } = useToast();
-  const router = useRouter();
-
-  const handleGoogleSignIn = async () => {
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      // Get the ID token from the signed-in user
-      const idToken = await result.user.getIdToken();
-      
-      // Send the ID token to your backend for verification and session creation
-      await socialLogin({ idToken }).unwrap();
-      
-      toast({ title: 'Sign-in Successful', description: 'Welcome!' });
-      router.push('/dashboard');
-    } catch (error: any) {
-      console.error('Google Sign-In Error:', error);
-      // Handle Firebase specific errors (e.g., popup closed)
-      if (error.code === 'auth/popup-closed-by-user') {
-        return;
-      }
-      toast({
-        variant: 'destructive',
-        title: 'Sign-in Failed',
-        description: error.data?.message || 'Could not sign in with Google.',
-      });
-    }
-  };
-
-  return (
-    <div className="flex flex-col gap-2">
-      <Button
-        variant="outline"
-        className="w-full"
-        onClick={handleGoogleSignIn}
-        disabled={isLoading}
-      >
-        <GoogleIcon className="mr-2 h-4 w-4" />
-        {isLoading ? 'Signing in...' : 'Sign in with Google'}
-      </Button>
-    </div>
-  );
+interface SocialSignInButtonsProps {
+    selectedRole?: Role | null;
 }
+
+const SocialSignInButtons = ({ selectedRole }: SocialSignInButtonsProps) => {
+    const [isLoading, setIsLoading] = useState<null | 'google'>(null);
+    const [socialLogin] = useSocialLoginMutation();
+    const { toast } = useToast();
+    const router = useRouter();
+
+    const handleGoogleSignIn = async () => {
+        setIsLoading('google');
+        try {
+            const result = await signInWithPopup(auth, googleProvider);
+            const user = result.user;
+
+            await socialLogin({
+                email: user.email!,
+                name: user.displayName!,
+                imgUrl: user.photoURL,
+                role: selectedRole || null,
+            }).unwrap();
+            
+            router.push('/');
+            
+        } catch (error: any) {
+            console.error("Google Sign-In Error:", error);
+            
+            if (error.code === 'auth/popup-closed-by-user') {
+                 toast({
+                    variant: "default",
+                    title: "Connexion annulée",
+                    description: "La fenêtre de connexion a été fermée.",
+                });
+            } else if (error.code === 'auth/configuration-not-found') {
+                 toast({
+                    variant: "destructive",
+                    title: "Erreur de configuration Firebase",
+                    description: "Les clés API Firebase sont invalides ou le domaine n'est pas autorisé. Veuillez vérifier votre fichier .env et les domaines autorisés dans votre console Firebase.",
+                    duration: 10000,
+                });
+            }
+             else {
+                 toast({
+                    variant: "destructive",
+                    title: "Erreur de connexion",
+                    description: `Une erreur est survenue (${error.code || 'inconnue'}). Veuillez réessayer.`,
+                });
+            }
+        } finally {
+            setIsLoading(null);
+        }
+    };
+    
+    const GoogleIcon = () => (
+        <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 24 24" width="24">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+            <path d="M1 1h22v22H1z" fill="none"/>
+        </svg>
+    );
+
+    return (
+        <div className="grid grid-cols-1 gap-4">
+             <Button 
+                variant="outline" 
+                onClick={handleGoogleSignIn} 
+                disabled={!!isLoading}
+                className="w-full shadow-neumorphic active:shadow-neumorphic-inset"
+            >
+                {isLoading === 'google' ? <Spinner size="sm" /> : <GoogleIcon />}
+                <span className="ml-2">Continuer avec Google</span>
+            </Button>
+        </div>
+    );
+};
+
+export default SocialSignInButtons;

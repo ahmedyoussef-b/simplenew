@@ -1,105 +1,161 @@
-'use client';
+// src/components/auth/LoginForm.tsx
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { loginSchema } from '@/lib/formValidationSchemas';
-import type { LoginSchema as LoginSchemaType } from '@/types';
-import { useLoginMutation } from '@/lib/redux/api/authApi';
-import { useRouter } from 'next/navigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import Link from 'next/link';
-import SocialSignInButtons from './SocialSignInButtons';
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useLoginMutation } from "@/lib/redux/api/authApi";
+import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import type { SerializedError } from '@reduxjs/toolkit';
+import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
+import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
+import type { LoginResponse } from "@/lib/redux/api/authApi";
+import FormError from "@/components/forms/FormError";
 
-export default function LoginForm() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [login, { isLoading }] = useLoginMutation();
+const loginSchema = z.object({
+  email: z.string().email({ message: "Adresse e-mail invalide." }),
+  password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
+});
 
-  const form = useForm<LoginSchemaType>({
+type LoginFormData = z.infer<typeof loginSchema>;
+
+interface ApiErrorData {
+  message: string;
+}
+
+function isFetchBaseQueryError(error: unknown): error is FetchBaseQueryError {
+  return typeof error === 'object' && error != null && 'status' in error;
+}
+
+function isSerializedError(error: unknown): error is SerializedError {
+  return typeof error === 'object' && error != null && 'message' in error;
+}
+
+export function LoginForm() {
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
   });
 
-  const onSubmit = async (data: LoginSchemaType) => {
-    try {
-      const result = await login(data).unwrap();
-      
-      if (result.requires2FA) {
-        // Store temp token and navigate to 2FA page
-        sessionStorage.setItem('temp_token', result.tempToken);
-        router.push('/verify-2fa');
-        toast({ title: '2FA Required', description: 'Please enter your two-factor authentication code.' });
-      } else {
-        // If login is successful without 2FA, the session is set by the query hook
-        toast({ title: 'Login Successful', description: 'Welcome back!' });
-        router.push('/dashboard'); 
+  const [login, { isLoading, isSuccess, isError, error: loginErrorData, data: loginSuccessData }] = useLoginMutation();
+  const { toast } = useToast();
+  const router = useRouter(); 
+
+  useEffect(() => {
+    console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError, "loginSuccessData:", loginSuccessData);
+    if (isSuccess && loginSuccessData) {
+        // More robust check for the 2FA response type
+        const twoFactorResponse = loginSuccessData as Partial<LoginResponse> & { twoFactorRequired?: boolean, twoFactorToken?: string, twoFactorCode?: string };
+        if (twoFactorResponse.twoFactorRequired && twoFactorResponse.twoFactorToken) {
+             console.log("✅ [LoginForm] 2FA required. Redirecting...");
+
+             const description = twoFactorResponse.twoFactorCode
+                ? `Pour le prototypage, votre code est : ${twoFactorResponse.twoFactorCode}`
+                : "Un code de vérification a été envoyé à votre e-mail.";
+
+             toast({
+                title: "Vérification Requise",
+                description: description,
+                duration: 10000, // Make it stay longer to copy the code
+             });
+             router.push(`/verify-2fa?token=${twoFactorResponse.twoFactorToken}`);
+        } else {
+             console.log("✅ [LoginForm] Login successful, no 2FA. The main page effect will handle redirection.");
+             toast({
+                title: "Connexion réussie",
+                description: "Vous êtes maintenant connecté. Redirection...",
+            });
+        }
+    }
+    if (isError && loginErrorData) {
+       console.error("❌ [LoginForm] Login mutation failed. Error data:", loginErrorData);
+      let title = "Échec de la connexion";
+      let description = "Une erreur inattendue s'est produite lors de la connexion.";
+
+       if (isFetchBaseQueryError(loginErrorData)) {
+        const errorData = loginErrorData.data as ApiErrorData;
+        if (loginErrorData.status === 401 && errorData?.message === "Invalid credentials") {
+          title = "Identifiants invalides";
+          description = "Veuillez vérifier votre e-mail et votre mot de passe et réessayer.";
+        } else {
+          description = errorData?.message || `Erreur: ${loginErrorData.status}`;
+        }
+      } else if (isSerializedError(loginErrorData)) {
+        description = loginErrorData.message || "Un problème est survenu lors de la connexion.";
       }
-    } catch (err: any) {
       toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: err.data?.message || 'An unexpected error occurred.',
+        variant: "destructive",
+        title: title,
+        description: description,
       });
     }
+  }, [isSuccess, isError, loginErrorData, loginSuccessData, toast, router]);
+
+  const onSubmit = async (data: LoginFormData) => {
+    console.log("➡️ [LoginForm] Submitting login form with data:", data);
+    await login(data);
   };
 
   return (
-    <>
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="you@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" placeholder="••••••••" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-           <div className="flex items-center justify-between">
-            <div className="text-sm">
-              <Link href="/forgot-password" prefetch={false} className="font-medium text-primary hover:underline">
-                Forgot your password?
-              </Link>
-            </div>
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? 'Signing In...' : 'Sign In'}
-          </Button>
-        </form>
-      </Form>
-      <div className="relative my-4">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-white px-2 text-gray-500 dark:bg-gray-800 dark:text-gray-400">Or continue with</span>
-        </div>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div className="space-y-2">
+        <Label htmlFor="email" className="pl-4">E-mail</Label>
+        <Input
+          id="email"
+          type="email"
+          placeholder="vous@exemple.com"
+          {...register("email")}
+          aria-invalid={errors.email ? "true" : "false"}
+          className={cn(
+            "bg-background border-0 rounded-full shadow-neumorphic-inset transition-shadow focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-ring",
+            errors.email && "focus-visible:ring-destructive"
+          )}
+        />
+        <FormError error={errors.email} className="pl-4" />
       </div>
-      <SocialSignInButtons />
-    </>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label htmlFor="password" className="pl-4">Mot de passe</Label>
+          <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline pr-4">
+            Mot de passe oublié ?
+          </Link>
+        </div>
+        <Input
+          id="password"
+          type="password"
+          placeholder="••••••••"
+          {...register("password")}
+          aria-invalid={errors.password ? "true" : "false"}
+          className={cn(
+            "bg-background border-0 rounded-full shadow-neumorphic-inset transition-shadow focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-ring",
+            errors.password && "focus-visible:ring-destructive"
+          )}
+        />
+        <FormError error={errors.password} className="pl-4" />
+      </div>
+      
+      <Button 
+        type="submit" 
+        className="w-full rounded-full bg-background text-foreground hover:bg-background hover:text-primary shadow-neumorphic active:shadow-neumorphic-inset transition-all" 
+        disabled={isLoading}
+      >
+        {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
+        {isLoading ? "Connexion..." : "Se connecter"}
+      </Button>
+
+      <p className="text-center text-sm text-muted-foreground">
+        Pas encore de compte ?{" "}
+        <Link href={`/register`} className="font-medium text-primary hover:underline">
+          S'inscrire
+        </Link>
+      </p>
+    </form>
   );
 }
