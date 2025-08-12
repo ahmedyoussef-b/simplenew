@@ -1,21 +1,18 @@
 'use client'
 
-import { useRef, useEffect } from 'react'
+import { useRef } from 'react'
 import { Provider } from 'react-redux'
 import { makeStore, type AppStore } from '@/lib/redux/store'
 import { useGetSessionQuery } from './api/authApi'
-import { setLoading, setUser, logout } from './slices/authSlice'
 import { Skeleton } from '@/components/ui/skeleton'
 
-const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
-  console.log('🔄 [AuthInitializer] Démarrage du composant...');
-  // Use the session query, but the actual state update is handled in authApi.ts
-  const { isLoading, isFetching } = useGetSessionQuery();
-  console.log(`🔄 [AuthInitializer] État de la session: isLoading: ${isLoading}, isFetching: ${isFetching}`);
+const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  // Trigger the session query on initial load.
+  // The onQueryStarted listener in authApi will handle dispatching setUser/logout.
+  const { isLoading } = useGetSessionQuery();
 
-  // Show a loading skeleton while the initial session is being fetched.
-  if (isLoading || isFetching) {
-    console.log('⏳ [AuthInitializer] Affichage du Skeleton pendant la récupération de la session.');
+  if (isLoading) {
+    console.log('⏳ [AuthProvider] Session check in progress, showing Skeleton...');
     return (
         <div className="flex min-h-screen flex-col items-center justify-center">
             <div className="space-y-4">
@@ -29,8 +26,8 @@ const AuthInitializer = ({ children }: { children: React.ReactNode }) => {
         </div>
     );
   }
-  
-  console.log('✅ [AuthInitializer] Initialisation terminée, affichage des enfants.');
+
+  console.log('✅ [AuthProvider] Session check complete, rendering app.');
   return <>{children}</>;
 }
 
@@ -44,16 +41,12 @@ export default function StoreProvider({
   const storeRef = useRef<AppStore | null>(null)
   if (!storeRef.current) {
     console.log('✨ [StoreProvider] Création d\'une nouvelle instance du store Redux.');
-    // Create the store instance the first time this renders
     storeRef.current = makeStore()
-    // Start initial session check by setting loading state
-    console.log('🚀 [StoreProvider] Dispatch de setLoading(true) pour démarrer la vérification de session.');
-    storeRef.current.dispatch(setLoading(true));
   }
   
   return (
     <Provider store={storeRef.current}>
-      <AuthInitializer>{children}</AuthInitializer>
+      <AuthProvider>{children}</AuthProvider>
     </Provider>
   )
 }
