@@ -5,16 +5,40 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useLogoutMutation } from '@/lib/redux/api/authApi';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 export default function Home() {
-  const { isAuthenticated, user } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, user, isLoading } = useAppSelector((state) => state.auth);
   const [logout] = useLogoutMutation();
   const router = useRouter();
+
+  useEffect(() => {
+    // Redirige vers le tableau de bord si l'utilisateur est authentifié et que le chargement est terminé
+    if (!isLoading && isAuthenticated) {
+      router.push('/dashboard');
+    }
+  }, [isAuthenticated, isLoading, router]);
 
   const handleLogout = async () => {
     await logout().unwrap();
     router.push('/');
   };
+
+  // Affiche un état de chargement pendant la vérification de la session
+  if (isLoading || isAuthenticated) {
+    return (
+        <div className="flex min-h-screen flex-col items-center justify-center">
+            <div className="space-y-4">
+                <Skeleton className="h-12 w-96" />
+                <Skeleton className="h-8 w-80" />
+                <Skeleton className="h-10 w-32" />
+            </div>
+        </div>
+    );
+  }
+
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8 text-center">
@@ -28,19 +52,9 @@ export default function Home() {
           and the modern 'Inter' typeface.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          {isAuthenticated ? (
-            <>
-              <p className="text-lg">Welcome, {user?.name || 'User'}!</p>
-              <Button onClick={handleLogout}>Logout</Button>
-              <Link href="/dashboard">
-                <Button variant="outline">Go to Dashboard</Button>
-              </Link>
-            </>
-          ) : (
-            <Link href="/login">
-              <Button>Login</Button>
-            </Link>
-          )}
+          <Link href="/login">
+            <Button>Login</Button>
+          </Link>
         </div>
       </div>
     </main>
