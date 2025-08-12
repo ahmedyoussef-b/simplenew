@@ -25,14 +25,20 @@ export default function SocialSignInButtons() {
   const handleGoogleSignIn = async () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
+      // Get the ID token from the signed-in user
       const idToken = await result.user.getIdToken();
       
+      // Send the ID token to your backend for verification and session creation
       await socialLogin({ idToken }).unwrap();
       
       toast({ title: 'Sign-in Successful', description: 'Welcome!' });
       router.push('/dashboard');
     } catch (error: any) {
       console.error('Google Sign-In Error:', error);
+      // Handle Firebase specific errors (e.g., popup closed)
+      if (error.code === 'auth/popup-closed-by-user') {
+        return;
+      }
       toast({
         variant: 'destructive',
         title: 'Sign-in Failed',

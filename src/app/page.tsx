@@ -15,19 +15,25 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    // Redirige vers le tableau de bord si l'utilisateur est authentifié et que le chargement est terminé
+    // Redirect to the dashboard if the user is authenticated and loading is finished
     if (!isLoading && isAuthenticated) {
       router.push('/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
 
   const handleLogout = async () => {
-    await logout().unwrap();
-    router.push('/');
+    try {
+        await logout().unwrap();
+        // The Redux slice will clear the user state.
+        // We push to the homepage after logout.
+        router.push('/');
+    } catch (error) {
+        console.error("Failed to logout:", error)
+    }
   };
 
-  // Affiche un état de chargement pendant la vérification de la session
-  if (isLoading || isAuthenticated) {
+  // Display a loading state while checking the session
+  if (isLoading) {
     return (
         <div className="flex min-h-screen flex-col items-center justify-center">
             <div className="space-y-4">
@@ -37,6 +43,12 @@ export default function Home() {
             </div>
         </div>
     );
+  }
+
+  // If the user is authenticated, this page will redirect.
+  // We can return null or a minimal loader to avoid a flash of content.
+  if (isAuthenticated) {
+      return null;
   }
 
 
@@ -52,9 +64,25 @@ export default function Home() {
           and the modern 'Inter' typeface.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
-          <Link href="/login">
-            <Button>Login</Button>
-          </Link>
+            {!isAuthenticated ? (
+                <>
+                    <Link href="/login">
+                        <Button>Login</Button>
+                    </Link>
+                    <Link href="/register">
+                        <Button variant="outline">Sign Up</Button>
+                    </Link>
+                </>
+            ) : (
+                <>
+                    <Link href="/dashboard">
+                        <Button>Go to Dashboard</Button>
+                    </Link>
+                    <Button onClick={handleLogout} variant="destructive">
+                        Logout
+                    </Button>
+                </>
+            )}
         </div>
       </div>
     </main>
