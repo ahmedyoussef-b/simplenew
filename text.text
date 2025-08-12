@@ -1,0 +1,38 @@
+GEMINI_API_KEY=AIzaSyD4X0183mMiD5h1Kit1GAjj1PsLqZ5gQ_s# Add your Firebase configuration here.
+# You can find these values in your Firebase project settings.
+# Firebase Config (Exposé côté client)
+# Firebase Config (Exposé côté client)
+NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBlnzRo66fiWmFwd8TJC37-LpywJjdobZU
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=lamadevschool.firebaseapp.com
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=lamadevschool
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=lamadevschool.appspot.com  # Note: corrigez "firebasestorage.app" en "appspot.com" si nécessaire
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=644460153608
+NEXT_PUBLIC_FIREBASE_APP_ID=1:644460153608:web:0111898c616f609ccf3abd
+GEMINI_API_KEY=AIzaSyDxU_uAI9mO1p5sIpLCXiGtaA2-wRCDDrs
+JWT_ACCESS_TOKEN_EXPIRATION_TIME=1h
+
+# Configuration pour le script de seed de la base de données (prisma/seed.ts) - Optionnel
+# Ces valeurs sont utilisées si vous exécutez `prisma db seed`.
+# Email pour l'utilisateur administrateur initial. Par défaut "admin@sentinelshield.app" si non défini.
+# Mot de passe pour l'utilisateur administrateur initial. Par défaut "admin123" si non défini.
+# Remplacez par votre propre chaîne de connexion à la base de données.
+
+DATABASE_URL="prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19oemdzVDU2Tmd4cDVBZlVoeDlEN2wiLCJhcGlfa2V5IjoiMDFLMUg2RkQwVldIRVNHTUNTWFZKUlA1OFoiLCJ0ZW5hbnRfaWQiOiIzZTgwNzc0OTM0NTQxMDdjNjA0NDdkNTY2NjVlY2QzNGUzNWZlZGJmOGNiM2RjNGNkZGY0ZmM0OThlNzM5YzdmIiwiaW50ZXJuYWxfc2VjcmV0IjoiYjQyM2Q4NWYtYmM4MS00ZDZmLTk1NGQtOTYxZjUxZDEwZDJlIn0.1tAnrq1OzfbG5dtW9vNMDeRz9FbwRc6mzT50RJGD8I8"
+
+DIRECT_URL="prisma+postgres://accelerate.prisma-data.net/?api_key=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqd3RfaWQiOjEsInNlY3VyZV9rZXkiOiJza19oemdzVDU2Tmd4cDVBZlVoeDlEN2wiLCJhcGlfa2V5IjoiMDFLMUg2RkQwVldIRVNHTUNTWFZKUlA1OFoiLCJ0ZW5hbnRfaWQiOiIzZTgwNzc0OTM0NTQxMDdjNjA0NDdkNTY2NjVlY2QzNGUzNWZlZGJmOGNiM2RjNGNkZGY0ZmM0OThlNzM5YzdmIiwiaW50ZXJuYWxfc2VjcmV0IjoiYjQyM2Q4NWYtYmM4MS00ZDZmLTk1NGQtOTYxZjUxZDEwZDJlIn0.1tAnrq1OzfbG5dtW9vNMDeRz9FbwRc6mzT50RJGD8I8"
+JWT_SECRET_KEY=yBSIFcgSCBWIF0gTSBWIDcgSiBQIGcgKSBrID4gdyA4IFAgWiBTICwgXSA5IEUgciAyICYgayA/ICUgZSBcIGwgUiBxIFMgUyBvICggWyA/IGsgXSBBICIgMSBdIGYgXSAqIHcgLyAsICYgJyBhID0gayBfIEYgbyBnICEgMg
+JWT_EXPIRES_IN=1h
+JWT_ALGORITHM=HS256
+# Le port est défini dans package.json (script "dev": "next dev -p 9004")
+# NODE_ENV est automatiquement géré par Next.js (development pour `next dev`, production pour `next start`)
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dl8ngmflh
+CLOUDINARY_API_KEY=844862965377985
+CLOUDINARY_API_SECRET=UG3fzsJaJANU84o7JVashI81Yr0
+CLOUDINARY_URL=cloudinary://844862965377985:UG3fzsJaJANU84o7JVashI81Yr0
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=ml_default
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=ahmedyoussefabbes@gmail.com
+SMTP_PASS=ecfh xmfr lctn munz
+EMAIL_FROM=ahmedyoussefabbes@gmail.com

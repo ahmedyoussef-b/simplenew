@@ -43,3 +43,6 @@ next-env.d.ts
 # firebase
 firebase-debug.log
 firestore-debug.log
+/src/generated/prisma
+
+/src/generated/prisma
