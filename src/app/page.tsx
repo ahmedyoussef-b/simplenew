@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/hooks/redux-hooks';
 import { selectCurrentUser, selectIsAuthLoading, selectIsAuthenticated } from '@/lib/redux/slices/authSlice';
 import { Spinner } from '@/components/ui/spinner';
-import AccueilZenPage from './(dashboard)/dashboard/page'; // Adjusted import path
+import { Role } from '@/types';
 
 export default function RootPage() {
   const router = useRouter();
@@ -15,32 +15,24 @@ export default function RootPage() {
   const isLoading = useAppSelector(selectIsAuthLoading);
 
   useEffect(() => {
-    // This effect handles redirection for LOGGED-IN users.
-    // If auth state is still loading, we wait.
     if (isLoading) {
-      return;
+      return; // Wait until authentication check is complete
     }
-    
-    // If the user is authenticated, redirect them to their specific role's dashboard.
-    // The dashboard layout will handle the actual content.
-    if (isAuthenticated && user) {
-        router.replace(`/${user.role.toLowerCase()}`);
+
+    if (isAuthenticated && user?.role) {
+      // If authenticated, redirect to the user's specific dashboard
+      const rolePath = user.role.toLowerCase();
+      router.replace(`/${rolePath}`);
+    } else {
+      // If not authenticated, redirect to the login page
+      router.replace('/login');
     }
-    
-    // If not authenticated, this component does nothing, and the public page is rendered below.
-    
   }, [user, isAuthenticated, isLoading, router]);
 
-  // While checking the session, show a loading spinner to prevent flicker.
-  if (isLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
-
-  // If the user is authenticated, they will be redirected by the useEffect.
-  // In the meantime, or if they are not authenticated, render the public-facing Zen page.
-  return <AccueilZenPage />;
+  // Show a loading spinner while the session is being checked and redirection occurs
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <Spinner size="lg" />
+    </div>
+  );
 }
