@@ -23,6 +23,22 @@ export const authApi = createApi({
             body: credentials,
         };
       },
+      async onQueryStarted(args, { dispatch, queryFulfilled }) {
+        console.log('🔑 [RTK Query] login a démarré.');
+        try {
+            const { data } = await queryFulfilled;
+            // Ne met à jour l'utilisateur que si la 2FA n'est pas requise.
+            // Si la 2FA est requise, la mise à jour se fera après la vérification.
+            if (!data.requires2FA) {
+                console.log('✅ [RTK Query] login réussi sans 2FA, mise à jour de l\'utilisateur.');
+                dispatch(setUser(data));
+            } else {
+                console.log('🔒 [RTK Query] 2FA requise, attente de la vérification.');
+            }
+        } catch (error) {
+            console.error('❌ [RTK Query] Échec de login:', error);
+        }
+      },
     }),
     register: builder.mutation<AuthResponse, RegisterSchema>({
       query: (userInfo) => {
