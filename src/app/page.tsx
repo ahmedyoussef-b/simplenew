@@ -39,11 +39,14 @@ export default function Home() {
   if (isLoading) {
     console.log('⏳ [Accueil] Session en cours de vérification, affichage du Skeleton...');
     return (
-        <div className="flex min-h-screen flex-col items-center justify-center">
-            <div className="space-y-4">
-                <Skeleton className="h-12 w-96" />
-                <Skeleton className="h-8 w-80" />
-                <Skeleton className="h-10 w-32" />
+        <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+            <div className="space-y-4 text-center">
+                <Skeleton className="h-12 w-96 mx-auto" />
+                <Skeleton className="h-8 w-80 mx-auto" />
+                <div className="flex justify-center gap-4 pt-4">
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-24" />
+                </div>
             </div>
         </div>
     );
