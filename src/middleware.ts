@@ -4,12 +4,6 @@ import type { NextRequest } from 'next/server';
 import { Role } from '@prisma/client';
 import * as jose from 'jose';
 
-// Ensure JWT_SECRET is defined before proceeding
-if (!process.env.JWT_SECRET) {
-    throw new Error('JWT_SECRET environment variable is not defined. Please set it in your .env file.');
-}
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
-
 const protectedRoutes = {
     [Role.ADMIN]: ['/admin'],
     [Role.TEACHER]: ['/teacher-dashboard'],
@@ -21,6 +15,12 @@ const commonProtectedRoutes = ['/dashboard', '/profile'];
 const allProtectedRoutes = [...Object.values(protectedRoutes).flat(), ...commonProtectedRoutes];
 
 export async function middleware(req: NextRequest) {
+    // Ensure JWT_SECRET is defined before proceeding
+    if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET environment variable is not defined. Please set it in your .env file.');
+    }
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET);
+    
     const { pathname } = req.nextUrl;
     const sessionToken = req.cookies.get('session_token')?.value;
 
