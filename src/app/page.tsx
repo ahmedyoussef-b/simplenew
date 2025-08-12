@@ -15,25 +15,29 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
+    console.log('🔄 [Accueil] Vérification de l\'état: isLoading:', isLoading, 'isAuthenticated:', isAuthenticated);
     // Redirect to the dashboard if the user is authenticated and loading is finished
     if (!isLoading && isAuthenticated) {
+      console.log('✅ [Accueil] Authentifié, redirection vers /dashboard');
       router.push('/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
 
   const handleLogout = async () => {
+    console.log('👋 [Accueil] Déconnexion...');
     try {
         await logout().unwrap();
         // The Redux slice will clear the user state.
         // We push to the homepage after logout.
         router.push('/');
     } catch (error) {
-        console.error("Failed to logout:", error)
+        console.error("❌ Échec de la déconnexion:", error)
     }
   };
 
   // Display a loading state while checking the session
   if (isLoading) {
+    console.log('⏳ [Accueil] Session en cours de vérification, affichage du Skeleton...');
     return (
         <div className="flex min-h-screen flex-col items-center justify-center">
             <div className="space-y-4">
@@ -48,10 +52,11 @@ export default function Home() {
   // If the user is authenticated, this page will redirect.
   // We can return null or a minimal loader to avoid a flash of content.
   if (isAuthenticated) {
+      console.log('👻 [Accueil] Authentifié, rendu nul en attente de redirection.');
       return null;
   }
 
-
+  console.log('🚪 [Accueil] Affichage de la page pour les non-authentifiés.');
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-background p-8 text-center">
       <div className="max-w-4xl">

@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 
 export async function POST() {
+  console.log('--- 👋 API: Logout ---');
   const response = NextResponse.json({ message: 'Logged out' });
   response.cookies.set('session_token', '', {
     httpOnly: true,
@@ -9,5 +10,6 @@ export async function POST() {
     maxAge: -1,
     path: '/',
   });
+  console.log('🍪 Cookie de session supprimé.');
   return response;
 }

@@ -19,15 +19,18 @@ const requestSchema = z.object({
 });
 
 export async function POST(req: Request) {
+    console.log('--- 🔄 API: Reset Password ---');
     try {
         const body = await req.json();
         const parsedBody = requestSchema.safeParse(body);
 
         if(!parsedBody.success) {
+             console.error('❌ Erreur de validation Zod:', parsedBody.error.errors);
              return NextResponse.json({ message: 'Invalid input', errors: parsedBody.error.errors }, { status: 400 });
         }
 
         const { password, token } = parsedBody.data;
+        console.log('🔒 Tentative de réinitialisation avec un jeton.');
         
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -39,9 +42,11 @@ export async function POST(req: Request) {
         });
 
         if (!user) {
+            console.log('⚠️ Jeton invalide ou expiré.');
             return NextResponse.json({ message: 'Token is invalid or has expired' }, { status: 400 });
         }
         
+        console.log(`✅ Jeton valide pour l'utilisateur: ${user.email}. Hachage du nouveau mot de passe...`);
         const hashedPassword = await bcrypt.hash(password, HASH_ROUNDS);
 
         await prisma.user.update({
@@ -52,6 +57,7 @@ export async function POST(req: Request) {
                 passwordResetExpires: null,
             },
         });
+        console.log('✅ Mot de passe réinitialisé avec succès.');
 
         return NextResponse.json({ message: 'Password has been reset successfully.' });
 
@@ -59,7 +65,7 @@ export async function POST(req: Request) {
         if (error.name === 'ZodError') {
             return NextResponse.json({ message: 'Invalid input', errors: error.errors }, { status: 400 });
         }
-        console.error("Reset Password Error:", error);
+        console.error("❌ Erreur dans /api/auth/reset-password:", error);
         return NextResponse.json({ message: 'An internal error occurred' }, { status: 500 });
     }
 }

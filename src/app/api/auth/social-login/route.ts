@@ -6,18 +6,23 @@ import { Role } from '@prisma/client';
 import admin from '@/lib/firebase-admin'; // Use the initialized admin instance
 
 export async function POST(req: Request) {
+    console.log('--- 🌐 API: Social Login ---');
     try {
         const { idToken } = await req.json();
 
         if (!idToken) {
+            console.log('🛑 ID Token manquant.');
             return NextResponse.json({ message: 'ID token is required' }, { status: 400 });
         }
 
+        console.log('🔍 Vérification du ID Token avec Firebase Admin...');
         // Verify the ID token with Firebase Admin SDK
         const decodedToken = await admin.auth().verifyIdToken(idToken);
         const { email, name, picture } = decodedToken;
+        console.log(`✅ Token valide pour: ${email}`);
 
         if (!email) {
+            console.log('🛑 E-mail non trouvé dans le token.');
             return NextResponse.json({ message: 'Email not found in social provider token' }, { status: 400 });
         }
         
@@ -27,6 +32,7 @@ export async function POST(req: Request) {
 
         // If user doesn't exist, create a new one
         if (!user) {
+            console.log(`🌱 Nouvel utilisateur via social login. Création pour: ${email}`);
             user = await prisma.user.create({
                 data: {
                     email,
@@ -46,9 +52,13 @@ export async function POST(req: Request) {
                     surname: name?.split(' ')[1] || 'User',
                 }
             });
+            console.log(`✅ Utilisateur et profil parent créés pour: ${email}`);
+        } else {
+            console.log(`👍 Utilisateur existant trouvé pour: ${email}`);
         }
 
         // Generate a session token for our application
+        console.log('🔑 Génération du JWT de session...');
         const token = jwt.sign(
             { userId: user.id, role: user.role, email: user.email },
             process.env.JWT_SECRET!,
@@ -66,11 +76,12 @@ export async function POST(req: Request) {
             maxAge: 60 * 60 * 24 * 7, // 1 week
             path: '/',
         });
+        console.log('🍪 Cookie de session créé.');
 
         return response;
 
     } catch (error) {
-        console.error('Social login error:', error);
+        console.error('❌ Erreur de connexion sociale:', error);
         // Handle potential token verification errors
         if (error instanceof Error && 'code' in error && (error as any).code?.startsWith('auth/')) {
             return NextResponse.json({ message: 'Invalid or expired social token.' }, { status: 401 });

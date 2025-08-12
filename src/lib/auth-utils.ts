@@ -7,15 +7,19 @@ import type { JwtPayload, SafeUser } from '@/types';
 import prisma from './prisma';
 
 export async function getServerSession() {
+  console.log('--- 🍪 [Serveur] getServerSession ---');
   const cookieStore = cookies();
   const token = cookieStore.get('session_token')?.value;
 
   if (!token) {
+    console.log('🚫 [Serveur] Pas de jeton de session trouvé dans les cookies.');
     return null;
   }
+  console.log('✅ [Serveur] Jeton trouvé, tentative de vérification...');
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as JwtPayload;
+    console.log('🔍 [Serveur] Jeton décodé:', decoded);
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -33,12 +37,14 @@ export async function getServerSession() {
     });
 
     if (!user) {
+      console.log(`🛑 [Serveur] Utilisateur non trouvé pour l'ID: ${decoded.userId}`);
       return null;
     }
 
+    console.log(`✅ [Serveur] Utilisateur trouvé dans la DB: ${user.email}`);
     return { user: user as SafeUser };
   } catch (error) {
-    console.error('Invalid token:', error);
+    console.error('❌ [Serveur] Jeton invalide ou expiré:', error);
     return null;
   }
 }
