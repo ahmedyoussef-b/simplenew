@@ -3,18 +3,24 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { verify2FASchema } from '@/lib/formValidationSchemas';
+import { z } from 'zod';
+
+// Define the schema for the request body including the tempToken
+const requestSchema = z.object({
+    code: verify2FASchema.shape.code,
+    tempToken: z.string().min(1, { message: "Temporary token is required." }),
+});
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { code, tempToken } = z.object({
-        ...verify2FASchema.shape,
-        tempToken: z.string(),
-    }).parse(body);
+    const parsedBody = requestSchema.safeParse(body);
 
-    if (!tempToken) {
-        return NextResponse.json({ message: 'Temporary token is missing.' }, { status: 400 });
+    if(!parsedBody.success) {
+        return NextResponse.json({ message: 'Invalid input', errors: parsedBody.error.errors }, { status: 400 });
     }
+
+    const { code, tempToken } = parsedBody.data;
 
     let decodedTemp;
     try {
@@ -29,7 +35,8 @@ export async function POST(req: Request) {
     }
 
     // TODO: Implement actual 2FA code verification logic
-    const isCodeValid = code === '123456'; // Placeholder for actual verification
+    // This should involve comparing the user's code with a stored secret (e.g., from an authenticator app)
+    const isCodeValid = code === '123456'; // Placeholder for actual verification. Never use this in production.
 
     if (!isCodeValid) {
       return NextResponse.json({ message: 'Invalid 2FA code' }, { status: 401 });
@@ -42,8 +49,9 @@ export async function POST(req: Request) {
       { expiresIn: '7d' }
     );
     
+    // Omit password before sending user data to client
     const { password: _, ...safeUser } = user;
-    const response = NextResponse.json(safeUser);
+    const response = NextResponse.json({ user: safeUser });
 
     response.cookies.set('session_token', token, {
       httpOnly: true,
@@ -58,7 +66,7 @@ export async function POST(req: Request) {
     if (error.name === 'ZodError') {
         return NextResponse.json({ message: 'Invalid input', errors: error.errors }, { status: 400 });
     }
-    return NextResponse.json({ message: 'An error occurred' }, { status: 500 });
+    console.error("2FA Verification Error:", error);
+    return NextResponse.json({ message: 'An internal error occurred' }, { status: 500 });
   }
 }
-import { z } from 'zod';

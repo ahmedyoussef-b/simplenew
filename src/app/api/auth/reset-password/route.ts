@@ -4,16 +4,30 @@ import prisma from '@/lib/prisma';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 import { resetPasswordSchema } from '@/lib/formValidationSchemas';
+import { z } from 'zod';
 
 const HASH_ROUNDS = 10;
+
+// Define the schema for the request body including the token
+const requestSchema = z.object({
+  password: resetPasswordSchema.shape.password,
+  confirmPassword: resetPasswordSchema.shape.confirmPassword,
+  token: z.string().min(1, { message: "Token is required." }),
+}).refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match.",
+    path: ['confirmPassword'],
+});
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { password, token } = z.object({
-            ...resetPasswordSchema.shape,
-            token: z.string(),
-        }).parse(body);
+        const parsedBody = requestSchema.safeParse(body);
+
+        if(!parsedBody.success) {
+             return NextResponse.json({ message: 'Invalid input', errors: parsedBody.error.errors }, { status: 400 });
+        }
+
+        const { password, token } = parsedBody.data;
         
         const hashedToken = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -45,7 +59,7 @@ export async function POST(req: Request) {
         if (error.name === 'ZodError') {
             return NextResponse.json({ message: 'Invalid input', errors: error.errors }, { status: 400 });
         }
-        return NextResponse.json({ message: 'An error occurred' }, { status: 500 });
+        console.error("Reset Password Error:", error);
+        return NextResponse.json({ message: 'An internal error occurred' }, { status: 500 });
     }
 }
-import { z } from 'zod';

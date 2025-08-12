@@ -217,6 +217,27 @@ export interface RegisterCredentials {
   name?: string;
 }
 
+export type RegisterSchema = {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string
+  role: 'TEACHER' | 'PARENT';
+};
+
+export type ForgotPasswordSchema = {
+  email: string;
+};
+
+export type ResetPasswordSchema = {
+  password: string;
+  confirmPassword: string;
+};
+
+export type Verify2FASchema = {
+  code: string;
+};
+
 export interface JwtPayload {
   userId: string;
   role: Role;

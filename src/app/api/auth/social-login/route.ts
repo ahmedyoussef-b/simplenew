@@ -3,21 +3,12 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import jwt from 'jsonwebtoken';
 import { Role } from '@prisma/client';
-import { auth as adminAuth } from 'firebase-admin/auth';
-import { initFirebaseAdminApp } from '@/lib/firebase-admin';
-
-initFirebaseAdminApp();
 
 export async function POST(req: Request) {
     try {
-        const { idToken } = await req.json();
-
-        if (!idToken) {
-            return NextResponse.json({ message: 'ID token is required' }, { status: 400 });
-        }
-
-        const decodedToken = await adminAuth().verifyIdToken(idToken);
-        const { email, name, picture } = decodedToken;
+        // Assuming the social login provider directly returns user information
+        // Modify this part to integrate with your social login provider's response
+        const { email, name, picture } = await req.json();
 
         if (!email) {
             return NextResponse.json({ message: 'Email not found in social provider' }, { status: 400 });
