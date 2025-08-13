@@ -55,44 +55,55 @@ export const teacherAssignmentsSlice = createSlice({
     toggleClassAssignment(state, action: PayloadAction<{ teacherId: string, subjectId: number, classId: number }>) {
         const { teacherId, subjectId, classId } = action.payload;
 
-        // First, check if this class is assigned to ANY teacher for this subject and remove it
-        state.items.forEach(assignment => {
-            if (assignment.subjectId === subjectId) {
+        const targetAssignmentIndex = state.items.findIndex(
+            (a) => a.teacherId === teacherId && a.subjectId === subjectId
+        );
+
+        const isCurrentlyAssignedToTarget = 
+            targetAssignmentIndex !== -1 && state.items[targetAssignmentIndex].classIds.includes(classId);
+
+        // If it's already assigned to the target teacher, unassign it (toggle off)
+        if (isCurrentlyAssignedToTarget) {
+            state.items[targetAssignmentIndex].classIds = state.items[targetAssignmentIndex].classIds.filter(
+                (id) => id !== classId
+            );
+            // Clean up the assignment if it becomes empty
+            if (state.items[targetAssignmentIndex].classIds.length === 0) {
+                state.items.splice(targetAssignmentIndex, 1);
+            }
+            return;
+        }
+
+        // --- Logic for toggling ON ---
+        
+        // Remove the class from any OTHER teacher who might have it for the same subject
+        state.items.forEach((assignment, index) => {
+            if (assignment.subjectId === subjectId && assignment.teacherId !== teacherId) {
                 const classIndex = assignment.classIds.indexOf(classId);
                 if (classIndex > -1) {
-                    // If it was assigned to the current teacher, this means we are toggling it OFF.
-                    // If it was assigned to another teacher, this logic still holds: it becomes free.
                     assignment.classIds.splice(classIndex, 1);
                 }
             }
         });
-
-        // Clean up any assignments that are now empty
-        state.items = state.items.filter(a => a.classIds.length > 0);
-
-        // Find the specific assignment for the toggling teacher
-        const targetAssignment = state.items.find(
-            a => a.teacherId === teacherId && a.subjectId === subjectId
-        );
         
-        const isCurrentlyAssigned = targetAssignment?.classIds.includes(classId);
-
-        if (!isCurrentlyAssigned) {
-            // If it's not currently assigned to our target teacher, we assign it (toggle ON).
-            if (targetAssignment) {
-                targetAssignment.classIds.push(classId);
-            } else {
-                // Or create a new assignment if one doesn't exist for this teacher/subject combo
-                state.items.push({
-                    id: -Date.now(),
-                    teacherId,
-                    subjectId,
-                    classIds: [classId],
-                    scheduleDraftId: null,
-                    classAssignments: []
-                });
-            }
+        // Add the class to the target teacher
+        if (targetAssignmentIndex !== -1) {
+            // Assignment for this teacher/subject already exists, just add the class
+            state.items[targetAssignmentIndex].classIds.push(classId);
+        } else {
+            // No assignment for this teacher/subject, create a new one
+            state.items.push({
+                id: -Date.now(),
+                teacherId,
+                subjectId,
+                classIds: [classId],
+                scheduleDraftId: null,
+                classAssignments: []
+            });
         }
+
+        // Clean up any assignments that became empty after re-assignment
+        state.items = state.items.filter(a => a.classIds.length > 0);
     },
     clearAllAssignments(state) {
         state.items = [];
