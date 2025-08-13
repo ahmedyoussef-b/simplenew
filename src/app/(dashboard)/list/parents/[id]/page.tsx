@@ -81,7 +81,7 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
 
   const childrenClassIds = [...new Set(parent.students.map((child: ParentWithDetails['students'][number]) => child.classId).filter((id): id is number => id !== null))];
 
-  const [lessons, allSubjects, allTeachers, allClassrooms, allGrades, allLessonRequirements, allTeacherConstraints, allSubjectRequirements] = await Promise.all([
+  const [lessons, allSubjects, allTeachersFromDb, allClassrooms, allGrades, allLessonRequirements, allTeacherConstraints, allSubjectRequirements] = await Promise.all([
     prisma.lesson.findMany({
       where: {
         classId: { in: childrenClassIds },
@@ -107,8 +107,8 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
     prisma.teacher.findMany({ 
         include: { 
             user: true, 
-            subjects: true, 
-            classes: true,
+            subjects: true,
+            lessons: { select: { classId: true }, distinct: ['classId'] }
         } 
     }),
     prisma.classroom.findMany(),
@@ -121,11 +121,12 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
   const childrenClasses = parent.students.map((c: ParentWithDetails['students'][number]) => c.class).filter((c): c is ClassWithGrade => !!(c as any)?.grade);
   const uniqueChildrenClasses = Array.from(new Map(childrenClasses.map(item => [item.id, item])).values());
   
-  const teachersWithCount: TeacherWithDetails[] = allTeachers.map(t => ({
+  const teachersWithCount: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
     ...t,
+    classes: [], // No need to map classes here as we get count from lessons
     _count: {
         subjects: t.subjects.length,
-        classes: t.classes.length,
+        classes: new Set(t.lessons.map(l => l.classId)).size,
     }
   }));
 

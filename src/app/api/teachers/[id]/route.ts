@@ -16,19 +16,28 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       include: {
         user: true,
         subjects: true,
-        classes: true,
+        lessons: { // Fetch lessons to determine classes
+          select: {
+            class: true,
+          },
+          distinct: ['classId']
+        }
       },
     });
 
     if (!teacherFromDb) {
       return NextResponse.json({ message: 'Enseignant non trouvé' }, { status: 404 });
     }
+    
+    // Extract unique classes from lessons
+    const uniqueClasses = teacherFromDb.lessons.map(l => l.class);
 
     const teacher: TeacherWithDetails = {
       ...teacherFromDb,
+      classes: uniqueClasses,
       _count: {
         subjects: teacherFromDb.subjects.length,
-        classes: teacherFromDb.classes.length,
+        classes: uniqueClasses.length,
       }
     };
 
@@ -68,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       }
     }
 
-    const updatedTeacher = await prisma.$transaction(async (tx) => {
+    const updatedTeacherWithRelations = await prisma.$transaction(async (tx) => {
         const userData: Prisma.UserUpdateInput = {};
         if (username) userData.username = username;
         if (email) userData.email = email;
@@ -109,18 +118,25 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         const result = await tx.teacher.update({
             where: { id },
             data: teacherData,
-            include: { user: true, subjects: true, classes: true },
+            include: { user: true, subjects: true },
         });
         
         return result;
     });
 
-    // Manually construct response to match TeacherWithDetails
+    const lessons = await prisma.lesson.findMany({
+        where: { teacherId: id },
+        select: { class: true },
+        distinct: ['classId']
+    });
+    const uniqueClasses = lessons.map(l => l.class);
+
     const responseData: TeacherWithDetails = {
-      ...updatedTeacher,
+      ...updatedTeacherWithRelations,
+      classes: uniqueClasses,
       _count: {
-        subjects: updatedTeacher.subjects.length,
-        classes: updatedTeacher.classes.length,
+        subjects: updatedTeacherWithRelations.subjects.length,
+        classes: uniqueClasses.length,
       }
     };
 

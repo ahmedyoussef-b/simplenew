@@ -24,6 +24,7 @@ export const teachersSlice = createSlice({
         ...teacher,
         // Ensure birthday is always a serializable string or null
         birthday: teacher.birthday ? new Date(teacher.birthday).toISOString() : null,
+        classes: teacher.classes || [], // Ensure classes is an array
       }));
       state.status = 'succeeded';
     },

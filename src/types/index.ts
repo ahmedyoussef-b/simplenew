@@ -103,7 +103,7 @@ export type SafeParent = PrismaParent & { user: SafeUser };
 export type TeacherWithDetails = Omit<PrismaTeacher, 'user'> & {
     user: SafeUser | null;
     subjects: PrismaSubject[];
-    classes: PrismaClass[];
+    classes: PrismaClass[]; // This will be populated manually after fetching lessons
     _count: {
         subjects: number;
         classes: number;

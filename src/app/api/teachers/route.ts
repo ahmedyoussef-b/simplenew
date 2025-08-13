@@ -5,7 +5,7 @@ import bcrypt from 'bcryptjs';
 import { Prisma, Role } from '@prisma/client';
 import { teacherSchema } from '@/lib/formValidationSchemas';
 import type { TeacherWithDetails } from '@/types';
-import type { User, Subject, Class, Teacher } from '@prisma/client'; // Import necessary types
+import type { User, Subject, Class, Teacher, Lesson } from '@prisma/client'; // Import necessary types
 
 const HASH_ROUNDS = 10;
 
@@ -13,7 +13,7 @@ const HASH_ROUNDS = 10;
 type TeacherWithPrismaRelations = Teacher & {
   user: User | null;
   subjects: Subject[];
-  classes: Class[];
+  lessons: { class: Class }[];
 };
 
 export async function GET() {
@@ -22,37 +22,27 @@ export async function GET() {
       include: {
         user: true,
         subjects: true,
-        classes: true,
+        lessons: {
+          select: { class: true },
+          distinct: ['classId']
+        }
       },
       orderBy: {
         name: 'asc'
       }
-    }) as TeacherWithPrismaRelations[]; // Cast to the Prisma relations type
+    });
 
-    const teachers: TeacherWithDetails[] = teachersFromDb.map(t => ({
-      // Include all properties expected by TeacherWithDetails
-      id: t.id,
-      name: t.name,
-      surname: t.surname,
-      userId: t.userId, // Assuming userId is part of TeacherWithDetails
-      img: t.img,
-      phone: t.phone,
-      address: t.address,
-      bloodType: t.bloodType,
-      birthday: t.birthday,
-      sex: t.sex,
-
-      // Explicitly include the relations
-      user: t.user, // This should now be correctly typed
-      subjects: t.subjects, // This should now be correctly typed
-      classes: t.classes, // This should now be correctly typed
-
-      // Include the _count
-      _count: {
-        subjects: t.subjects.length,
-        classes: t.classes.length,
-      }
-    })) as TeacherWithDetails[]; // Cast the final mapped object
+    const teachers: TeacherWithDetails[] = teachersFromDb.map(t => {
+      const uniqueClasses = t.lessons.map(l => l.class);
+      return {
+        ...t,
+        classes: uniqueClasses,
+        _count: {
+          subjects: t.subjects.length,
+          classes: uniqueClasses.length,
+        }
+      };
+    });
 
     return NextResponse.json(teachers);
   } catch (error: any) {
@@ -128,7 +118,6 @@ export async function POST(request: NextRequest) {
         include: {
             subjects: true,
             user: true,
-            classes: true, // Also include classes to fulfill the type
         }
       });
       
@@ -146,9 +135,10 @@ export async function POST(request: NextRequest) {
 
     const responseData: TeacherWithDetails = {
         ...newTeacherData,
+        classes: [], // New teacher has no classes yet
         _count: {
             subjects: newTeacherData.subjects.length,
-            classes: newTeacherData.classes.length, 
+            classes: 0, 
         }
     };
     

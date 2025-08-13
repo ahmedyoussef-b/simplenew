@@ -22,7 +22,6 @@ const TeacherPage = async () => {
       include: {
         user: true,
         subjects: true,
-        classes: true,
       }
   });
 
@@ -42,21 +41,11 @@ const TeacherPage = async () => {
     );
   }
   
-  const teacher: TeacherWithDetails = {
-    ...teacherFromDb,
-    _count: {
-      subjects: teacherFromDb.subjects.length,
-      classes: teacherFromDb.classes.length
-    }
-  };
-  
-  console.log(`🧑‍🏫 [TeacherPage] Profil enseignant trouvé pour ${teacher.name}. Récupération des données de l'emploi du temps.`);
-
   // --- REFACTORED DATA FETCHING ---
 
   // 1. Fetch only the lessons for this teacher to get class IDs and for the schedule display
   const lessonsFromDb = await prisma.lesson.findMany({
-    where: { teacherId: teacher.id }, // Use the teacher's actual ID
+    where: { teacherId: teacherFromDb.id }, // Use the teacher's actual ID
     select: {
       id: true,
       name: true,
@@ -74,7 +63,7 @@ const TeacherPage = async () => {
       class: { select: { name: true } },
     },
   });
-  
+
   const lessons: Lesson[] = lessonsFromDb.map(lesson => ({
     ...lesson,
     startTime: lesson.startTime.toISOString(),
@@ -86,6 +75,15 @@ const TeacherPage = async () => {
   // 2. Extract unique class IDs from the lessons
   const classIds = [...new Set(lessons.map(l => l.classId))];
 
+  const teacher: TeacherWithDetails = {
+    ...teacherFromDb,
+    classes: [],
+    _count: {
+      subjects: teacherFromDb.subjects.length,
+      classes: classIds.length,
+    }
+  };
+  
   // 3. Fetch only the classes this teacher teaches in, with their grades
   const teacherClasses = await prisma.class.findMany({
     where: { id: { in: classIds as number[] } },

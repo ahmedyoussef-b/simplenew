@@ -31,7 +31,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       prisma.school.findFirst(),
       prisma.class.findMany({ include: { grade: true, _count: { select: { students: true, lessons: true } } } }),
       prisma.subject.findMany({orderBy: {name: 'asc'}}),
-      prisma.teacher.findMany({ include: { user: true, subjects: true, classes: true } }),
+      prisma.teacher.findMany({ include: { user: true, subjects: true, lessons: { select: { classId: true } } } }),
       prisma.classroom.findMany({orderBy: {name: 'asc'}}),
       prisma.grade.findMany({orderBy: {level: 'asc'}}),
       prisma.lessonRequirement.findMany(),
@@ -41,13 +41,17 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       prisma.lesson.findMany()
     ]);
     
-    const teachers: TeacherWithDetails[] = teachersFromDb.map(t => ({
+    const teachers: TeacherWithDetails[] = teachersFromDb.map(t => {
+      const classIds = new Set(t.lessons.map(l => l.classId));
+      return {
         ...t,
         _count: {
             subjects: t.subjects.length,
-            classes: t.classes.length,
-        }
-    }));
+            classes: classIds.size,
+        },
+        classes: [], // This will be populated if needed, but count is the main thing
+      };
+    });
 
 
     // This is now the definitive default structure for school configuration
@@ -55,9 +59,9 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       id: school?.id ? Number(school.id) : undefined, // Convert id to number if it exists
       name: school?.name || "Collège Riadh 5",
       startTime: '08:00',
-      endTime: '17:00', // Added missing property
+      endTime: '17:00',
       sessionDuration: 60,
-      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'], // Added missing property
+      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
       scheduleDraftId: null,
       schoolConfig: {}
     };

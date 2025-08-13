@@ -40,7 +40,6 @@ const SingleTeacherPage = async ({
       include: {
         user: true,
         subjects: true,
-        classes: true,
       },
   });
 
@@ -48,15 +47,6 @@ const SingleTeacherPage = async ({
     return notFound();
   }
   
-  const teacher: TeacherWithDetails = {
-    ...teacherFromDb,
-    _count: {
-      subjects: teacherFromDb.subjects.length,
-      classes: teacherFromDb.classes.length,
-    }
-  }
-
-
   // --- REFACTORED DATA FETCHING ---
   const lessons = await prisma.lesson.findMany({
     where: { teacherId: id },
@@ -79,6 +69,15 @@ const SingleTeacherPage = async ({
   });
   
   const classIds = [...new Set(lessons.map(l => l.classId).filter(id => id !== null))];
+
+  const teacher: TeacherWithDetails = {
+    ...teacherFromDb,
+    classes: [], // Classes data is not directly needed here, count is derived from lessons
+    _count: {
+      subjects: teacherFromDb.subjects.length,
+      classes: classIds.length,
+    }
+  }
 
   const teacherClasses = await prisma.class.findMany({
     where: { id: { in: classIds as number[] } },
