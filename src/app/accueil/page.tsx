@@ -69,7 +69,7 @@ export default function AccueilZenPage() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4 relative">
+    <main className="h-screen w-full flex flex-col items-center justify-center p-4 relative overflow-hidden">
         <div className="futuristic-pattern">
             <svg className="texture-filter">
                 <filter id="advanced-texture">
