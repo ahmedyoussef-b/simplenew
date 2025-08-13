@@ -5,11 +5,12 @@ import { cookies } from 'next/headers';
 import jwt from 'jsonwebtoken';
 import type { JwtPayload, SafeUser } from '@/types';
 import prisma from './prisma';
+import { SESSION_COOKIE_NAME } from './constants';
 
 export async function getServerSession() {
   console.log('--- 🍪 [Serveur] getServerSession ---');
   const cookieStore = cookies();
-  const token = cookieStore.get('session_token')?.value;
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
   if (!token) {
     console.log('🚫 [Serveur] Pas de jeton de session trouvé dans les cookies.');

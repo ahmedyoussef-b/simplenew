@@ -4,6 +4,7 @@ import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { loginSchema } from '@/lib/formValidationSchemas';
+import { SESSION_COOKIE_NAME } from '@/lib/constants';
 
 export async function POST(req: Request) {
   console.log('--- 🚀 API: Login Attempt ---');
@@ -54,7 +55,7 @@ export async function POST(req: Request) {
         twoFactorEnabled: user.twoFactorEnabled
     });
 
-    response.cookies.set('session_token', token, {
+    response.cookies.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7, // 1 week

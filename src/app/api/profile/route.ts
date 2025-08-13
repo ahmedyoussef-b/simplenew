@@ -8,7 +8,7 @@ import { profileUpdateSchema } from '@/lib/formValidationSchemas';
 import jwt from 'jsonwebtoken';
 import { SESSION_COOKIE_NAME } from '@/lib/constants';
 
-const JWT_SECRET = process.env.JWT_SECRET; // Utiliser la même variable que le reste de l'application
+const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_ACCESS_TOKEN_EXPIRATION_TIME = '1h';
 
 export async function PUT(request: NextRequest) {
