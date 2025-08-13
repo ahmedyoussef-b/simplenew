@@ -55,14 +55,16 @@ export const authApi = createApi({
         body: credentials,
       }),
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
+        console.log("▶️ [authApi] onQueryStarted for login mutation.");
         try {
             const { data } = await queryFulfilled;
+            console.log("✅ [authApi] Login queryFulfilled. Data:", data);
             if ('user' in data) { // Check if it's AuthResponse
                 dispatch(setUser(data.user));
             }
             // If it's TwoFactorResponse, we wait for the 2FA verification step
         } catch (error) {
-            // Error handling can be done globally or per-component
+            console.error("❌ [authApi] Login queryFulfilled failed.", error);
         }
       },
     }),
@@ -120,14 +122,17 @@ export const authApi = createApi({
     getSession: builder.query<SessionResponse, void>({
       query: () => 'session',
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
+        console.log("▶️ [authApi] onQueryStarted for getSession query.");
         try {
           const { data } = await queryFulfilled;
+          console.log("✅ [authApi] getSession queryFulfilled. Data:", data);
           if (data?.user) {
             dispatch(setUser(data.user));
           } else {
              dispatch(logoutAction());
           }
         } catch (error) {
+          console.error("❌ [authApi] getSession queryFulfilled failed.", error);
           dispatch(logoutAction());
         }
       },

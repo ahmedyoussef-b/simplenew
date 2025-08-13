@@ -14,19 +14,18 @@ export default function DashboardRedirectPage() {
   const isLoading = useAppSelector(selectIsAuthLoading);
 
   useEffect(() => {
+    console.log("🔄 [DashboardRedirect] useEffect triggered. isLoading:", isLoading, "User:", user?.email);
     if (isLoading) {
-      // Still checking authentication, do nothing.
+      console.log("⏳ [DashboardRedirect] Auth state is loading, waiting...");
       return;
     }
 
     if (user?.role) {
-      // If the user has a specific role, redirect to their main dashboard page.
       const rolePath = user.role.toLowerCase();
       console.log(`✅ [DashboardRedirect] User authenticated with role ${user.role}. Redirecting to /${rolePath}`);
       router.replace(`/${rolePath}`);
 
     } else {
-      // If not authenticated, redirect to the public landing page
       console.log(`🛑 [DashboardRedirect] User not authenticated. Redirecting to /login`);
       router.replace('/login');
     }

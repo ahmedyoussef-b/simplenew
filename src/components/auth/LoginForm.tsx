@@ -65,8 +65,7 @@ export function LoginForm() {
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
             });
-            // The redirection is now handled by the root page/middleware.
-            // No need to call router.push('/') here, which caused the loop.
+             router.push('/');
         }
     }
     if (isError && loginErrorData) {
