@@ -1,5 +1,6 @@
+
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, type SubmitHandler, UseFormHandleSubmit, FieldErrors, UseFormRegister } from "react-hook-form";
+import { useForm, type SubmitHandler, UseFormHandleSubmit, FieldErrors, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
@@ -29,7 +30,7 @@ export interface ResultFormReturn {
   actualOnSubmit: SubmitHandler<ResultSchema>;
   errors: FieldErrors<ResultSchema>;
   isLoading: boolean;
-  setValue: any;
+  setValue: UseFormSetValue<ResultSchema>;
   assessmentType: "exam" | "assignment";
   createIsError: boolean;
   updateIsError: boolean;
@@ -63,7 +64,14 @@ const useResultForm = ({
   });
 
   const [assessmentType, setAssessmentType] = useState<'exam' | 'assignment'>('exam');
-  
+  const watchedAssessmentType = watch('assessmentType');
+
+  useEffect(() => {
+    if(watchedAssessmentType){
+        setAssessmentType(watchedAssessmentType);
+    }
+  }, [watchedAssessmentType]);
+
   useEffect(() => {
     if (data?.examId) setAssessmentType('exam');
     else if (data?.assignmentId) setAssessmentType('assignment');

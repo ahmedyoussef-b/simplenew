@@ -1,3 +1,4 @@
+
 // src/components/forms/ParentForm/useParentForm.ts
 "use client";
 
@@ -6,9 +7,9 @@ import { useForm, type SubmitHandler, UseFormRegister, FieldErrors, UseFormSetVa
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useCreateParentMutation, useUpdateParentMutation } from "../../../lib/redux/api/entityApi/index"; // Corrected import path
+import { useCreateParentMutation, useUpdateParentMutation } from "@/lib/redux/api/entityApi";
 import { parentSchema } from "@/lib/formValidationSchemas";
-import type { ParentFormProps, ParentFormValues } from "./types";
+import type { ParentFormProps, ParentFormValues } from "@/types";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 
@@ -62,8 +63,9 @@ const useParentForm = ({
     }
   });
 
-  const { register, handleSubmit, formState: { errors }, setValue } = form;
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = form;
   const [imgPreview, setImgPreview] = useState<string | null | undefined>(initialData?.img || null);
+  const watchedImg = watch("img");
 
   const actualOnSubmit: SubmitHandler<ParentFormValues> = async (formData) => {
     try {
@@ -92,24 +94,10 @@ const useParentForm = ({
 
     // Handle image file change
     useEffect(() => {
-      const subscription = form.watch((value, { name }) => {
-        if (name === 'img' && (value.img as any) instanceof FileList && (value.img as any).length > 0) {
-          const file = (value.img as any)[0];
-          if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-              setImgPreview(reader.result as string);
-            };
-            reader.readAsDataURL(file);
-          } else {
-            setImgPreview(initialData?.img || null);
-          }
-        } else if (name === 'img' && !value.img) {
-          setImgPreview(initialData?.img || null);
+        if (watchedImg && typeof watchedImg === 'string') {
+            setImgPreview(watchedImg);
         }
-      });
-      return () => subscription.unsubscribe();
-    }, [form, initialData?.img]);
+    }, [watchedImg]);
 
 
   return {

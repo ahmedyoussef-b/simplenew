@@ -1,3 +1,4 @@
+
 // src/components/forms/TeacherForm/useTeacherForm.ts
 "use client";
 
@@ -6,28 +7,14 @@ import { useForm, type SubmitHandler, UseFormSetValue, UseFormHandleSubmit, Fiel
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useCreateTeacherMutation, useUpdateTeacherMutation } from "@/lib/redux/api/entityApi/index";
+import { useCreateTeacherMutation, useUpdateTeacherMutation } from "@/lib/redux/api/entityApi";
 import { teacherSchema } from "@/lib/formValidationSchemas";
-import type { TeacherFormProps } from "./types";
+import type { TeacherFormProps, TeacherFormReturn } from "@/types";
 import { UserSex } from "@/types";
 import type { TeacherSchema } from "@/types/schemas";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 import * as paths from "@/lib/image-paths";
-
-interface TeacherFormReturn {
-  register: UseFormRegister<TeacherSchema>;
-  handleSubmit: UseFormHandleSubmit<TeacherSchema>;
-  actualOnSubmit: SubmitHandler<TeacherSchema>;
-  errors: FieldErrors<TeacherSchema>;
-  isLoading: boolean;
-  setValue: UseFormSetValue<TeacherSchema>;
-  sexWatch: UserSex | null | undefined;
-  birthdayWatch: Date | null | undefined;
-  imgPreview: string | null | undefined;
-  createErrorData: FetchBaseQueryError | SerializedError | undefined;
-  updateErrorData: FetchBaseQueryError | SerializedError | undefined;
-}
 
 
 const useTeacherForm = ({

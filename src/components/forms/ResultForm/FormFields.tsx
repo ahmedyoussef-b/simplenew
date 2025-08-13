@@ -1,3 +1,4 @@
+
 // src/components/forms/ResultForm/FormFields.tsx
 import InputField from "@/components/InputField";
 import { Label } from "@/components/ui/label";
@@ -60,7 +61,7 @@ const FormFields = ({
       
       <div className="md:col-span-2">
         <RadioGroup
-          defaultValue={assessmentType}
+          value={assessmentType}
           onValueChange={(value) => setValue("assessmentType", value as 'exam' | 'assignment', { shouldValidate: true })}
           className="flex gap-4"
           disabled={isLoading || isUpdate}

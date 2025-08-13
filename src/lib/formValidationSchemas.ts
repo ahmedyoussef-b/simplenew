@@ -252,3 +252,17 @@ export const profileUpdateSchema = z.object({
   img: z.string().url().optional().nullable(),
   twoFactorEnabled: z.boolean().optional(),
 });
+
+export type AnnouncementSchema = z.infer<typeof announcementSchema>;
+export type AssignmentSchema = z.infer<typeof assignmentSchema>;
+export type AttendanceSchema = z.infer<typeof attendanceSchema>;
+export type ClassSchema = z.infer<typeof classSchema>;
+export type EventSchema = z.infer<typeof eventSchema>;
+export type ExamSchema = z.infer<typeof examSchema>;
+export type GradeSchema = z.infer<typeof gradeSchema>;
+export type LessonSchema = z.infer<typeof lessonSchema>;
+export type ParentSchema = z.infer<typeof parentSchema>;
+export type ResultSchema = z.infer<typeof resultSchema>;
+export type StudentSchema = z.infer<typeof studentSchema>;
+export type SubjectSchema = z.infer<typeof subjectSchema>;
+export type TeacherSchema = z.infer<typeof teacherSchema>;

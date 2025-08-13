@@ -1,3 +1,4 @@
+
 //src/components/forms/StudentForm/useStudentForm.ts
 "use client";
 
@@ -6,22 +7,16 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import type { SubmitHandler, UseFormRegister, UseFormHandleSubmit, FieldErrors, UseFormSetValue } from "react-hook-form";
-import type { StudentSchema, Student } from "@/types/index";
+import type { StudentSchema, Student, StudentFormProps, TeacherFormReturn } from "@/types/index";
 import { studentSchema } from "@/lib/formValidationSchemas";
 import {
   useCreateStudentMutation,
   useUpdateStudentMutation,
-} from "@/lib/redux/api/entityApi/index"; 
+} from "@/lib/redux/api/entityApi"; 
 import type { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import type { SerializedError } from "@reduxjs/toolkit";
 import { toast } from "@/hooks/use-toast";
 import * as paths from "@/lib/image-paths";
-
-interface StudentFormProps {
-  type: "create" | "update";
-  data?: Student;
-  setOpen: (open: boolean) => void;
-}
 
 export interface StudentFormReturn {
   register: UseFormRegister<StudentSchema>;

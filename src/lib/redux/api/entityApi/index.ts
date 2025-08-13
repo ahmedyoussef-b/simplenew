@@ -1,4 +1,4 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { entityConfig, baseQueryWithCredentials } from './config'; // Import baseQueryWithCredentials
 import { gradeEndpoints } from './endpoints/gradeEndpoints';
 import { subjectEndpoints } from './endpoints/subjectEndpoints';

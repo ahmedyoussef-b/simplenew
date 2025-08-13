@@ -1,3 +1,4 @@
+
 // src/types/index.ts
 
 // --- ENUMS (Single Source of Truth) ---
@@ -33,7 +34,7 @@ import type { Dispatch, SetStateAction } from "react";
 import type { FieldErrors, SubmitHandler, UseFormHandleSubmit, UseFormRegister, UseFormSetValue } from "react-hook-form";
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import type { SerializedError } from "@reduxjs/toolkit";
-import type { TeacherSchema } from './schemas';
+import type { TeacherSchema, ParentSchema, StudentSchema } from './schemas';
 
 
 export { Role, UserSex, Day, TimePreference } from '@prisma/client';
@@ -227,7 +228,7 @@ export interface JwtPayload {
 }
 
 
-// --- FORM PROPS ---
+// --- FORM PROPS & RETURN TYPES ---
 export interface TeacherFormProps {
   type: 'create' | 'update';
   initialData?: (Partial<Teacher> & { user?: Partial<Pick<any, 'username' | 'email'>>, subjects?: Partial<Pick<Subject, 'id' | 'name'>>[] }) | null;
@@ -253,19 +254,9 @@ export interface ParentFormProps {
   setOpen: Dispatch<SetStateAction<boolean>>;
 }
 
-// --- Cloudinary Types for Upload Widgets ---
-export interface CloudinaryUploadWidgetInfo {
-  secure_url: string;
-  resource_type: string;
-  original_filename?: string;
-}
+export type ParentFormValues = Omit<ParentSchema, 'confirmPassword'>;
+export type StudentFormValues = Omit<StudentSchema, 'confirmPassword'>;
 
-export interface CloudinaryUploadWidgetResults {
-  event: "success" | string;
-  info: CloudinaryUploadWidgetInfo | string | { public_id: string };
-}
-
-// --- Specific Form Return Types ---
 export interface TeacherFormReturn {
   register: UseFormRegister<TeacherSchema>;
   handleSubmit: UseFormHandleSubmit<TeacherSchema>;
@@ -279,6 +270,20 @@ export interface TeacherFormReturn {
   createErrorData: FetchBaseQueryError | SerializedError | undefined;
   updateErrorData: FetchBaseQueryError | SerializedError | undefined;
 }
+
+
+// --- Cloudinary Types for Upload Widgets ---
+export interface CloudinaryUploadWidgetInfo {
+  secure_url: string;
+  resource_type: string;
+  original_filename?: string;
+}
+
+export interface CloudinaryUploadWidgetResults {
+  event: "success" | string;
+  info: CloudinaryUploadWidgetInfo | string | { public_id: string };
+}
+
 
 // --- Other Utility Types ---
 export type RelatedGrade = Pick<Grade, 'id' | 'level'>;
