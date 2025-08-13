@@ -17,8 +17,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { LoginResponse } from "@/lib/redux/api/authApi";
 import FormError from "@/components/forms/FormError";
-import { loginSchema } from "@/lib/formValidationSchemas";
-import type { LoginSchema as LoginCredentials } from "@/types/schemas";
+import { loginSchema, type LoginSchema as LoginCredentials } from "@/lib/formValidationSchemas";
 
 
 interface ApiErrorData {
@@ -60,13 +59,12 @@ export function LoginForm() {
              });
              router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
         } else {
-             console.log("✅ [LoginForm] Login successful, no 2FA. Redirecting to /accueil.");
+             console.log("✅ [LoginForm] Login successful, no 2FA. Redirecting to /.");
              toast({
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
             });
-            // The redirection is now handled by the RootPage's useEffect, which waits for the state to update.
-            router.push('/accueil');
+            router.push('/');
         }
     }
     if (isError && loginErrorData) {

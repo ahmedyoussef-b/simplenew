@@ -4,31 +4,28 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAppSelector } from '@/hooks/redux-hooks';
-import { selectCurrentUser, selectIsAuthenticated, selectIsAuthLoading } from '@/lib/redux/slices/authSlice';
+import { selectIsAuthenticated, selectIsAuthLoading } from '@/lib/redux/slices/authSlice';
 import { Spinner } from '@/components/ui/spinner';
 import AuthLayout from '@/components/layout/AuthLayout';
 import { LoginForm } from '@/components/auth/LoginForm';
 import SocialSignInButtons from '@/components/auth/SocialSignInButtons';
 import Link from 'next/link';
-import { Role } from '@/types';
-
 
 export default function RootPage() {
   const router = useRouter();
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
   const isLoading = useAppSelector(selectIsAuthLoading);
-  const user = useAppSelector(selectCurrentUser);
 
   useEffect(() => {
-    // Si l'utilisateur est authentifié, le rediriger vers sa page de tableau de bord temporaire.
-    if (!isLoading && isAuthenticated && user?.role) {
-      console.log(`✅ [RootPage] User is authenticated with role ${user.role}, redirecting to /temp-${user.role.toLowerCase()}`);
-      router.replace(`/temp-${user.role.toLowerCase()}`);
+    // If the session is loaded and the user is authenticated, redirect them.
+    if (!isLoading && isAuthenticated) {
+      console.log(`✅ [RootPage] User is authenticated, redirecting to /accueil`);
+      router.replace('/accueil');
     }
-  }, [isAuthenticated, isLoading, user, router]);
+  }, [isAuthenticated, isLoading, router]);
 
-  // Affiche un spinner pendant le chargement initial ou la redirection.
-  if (isLoading || (isAuthenticated && user)) {
+  // While checking the session, show a loading spinner
+  if (isLoading || isAuthenticated) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Spinner size="lg" />
@@ -36,7 +33,7 @@ export default function RootPage() {
     );
   }
 
-  // Si l'utilisateur n'est pas authentifié, afficher la page de connexion
+  // If the user is not authenticated, display the login page.
   console.log("🛑 [RootPage] User is not authenticated, showing login form.");
   return (
        <AuthLayout
