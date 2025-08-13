@@ -1,5 +1,6 @@
 
-import { Announcement, AnnouncementSchema } from '@/types/index';
+import type { Announcement } from '@/types/index';
+import type { AnnouncementSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

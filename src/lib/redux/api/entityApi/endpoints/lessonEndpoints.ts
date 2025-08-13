@@ -1,5 +1,6 @@
 // src/lib/redux/api/entityApi/endpoints/lessonEndpoints.ts
-import { Lesson, LessonSchema } from '@/types/index';
+import type { Lesson } from '@/types/index';
+import type { LessonSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

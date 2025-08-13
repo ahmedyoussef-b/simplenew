@@ -1,5 +1,6 @@
 
-import { Assignment, AssignmentSchema } from '@/types/index';
+import type { Assignment } from '@/types/index';
+import type { AssignmentSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

@@ -1,5 +1,6 @@
 // src/lib/redux/api/entityApi/endpoints/teacherEndpoints.ts
-import { Teacher, TeacherSchema } from '@/types/index';
+import type { Teacher } from '@/types/index';
+import type { TeacherSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

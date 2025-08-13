@@ -8,8 +8,9 @@ import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useCreateTeacherMutation, useUpdateTeacherMutation } from "@/lib/redux/api/entityApi/index";
 import { teacherSchema } from "@/lib/formValidationSchemas";
-import type { TeacherFormProps, TeacherFormValues } from "./types";
-import { UserSex, TeacherSchema } from "@/types";
+import type { TeacherFormProps } from "./types";
+import { UserSex } from "@/types";
+import type { TeacherSchema } from "@/types/schemas";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";
 import * as paths from "@/lib/image-paths";
@@ -52,7 +53,7 @@ const useTeacherForm = ({
   
   const isLoading = isCreating || isUpdating;
 
-  const form = useForm<TeacherFormValues>({
+  const form = useForm<TeacherSchema>({
     resolver: zodResolver(teacherSchema),
     defaultValues: {
       id: initialData?.id,
@@ -78,7 +79,7 @@ const useTeacherForm = ({
   const imgPreview = watch("img");
 
 
-  const actualOnSubmit: SubmitHandler<TeacherFormValues> = async (formData) => {
+  const actualOnSubmit: SubmitHandler<TeacherSchema> = async (formData) => {
     const payload = { ...formData };
     
     if (type === "update" && (!payload.password || payload.password.trim() === "")) {

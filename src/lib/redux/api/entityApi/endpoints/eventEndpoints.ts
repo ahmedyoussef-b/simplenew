@@ -1,5 +1,6 @@
 
-import { Event, EventSchema } from '@/types/index';
+import type { Event } from '@/types/index';
+import type { EventSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

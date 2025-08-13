@@ -1,5 +1,6 @@
 
-import { Subject, SubjectSchema } from '@/types/index';
+import type { Subject } from '@/types/index';
+import type { SubjectSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

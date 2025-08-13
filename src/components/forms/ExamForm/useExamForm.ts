@@ -4,7 +4,8 @@ import { useEffect } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useCreateExamMutation, useUpdateExamMutation } from "@/lib/redux/api/entityApi/index";
-import { examSchema, type ExamSchema } from "@/lib/formValidationSchemas";
+import { examSchema } from "@/lib/formValidationSchemas";
+import type { ExamSchema } from "@/types/schemas";
 import type { ExamFormProps, ExamFormReturn } from "./types";
 import { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { SerializedError } from '@reduxjs/toolkit';
@@ -62,6 +63,15 @@ const useExamForm = ({
       // Error is handled by useEffect below
     }
   };
+  
+  useEffect(() => {
+    if (createSuccess || updateSuccess) {
+      toast({ title: `Examen ${type === "create" ? "créé" : "mis à jour"} avec succès !` });
+      setOpen(false);
+      reset();
+      router.refresh();
+    }
+  }, [createSuccess, updateSuccess, type, setOpen, reset, router]);
 
   useEffect(() => {
     const error: FetchBaseQueryError | SerializedError | undefined = 

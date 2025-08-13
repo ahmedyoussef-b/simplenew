@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction, BaseSyntheticEvent } from "react";
 import type { UseFormRegister, FieldErrors, SubmitHandler, UseFormHandleSubmit } from "react-hook-form";
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import type { AssignmentSchema } from "@/lib/formValidationSchemas";
+import type { AssignmentSchema } from '@/types/schemas';
 
 
 export interface AssignmentFormProps {

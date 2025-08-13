@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,7 +11,8 @@ import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { forgotPasswordSchema, type ForgotPasswordSchema } from '@/lib/formValidationSchemas';
+import { forgotPasswordSchema } from '@/lib/formValidationSchemas';
+import type { ForgotPasswordSchema } from '@/types/schemas';
 import { Mail, CheckCircle } from 'lucide-react';
 
 export function ForgotPasswordForm() {

@@ -1,5 +1,6 @@
 
-import { Attendance, AttendanceSchema } from '@/types/index';
+import type { Attendance } from '@/types/index';
+import type { AttendanceSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

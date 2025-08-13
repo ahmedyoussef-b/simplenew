@@ -1,5 +1,6 @@
 
-import { Student, StudentSchema } from '@/types/index';
+import type { Student } from '@/types/index';
+import type { StudentSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

@@ -4,7 +4,6 @@
 import { useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -14,12 +13,10 @@ import { useRouter } from 'next/navigation';
 import { Spinner } from '../ui/spinner';
 import { KeyRound } from 'lucide-react';
 import FormError from '@/components/forms/FormError';
+import { verify2FASchema } from '@/lib/formValidationSchemas';
+import type { Verify2FASchema } from '@/types/schemas';
 
-const verify2FASchema = z.object({
-  code: z.string().length(6, "Le code doit contenir 6 chiffres."),
-  token: z.string(),
-});
-type Verify2FAFormData = z.infer<typeof verify2FASchema>;
+type Verify2FAFormData = Verify2FASchema & { token: string };
 
 interface Verify2FAFormProps {
   token: string;
@@ -27,7 +24,7 @@ interface Verify2FAFormProps {
 
 export default function Verify2FAForm({ token }: Verify2FAFormProps) {
   const { register, handleSubmit, formState: { errors } } = useForm<Verify2FAFormData>({
-    resolver: zodResolver(verify2FASchema),
+    resolver: zodResolver(verify2FASchema.extend({ token: z.string() })),
     defaultValues: { token },
   });
 

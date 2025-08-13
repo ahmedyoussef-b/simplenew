@@ -1,5 +1,6 @@
 
-import { Class, ClassSchema } from '@/types/index';
+import type { Class } from '@/types/index';
+import type { ClassSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

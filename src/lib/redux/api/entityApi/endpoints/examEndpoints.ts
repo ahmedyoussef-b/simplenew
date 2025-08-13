@@ -1,5 +1,6 @@
 
-import { Exam, ExamSchema } from '@/types/index';
+import type { Exam } from '@/types/index';
+import type { ExamSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

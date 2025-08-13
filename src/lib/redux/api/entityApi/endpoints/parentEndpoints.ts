@@ -1,5 +1,6 @@
 
-import { Parent, ParentSchema } from '@/types/index';
+import type { Parent } from '@/types/index';
+import type { ParentSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

@@ -1,5 +1,6 @@
 
-import { Grade, GradeSchema } from '@/types/index';
+import type { Grade } from '@/types/index';
+import type { GradeSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

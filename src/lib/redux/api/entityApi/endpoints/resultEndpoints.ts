@@ -1,5 +1,6 @@
 
-import { Result, ResultSchema } from '@/types/index';
+import type { Result } from '@/types/index';
+import type { ResultSchema } from '@/types/schemas';
 import { generateEndpoint } from '../utils';
 import type { EndpointBuilder } from '@reduxjs/toolkit/query';
 

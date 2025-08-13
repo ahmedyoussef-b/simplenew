@@ -9,7 +9,7 @@ import type {
     ResetPasswordSchema, 
     Verify2FASchema,
     ProfileUpdateSchema
-} from '@/lib/formValidationSchemas';
+} from '@/types/schemas';
 
 // --- Response Types ---
 

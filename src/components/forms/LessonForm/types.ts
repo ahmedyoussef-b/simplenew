@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { Lesson, Subject, Class, Teacher, Classroom } from "@/types/index";
-import type { LessonSchema } from "@/lib/formValidationSchemas";
+import type { LessonSchema } from "@/types/schemas";
 import { FieldErrors, SubmitHandler, UseFormHandleSubmit, UseFormRegister } from "react-hook-form";
 import { FetchBaseQueryError } from "@reduxjs/toolkit/query";
 import { SerializedError } from "@reduxjs/toolkit";

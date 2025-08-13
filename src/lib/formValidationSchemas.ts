@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Role, UserSex, TimePreference, Day } from "@/types/index";
+import { Role, UserSex, TimePreference, Day } from "@prisma/client";
 
 export const loginSchema = z.object({
   email: z.string().email({ message: 'Veuillez entrer une adresse email valide.' }),
@@ -24,8 +24,6 @@ export const registerSchema = z
 export const forgotPasswordSchema = z.object({
   email: z.string().email({ message: 'Veuillez entrer une adresse email valide.' }),
 });
-export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
-
 
 export const resetPasswordSchema = z
   .object({
@@ -37,19 +35,15 @@ export const resetPasswordSchema = z
     message: 'Les mots de passe ne correspondent pas.',
     path: ['confirmPassword'],
   });
-export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
-
 
 export const verify2FASchema = z.object({
   code: z.string().length(6, { message: 'Le code doit contenir 6 chiffres.' }),
 });
-export type Verify2FASchema = z.infer<typeof verify2FASchema>;
 
 export const gradeSchema = z.object({
   id: z.coerce.number().optional(),
   level: z.coerce.number({ required_error: "Le niveau est requis.", invalid_type_error: "Le niveau doit être un nombre."}).min(1, { message: "Le niveau doit être au moins 1." }),
 });
-export type GradeSchema = z.infer<typeof gradeSchema>;
 
 export const subjectSchema = z.object({
   id: z.coerce.number().optional(),
@@ -58,7 +52,6 @@ export const subjectSchema = z.object({
   coefficient: z.coerce.number({invalid_type_error: "Veuillez entrer un nombre"}).min(1, { message: "Le coefficient est requis !" }).optional(),
   teachers: z.array(z.string()).optional(),
 });
-export type SubjectSchema = z.infer<typeof subjectSchema>;
 
 export const classSchema = z.object({
   id: z.coerce.number().optional(),
@@ -66,7 +59,6 @@ export const classSchema = z.object({
   capacity: z.coerce.number().min(1, { message: "La capacité est requise !" }),
   gradeLevel: z.coerce.number().min(1, { message: "Le niveau est requis !" }),
 });
-export type ClassSchema = z.infer<typeof classSchema>;
 
 export const teacherSchema = z.object({
   id: z.string().optional(),
@@ -102,7 +94,6 @@ export const teacherSchema = z.object({
   message: "Le mot de passe est requis pour les nouveaux enseignants.",
   path: ["password"],
 });
-export type TeacherSchema = z.infer<typeof teacherSchema>;
 
 export const studentSchema = z.object({
   id: z.string().optional(),
@@ -137,7 +128,6 @@ export const studentSchema = z.object({
   message: "Le mot de passe est requis pour les nouveaux étudiants.",
   path: ["password"],
 });
-export type StudentSchema = z.infer<typeof studentSchema>;
 
 export const examSchema = z.object({
   id: z.coerce.number().optional(),
@@ -146,7 +136,6 @@ export const examSchema = z.object({
   endTime: z.coerce.date({ message: "L'heure de fin est requise !" }),
   lessonId: z.coerce.number({ message: "Le cours est requis !" }),
 });
-export type ExamSchema = z.infer<typeof examSchema>;
 
 export const assignmentSchema = z.object({
   id: z.coerce.number().optional(),
@@ -155,7 +144,6 @@ export const assignmentSchema = z.object({
   dueDate: z.coerce.date({ message: "La date d'échéance est requise !" }),
   lessonId: z.coerce.number({ message: "Le cours est requis !" }),
 });
-export type AssignmentSchema = z.infer<typeof assignmentSchema>;
 
 const optionalNumberIdSchema = z.string()
   .transform((val, ctx) => {
@@ -181,7 +169,6 @@ export const eventSchema = z.object({
   endTime: z.coerce.date({ required_error: "L'heure de fin est requise." }),
   classId: optionalNumberIdSchema,
 });
-export type EventSchema = z.infer<typeof eventSchema>;
 
 export const announcementSchema = z.object({
   id: z.coerce.number().optional(),
@@ -190,8 +177,6 @@ export const announcementSchema = z.object({
   date: z.coerce.date({ message: "La date est requise !" }),
   classId: optionalNumberIdSchema,
 });
-export type AnnouncementSchema = z.infer<typeof announcementSchema>;
-
 
 export const parentSchema = z.object({
   id: z.string().optional(),
@@ -219,8 +204,6 @@ export const parentSchema = z.object({
   message: "Le mot de passe est requis pour les nouveaux parents.",
   path: ["password"],
 });
-export type ParentSchema = z.infer<typeof parentSchema>;
-
 
 export const baseLessonSchema = z.object({
   id: z.coerce.number().optional(),
@@ -238,7 +221,6 @@ export const lessonSchema = baseLessonSchema.refine(data => data.endTime > data.
   message: "L'heure de fin doit être après l'heure de début",
   path: ["endTime"],
 });
-export type LessonSchema = z.infer<typeof lessonSchema>;
 
 export const resultSchema = z.object({
     id: z.coerce.number().optional(),
@@ -250,7 +232,6 @@ export const resultSchema = z.object({
     message: "L'identifiant de l'examen ou du devoir doit être fourni.",
     path: ["examId"],
 });
-export type ResultSchema = z.infer<typeof resultSchema>;
 
 export const attendanceSchema = z.object({
   id: z.coerce.number().optional(),
@@ -259,8 +240,6 @@ export const attendanceSchema = z.object({
   studentId: z.string({ required_error: "L'étudiant est requis." }),
   lessonId: z.coerce.number({ required_error: "Le cours est requis." }),
 });
-
-export type AttendanceSchema = z.infer<typeof attendanceSchema>;
 
 export const profileUpdateSchema = z.object({
   name: z.string().min(1, { message: "Le prénom est requis !" }).optional(),
@@ -273,4 +252,3 @@ export const profileUpdateSchema = z.object({
   img: z.string().url().optional().nullable(),
   twoFactorEnabled: z.boolean().optional(),
 });
-export type ProfileUpdateSchema = z.infer<typeof profileUpdateSchema>;
