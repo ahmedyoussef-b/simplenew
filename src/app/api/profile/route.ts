@@ -8,8 +8,8 @@ import { profileUpdateSchema } from '@/lib/formValidationSchemas';
 import jwt from 'jsonwebtoken';
 import { SESSION_COOKIE_NAME } from '@/lib/constants';
 
-const JWT_SECRET_KEY = process.env.JWT_SECRET_KEY;
-const JWT_ACCESS_TOKEN_EXPIRATION_TIME = '1h'; // Use a direct string literal
+const JWT_SECRET = process.env.JWT_SECRET; // Utiliser la même variable que le reste de l'application
+const JWT_ACCESS_TOKEN_EXPIRATION_TIME = '1h';
 
 export async function PUT(request: NextRequest) {
   const session = await getServerSession();
@@ -17,8 +17,8 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ message: "Non autorisé" }, { status: 401 });
   }
   
-  if (!JWT_SECRET_KEY) {
-      console.error("❌ [API/profile] JWT_SECRET_KEY is not defined.");
+  if (!JWT_SECRET) {
+      console.error("❌ [API/profile] JWT_SECRET is not defined.");
       return NextResponse.json({ message: "Erreur de configuration du serveur." }, { status: 500 });
   }
 
@@ -114,14 +114,14 @@ export async function PUT(request: NextRequest) {
 
     // Re-issue JWT with new data
     const tokenPayload = {
-        userId: safeUser.id, // Keep userId in token payload for clarity, but use safeUser.id
-        role: safeUser.role, // Keep role in token payload for clarity, but use safeUser.role
+        userId: safeUser.id,
+        role: safeUser.role,
         email: safeUser.email,
         name: safeUser.name,
-        img: safeUser.img // Include new image in token
+        img: safeUser.img
     };
 
-    const newToken = jwt.sign(tokenPayload, JWT_SECRET_KEY, { expiresIn: JWT_ACCESS_TOKEN_EXPIRATION_TIME });
+    const newToken = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: JWT_ACCESS_TOKEN_EXPIRATION_TIME });
     const response = NextResponse.json({ message: "Profil mis à jour avec succès", user: safeUser }, { status: 200 });
     
     // Set the new token in the cookie
