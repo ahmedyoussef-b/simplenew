@@ -51,7 +51,7 @@ export default function LoginForm() {
 
   return (
     <div className="space-y-6">
-      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+       <svg style={{ position: 'absolute', width: 0, height: 0 }}>
         <filter id="unopaq">
           <feTurbulence type="fractalNoise" baseFrequency="0.5 1.5" numOctaves="2" stitchTiles="stitch" result="noise" />
           <feDiffuseLighting in="noise" lightingColor="#fff" surfaceScale="1" result="diffuse">
@@ -104,8 +104,8 @@ export default function LoginForm() {
         <FormError error={errors.password} className="pl-4"/>
         
         <div className="text-right">
-             <Link href="/forgot-password" passHref legacyBehavior>
-                  <a className="text-xs text-blue-500 hover:underline">Mot de passe oublié ?</a>
+             <Link href="/forgot-password" passHref>
+                  <span className="text-xs text-blue-500 hover:underline">Mot de passe oublié ?</span>
               </Link>
         </div>
 
@@ -121,7 +121,7 @@ export default function LoginForm() {
                 </div>
             </div>
             <div className="button-container">
-                <Link href="/register" passHref>
+                <Link href="/register" passHref legacyBehavior>
                     <a className="real-button"></a>
                 </Link>
                 <div className="button-body">
