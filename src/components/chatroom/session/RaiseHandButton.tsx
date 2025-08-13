@@ -6,7 +6,7 @@ import { Hand, HandMetal } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
 import { raiseHand, lowerHand } from '@/lib/redux/slices/sessionSlice';
 import { addNotification } from '@/lib/redux/slices/notificationSlice';
-import { selectCurrentUser } from '@/lib/redux/slices/authSlice';
+import { selectCurrentUser } from '@/lib/redux/features/auth/authSlice';
 import { SessionParticipant } from '@/lib/redux/slices/session/types';
 
 export default function RaiseHandButton() {

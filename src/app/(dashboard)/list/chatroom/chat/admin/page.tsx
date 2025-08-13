@@ -11,7 +11,7 @@ import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
 import { fetchMeetingParticipants, startMeeting } from '@/lib/redux/slices/sessionSlice';
 import { addNotification } from '@/lib/redux/slices/notificationSlice';
 import TeacherSelector from '@/components/chatroom/dashboard/admin/TeacherSelector';
-import { selectCurrentUser } from '@/lib/redux/slices/authSlice';
+import { selectCurrentUser } from '@/lib/redux/features/auth/authSlice';
 import { Role, type SafeUser } from '@/types';
 
 export default function AdminMeetingDashboard() {

@@ -7,7 +7,7 @@ import { Video, LogOut } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
 import { updateStudentPresence, tickTimer, breakoutTimerTick, endSession } from '@/lib/redux/slices/sessionSlice';
 import TimerDisplay from './TimerDisplay';
-import { selectCurrentUser } from '@/lib/redux/slices/authSlice';
+import { selectCurrentUser } from '@/lib/redux/features/auth/authSlice';
 import { useToast } from "@/hooks/use-toast";
 
 // Import session components

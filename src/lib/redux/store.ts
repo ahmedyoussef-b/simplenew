@@ -2,7 +2,7 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import { authApi } from './api/authApi';
-import authReducer from './slices/authSlice';
+import authReducer from './features/auth/authSlice';
 import classesReducer from './features/classes/classesSlice';
 import subjectsReducer from './features/subjects/subjectsSlice';
 import teachersReducer from './features/teachers/teachersSlice';
@@ -18,13 +18,9 @@ import subjectRequirementsReducer from './features/subjectRequirementsSlice';
 import teacherAssignmentsReducer from './features/teacherAssignmentsSlice';
 import attendanceReducer from './features/attendance/attendanceSlice';
 import schoolConfigReducer from './features/schoolConfigSlice';
-import scheduleDraftReducer from './features/scheduleDraftSlice'; // Ajout de l'import
+import scheduleDraftReducer from './features/scheduleDraftSlice'; 
 import { entityApi } from './api/entityApi/index';
-import { loadState, saveState } from './storage';
-import { throttle } from 'lodash';
-
-// Load the persisted state for the scheduler only
-const persistedSchedulerState = loadState();
+// Removed loadState and saveState imports as they are no longer used
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -45,11 +41,10 @@ const rootReducer = combineReducers({
   teacherAssignments: teacherAssignmentsReducer,
   schoolConfig: schoolConfigReducer,
   attendance: attendanceReducer,
-  scheduleDraft: scheduleDraftReducer, // Enregistrement du reducer
+  scheduleDraft: scheduleDraftReducer, 
 });
 
 export const store = configureStore({
-  preloadedState: persistedSchedulerState,
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -58,28 +53,6 @@ export const store = configureStore({
     }).concat([authApi.middleware, entityApi.middleware]),
 });
 
-
-// Subscribe to store updates to save the state, only on the client side.
-if (typeof window !== 'undefined') {
-    store.subscribe(throttle(() => {
-        const state = store.getState();
-        // We only persist the configuration part of the state
-        const stateToPersist = {
-            schoolConfig: state.schoolConfig,
-            classes: state.classes,
-            subjects: state.subjects,
-            teachers: state.teachers,
-            classrooms: state.classrooms,
-            grades: state.grades,
-            lessonRequirements: state.lessonRequirements,
-            teacherConstraints: state.teacherConstraints,
-            subjectRequirements: state.subjectRequirements,
-            teacherAssignments: state.teacherAssignments,
-            schedule: state.schedule,
-        };
-        saveState(stateToPersist);
-    }, 2000)); // Throttle saving to every 2 seconds
-}
 
 export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;

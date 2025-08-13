@@ -1,4 +1,3 @@
-
 // src/app/[locale]/(dashboard)/list/chatroom/dashboard/page.tsx
 'use client';
 
@@ -10,7 +9,7 @@ import { setSelectedClass, fetchChatroomClasses, startSession } from "@/lib/redu
 import ClassCard from '@/components/chatroom/dashboard/ClassCard';
 import StudentSelector from '@/components/chatroom/dashboard/StudentSelector';
 import TemplateSelector from '@/components/chatroom/dashboard/TemplateSelector';
-import { selectCurrentUser } from '@/lib/redux/slices/authSlice';
+import { selectCurrentUser } from '@/lib/redux/features/auth/authSlice';
 import { Role } from '@/types';
 import { Spinner } from '@/components/ui/spinner';
 import { useToast } from '@/hooks/use-toast';
