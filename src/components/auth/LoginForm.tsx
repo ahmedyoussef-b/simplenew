@@ -7,10 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useLoginMutation } from '@/lib/redux/api/authApi';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Loader2, LogIn } from 'lucide-react';
+import { Loader2, LogIn, Key, Mail } from 'lucide-react';
 import Link from 'next/link';
 import FormError from '@/components/forms/FormError';
 import { loginSchema, type LoginSchema as LoginFormValues } from '@/lib/formValidationSchemas';
@@ -54,47 +51,49 @@ export default function LoginForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-2">
-          <Label htmlFor="email">Adresse e-mail ou nom d'utilisateur</Label>
-          <Input
-            id="email"
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div className="field">
+          <Mail className="input-icon" />
+          <input
             type="text"
-            placeholder="nom@exemple.com"
+            placeholder="Email ou nom d'utilisateur"
             autoComplete="email"
             {...register('email')}
             disabled={isLoading}
+            className="input-field"
           />
-          <FormError error={errors.email} />
         </div>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-              <Label htmlFor="password">Mot de passe</Label>
-              <Link href="/forgot-password" passHref legacyBehavior>
-                  <a className="text-sm text-primary hover:underline">Mot de passe oublié ?</a>
-              </Link>
-          </div>
-          <Input
-            id="password"
+        <FormError error={errors.email} className="pl-4" />
+        
+        <div className="field">
+           <Key className="input-icon" />
+          <input
             type="password"
             autoComplete="current-password"
+            placeholder="Mot de passe"
             {...register('password')}
             disabled={isLoading}
+            className="input-field"
           />
-          <FormError error={errors.password} />
         </div>
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-          Se Connecter
-        </Button>
+        <FormError error={errors.password} className="pl-4"/>
+        <div className="text-right">
+             <Link href="/forgot-password" passHref legacyBehavior>
+                  <a className="text-xs text-blue-500 hover:underline">Mot de passe oublié ?</a>
+              </Link>
+        </div>
+
+        <div className="btn">
+          <button type="submit" className="button1" disabled={isLoading}>
+            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
+            Se Connecter
+          </button>
+           <Link href="/register" className="button2">
+              Inscrivez-vous
+          </Link>
+        </div>
       </form>
       <SocialSignInButtons />
-      <div className="text-center text-sm">
-        Pas encore de compte ?{' '}
-        <Link href="/register" className="text-primary hover:underline">
-          Inscrivez-vous
-        </Link>
-      </div>
     </div>
   );
 }
