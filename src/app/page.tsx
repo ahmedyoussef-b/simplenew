@@ -11,19 +11,8 @@ export default async function RootPage() {
   if (session?.user?.role) {
     const rolePath = session.user.role.toLowerCase();
     console.log(`✅ [RootPage] User authenticated with role ${session.user.role}. Redirecting to /${rolePath}`);
-    // Redirect to a temporary page first to test
-    switch (session.user.role) {
-        case Role.ADMIN:
-            return redirect('/temp-admin');
-        case Role.TEACHER:
-            return redirect('/temp-teacher');
-        case Role.STUDENT:
-            return redirect('/temp-student');
-        case Role.PARENT:
-            return redirect('/temp-parent');
-        default:
-            return redirect('/login');
-    }
+    // Redirect to the correct dashboard based on role
+    return redirect(`/${rolePath}`);
   }
   
   console.log("🛑 [RootPage] User is not authenticated, showing login page content.");

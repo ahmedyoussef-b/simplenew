@@ -16,7 +16,6 @@ import { useEffect } from "react";
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { Spinner } from "@/components/ui/spinner";
-import SocialSignInButtons from "./SocialSignInButtons";
 import FormError from "@/components/forms/FormError";
 import { cn } from "@/lib/utils";
 import { registerSchema } from '@/lib/formValidationSchemas'; // Import the central schema

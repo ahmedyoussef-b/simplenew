@@ -5,6 +5,7 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { loginSchema } from '@/lib/formValidationSchemas';
 import { SESSION_COOKIE_NAME } from '@/lib/constants';
+import type { SafeUser } from '@/types';
 
 export async function POST(req: NextRequest) {
   console.log('--- 🚀 API: Login Attempt ---');
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
     }
     console.log('🔑 Mot de passe valide.');
     
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...safeUser } = user;
+
     console.log('✅ Connexion réussie. Génération du JWT final.');
     const token = jwt.sign(
       { userId: user.id, role: user.role, email: user.email },
@@ -35,12 +39,9 @@ export async function POST(req: NextRequest) {
       { expiresIn: '7d' }
     );
     
-    // Instead of returning JSON, we set the cookie and then redirect the user.
-    // This is the POST-Redirect-GET pattern.
-    console.log('🍪 Cookie de session créé. Préparation de la redirection...');
+    console.log('🍪 Cookie de session créé.');
     
-    // Create a response object to set the cookie
-    const response = NextResponse.json({ success: true, message: 'Login successful' });
+    const response = NextResponse.json(safeUser as SafeUser); // Return the user object
     
     response.cookies.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,

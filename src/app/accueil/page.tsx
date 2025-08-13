@@ -80,7 +80,7 @@ export default function AccueilZenPage() {
             </Button>
         ) : (
             <Button asChild variant="outline">
-                <Link href="/login">
+                <Link href="/">
                      <LogIn className="mr-2 h-4 w-4" />
                     Se connecter
                 </Link>

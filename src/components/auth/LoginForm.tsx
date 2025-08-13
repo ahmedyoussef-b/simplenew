@@ -40,7 +40,7 @@ export function LoginForm() {
   const router = useRouter(); 
 
   useEffect(() => {
-    console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError);
+    console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess);
     if (isSuccess) {
         console.log("✅ [LoginForm] Login successful. Forcing page refresh for redirection.");
         // Instead of router.push, we do a full page reload to the root.
