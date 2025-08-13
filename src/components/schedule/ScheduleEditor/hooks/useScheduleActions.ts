@@ -1,12 +1,12 @@
+// src/components/schedule/ScheduleEditor/hooks/useScheduleActions.ts
 
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/redux-hooks';
-import { addLesson, removeLesson, saveSchedule, updateLessonSlot } from '@/lib/redux/features/schedule/scheduleSlice';
+import { addLesson, removeLesson, saveSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
 import { useToast } from '@/hooks/use-toast';
 import type { Day, Lesson, Subject, WizardData } from '@/types';
 import { findConflictingConstraint } from '@/lib/constraint-utils';
 import { formatTimeSimple, timeToMinutes } from '../utils/scheduleUtils';
-import { DragEndEvent } from '@dnd-kit/core';
 
 export const useScheduleActions = (
   wizardData: WizardData,
@@ -148,33 +148,6 @@ export const useScheduleActions = (
     });
   }, [wizardData, schedule, selectedClassId, viewMode, dispatch, toast]);
 
- const handleDragEnd = useCallback((event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over) return;
-    
-    const overId = over.id.toString();
-    const activeId = active.id.toString();
-    
-    if (activeId.startsWith('subject-')) {
-        if (overId.startsWith('empty-')) {
-            const subjectId = parseInt(active.id.toString().replace('subject-', ''), 10);
-            const subject = wizardData.subjects.find(s => s.id === subjectId);
-            if (!subject) return;
-
-            const [, day, time] = over.id.toString().split('-');
-            handlePlaceLesson(subject, day as Day, time);
-        }
-    } else if (activeId.startsWith('lesson-')) {
-        if (overId.startsWith('empty-')) {
-            const lessonId = parseInt(active.id.toString().replace('lesson-', ''));
-            const [, newDay, newTime] = over.id.toString().split('-');
-            dispatch(updateLessonSlot({ lessonId, newDay: newDay as Day, newTime }));
-            toast({ title: "Cours déplacé" });
-        }
-    }
-}, [dispatch, toast, wizardData, handlePlaceLesson]);
-
-
   const handleDeleteLesson = useCallback((lessonId: number) => {
     dispatch(removeLesson(lessonId));
   }, [dispatch]);
@@ -184,7 +157,6 @@ export const useScheduleActions = (
   }, [dispatch, schedule]);
 
   return {
-    handleDragEnd,
     handlePlaceLesson,
     handleDeleteLesson,
     handleSaveChanges

@@ -1,13 +1,13 @@
+// src/components/schedule/TimetableDisplay/components/LessonCell.tsx
 
 import React from 'react';
-import { useDroppable, useDraggable } from '@dnd-kit/core';
 import { cn } from '@/lib/utils';
 import { Trash2 } from 'lucide-react';
 import type { Lesson, WizardData } from '@/types';
 import RoomSelectorPopover from './RoomSelectorPopover';
 import { formatTimeSimple, getSubjectColorClass } from './utils';
 
-interface DraggableLessonProps {
+interface LessonCellProps {
   lesson: Lesson;
   wizardData: WizardData;
   onDelete: (id: number) => void;
@@ -15,34 +15,13 @@ interface DraggableLessonProps {
   fullSchedule: Lesson[];
 }
 
-const DraggableLesson: React.FC<DraggableLessonProps> = ({ 
+const LessonCell: React.FC<LessonCellProps> = ({ 
   lesson, 
   wizardData, 
   onDelete, 
   isEditable, 
   fullSchedule 
 }) => {
-  const { attributes, listeners, setNodeRef: setDraggableNodeRef, transform, isDragging } = useDraggable({
-    id: `lesson-${lesson.id}`,
-    data: { lesson },
-    disabled: !isEditable,
-  });
-  
-  const { isOver, setNodeRef: setDroppableNodeRef } = useDroppable({
-    id: `lesson-${lesson.id}`,
-    data: { lesson }
-  });
-
-  const setNodeRef = (node: HTMLElement | null) => {
-    setDraggableNodeRef(node);
-    setDroppableNodeRef(node);
-  };
-
-  const style = transform ? { 
-    transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
-    zIndex: 10,
-  } : undefined;
-
   const getSubjectName = (id: number) => wizardData.subjects?.find(s => s.id === id)?.name || 'N/A';
   const getTeacherName = (id: string) => {
     const teacher = wizardData.teachers?.find(t => t.id === id);
@@ -55,18 +34,11 @@ const DraggableLesson: React.FC<DraggableLessonProps> = ({
     return rooms.find(r => r.id === id)?.name || 'N/A';
   }
   
-  
   return (
     <div 
-      ref={setNodeRef} 
-      style={style} 
-      {...listeners} 
-      {...attributes} 
       className={cn(
-        `absolute inset-1 p-2 rounded-md border text-xs flex flex-col justify-center transition-colors group cursor-grab`, 
-        getSubjectColorClass(lesson.subjectId), 
-        isOver && 'ring-2 ring-primary', 
-        isDragging && 'opacity-50 shadow-lg'
+        `absolute inset-1 p-2 rounded-md border text-xs flex flex-col justify-center transition-colors group`, 
+        getSubjectColorClass(lesson.subjectId)
       )}
     >
       {isEditable && (
@@ -95,4 +67,4 @@ const DraggableLesson: React.FC<DraggableLessonProps> = ({
   );
 };
 
-export default DraggableLesson;
+export default LessonCell;
