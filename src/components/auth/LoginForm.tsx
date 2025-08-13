@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { useLoginMutation } from "@/lib/redux/api/authApi";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter } from "next/navigation"; 
 import { useEffect } from "react";
 import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
@@ -18,13 +18,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { LoginResponse } from "@/lib/redux/api/authApi";
 import FormError from "@/components/forms/FormError";
+import { loginSchema, type LoginSchema } from "@/lib/formValidationSchemas";
 
-const loginSchema = z.object({
-  email: z.string().email({ message: "Adresse e-mail invalide." }),
-  password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères." }),
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
 
 interface ApiErrorData {
   message: string;
@@ -39,7 +34,7 @@ function isSerializedError(error: unknown): error is SerializedError {
 }
 
 export function LoginForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -50,7 +45,6 @@ export function LoginForm() {
   useEffect(() => {
     console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError, "loginSuccessData:", loginSuccessData);
     if (isSuccess && loginSuccessData) {
-        // More robust check for the 2FA response type
         const twoFactorResponse = loginSuccessData as Partial<LoginResponse> & { requires2FA?: boolean, tempToken?: string, twoFactorCode?: string };
         if (twoFactorResponse.requires2FA && twoFactorResponse.tempToken) {
              console.log("✅ [LoginForm] 2FA required. Redirecting...");
@@ -62,18 +56,17 @@ export function LoginForm() {
              toast({
                 title: "Vérification Requise",
                 description: description,
-                duration: 10000, // Make it stay longer to copy the code
+                duration: 10000, 
              });
-             console.log("➡️ 😁[LoginForm] 2FA required. Redirecting to /verify-2fa with token:", twoFactorResponse.tempToken);
              router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
         } else {
+             // La redirection est maintenant gérée par /app/page.tsx ou le middleware
+             // après la mise à jour de l'état Redux. On affiche juste un toast.
              console.log("✅ [LoginForm] Login successful, no 2FA. The main page effect will handle redirection.");
              toast({
                 title: "Connexion réussie",
-                description: "Vous êtes maintenant connecté. Redirection...",
+                description: "Vous allez être redirigé...",
             });
-            console.log("redirection vers / 😎")
-            router.push('/');
         }
     }
     if (isError && loginErrorData) {
@@ -100,13 +93,13 @@ export function LoginForm() {
     }
   }, [isSuccess, isError, loginErrorData, loginSuccessData, toast, router]);
 
-  const onSubmit = async (data: LoginFormData) => {
+  const onSubmit = async (data: LoginSchema) => {
     console.log("➡️ [LoginForm] Submitting login form with data:", data);
     await login(data);
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="email" className="pl-4">E-mail</Label>
         <Input
@@ -152,13 +145,6 @@ export function LoginForm() {
         {isLoading ? <Spinner size="sm" className="mr-2" /> : null}
         {isLoading ? "Connexion..." : "Se connecter"}
       </Button>
-
-      <p className="text-center text-sm text-muted-foreground">
-        Pas encore de compte ?{" "}
-        <Link href={`/register`} className="font-medium text-primary hover:underline">
-          S'inscrire
-        </Link>
-      </p>
     </form>
   );
 }

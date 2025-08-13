@@ -2,18 +2,30 @@
 import AuthLayout from '@/components/layout/AuthLayout';
 import {LoginForm} from '@/components/auth/LoginForm';
 import Link from 'next/link';
+import SocialSignInButtons from '@/components/auth/SocialSignInButtons';
 
 export default function LoginPage() {
   return (
     <AuthLayout
-      title="Sign in to your account"
-      description="Enter your credentials to access your dashboard."
+      title="Connectez-vous à votre compte"
+      description="Entrez vos identifiants pour accéder à votre tableau de bord."
     >
       <LoginForm />
-      <p className="mt-4 text-center text-sm text-gray-600 dark:text-gray-400">
-        Don't have an account?{' '}
+      <div className="relative my-4">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-xs uppercase">
+          <span className="bg-background px-2 text-muted-foreground">
+            Ou continuez avec
+          </span>
+        </div>
+      </div>
+      <SocialSignInButtons />
+      <p className="mt-4 text-center text-sm text-muted-foreground">
+        Pas encore de compte ?{' '}
         <Link href="/register" className="font-medium text-primary hover:underline">
-          Sign up
+          S'inscrire
         </Link>
       </p>
     </AuthLayout>
