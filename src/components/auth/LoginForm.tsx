@@ -60,13 +60,13 @@ export function LoginForm() {
              });
              router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
         } else {
-             // La redirection est maintenant gérée par /app/page.tsx ou le middleware
-             // après la mise à jour de l'état Redux. On affiche juste un toast.
              console.log("✅ [LoginForm] Login successful, no 2FA. The main page effect will handle redirection.");
              toast({
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
             });
+            // La redirection est gérée par le middleware ou la page principale après la mise à jour de l'état Redux.
+             window.location.href = '/';
         }
     }
     if (isError && loginErrorData) {
