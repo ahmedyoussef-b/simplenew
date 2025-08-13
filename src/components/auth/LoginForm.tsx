@@ -7,7 +7,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useLoginMutation } from '@/lib/redux/api/authApi';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, LogIn, Key, Mail } from 'lucide-react';
+import { Loader2, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import FormError from '@/components/forms/FormError';
 import { loginSchema, type LoginSchema as LoginFormValues } from '@/lib/formValidationSchemas';
@@ -52,31 +52,37 @@ export default function LoginForm() {
   return (
     <div className="space-y-6">
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div className="field">
-          <Mail className="input-icon" />
+        
+        <div className="neumorphic-container">
           <input
+            id="email"
             type="text"
-            placeholder="Email ou nom d'utilisateur"
+            required
             autoComplete="email"
+            placeholder=" " 
             {...register('email')}
             disabled={isLoading}
-            className="input-field"
+            className="neumorphic-input"
           />
+           <label htmlFor="email" className="neumorphic-label">Email ou nom d'utilisateur</label>
         </div>
         <FormError error={errors.email} className="pl-4" />
         
-        <div className="field">
-           <Key className="input-icon" />
+        <div className="neumorphic-container">
           <input
+            id="password"
             type="password"
+            required
             autoComplete="current-password"
-            placeholder="Mot de passe"
+            placeholder=" "
             {...register('password')}
             disabled={isLoading}
-            className="input-field"
+            className="neumorphic-input"
           />
+          <label htmlFor="password" className="neumorphic-label">Mot de passe</label>
         </div>
         <FormError error={errors.password} className="pl-4"/>
+        
         <div className="text-right">
              <Link href="/forgot-password" passHref legacyBehavior>
                   <a className="text-xs text-blue-500 hover:underline">Mot de passe oublié ?</a>
