@@ -12,7 +12,7 @@ type ChatroomSessionWithRelations = ChatroomSession & {
 
 export async function GET(request: NextRequest, { params }: { params: { sessionId: string } }) {
   const sessionInfo = await getServerSession();
-  if (!sessionInfo?.userId) {
+  if (!sessionInfo?.user.id) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
   }
 
@@ -40,8 +40,8 @@ export async function GET(request: NextRequest, { params }: { params: { sessionI
     }
 
     // Security check: Ensure the requesting user is the host or a participant
-    const isHost = session.hostId === sessionInfo.userId;
-    const isParticipant = session.participants.some(p => p.userId === sessionInfo.userId);
+    const isHost = session.hostId === sessionInfo.user.id;
+    const isParticipant = session.participants.some(p => p.userId === sessionInfo.user.id);
     if (!isHost && !isParticipant) {
         return NextResponse.json({ message: 'Accès interdit à cette session' }, { status: 403 });
     }

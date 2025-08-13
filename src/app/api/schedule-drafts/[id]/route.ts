@@ -7,7 +7,7 @@ import { Prisma } from '@prisma/client';
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
     console.log("📥 [API PUT /draft/:id] Requête reçue pour mettre à jour le brouillon ID:", params.id);
     const session = await getServerSession();
-    if (!session?.userId) {
+    if (!session?.user.id || session.user.role !== 'TEACHER') {
         return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
     }
 
@@ -47,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
             };
             
             const draft = await tx.scheduleDraft.update({
-                where: { id, userId: session.userId },
+                where: { id, userId: session.user.id },
                 data: draftUpdatePayload,
             });
 
@@ -105,7 +105,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
 export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
     console.log(`🗑️ [API DELETE /draft/:id] Requête reçue pour supprimer le brouillon ID:`, params.id);
     const session = await getServerSession();
-    if (!session?.userId) {
+    if (!session?.user.id) {
         return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
     }
 
@@ -118,7 +118,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
             // Now delete the draft itself
             await tx.scheduleDraft.delete({
-                where: { id, userId: session.userId },
+                where: { id, userId: session.user.id },
             });
         });
         

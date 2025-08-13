@@ -25,7 +25,8 @@ const registerSchema = z.object({
   name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }).optional(),
   email: z.string().email({ message: "Adresse e-mail invalide." }),
   password: z.string().min(8, { message: "Le mot de passe doit contenir au moins 8 caractères." }),
-  role: z.nativeEnum(Role, { errorMap: () => ({ message: "Veuillez sélectionner un rôle."}) }),
+  confirmPassword: z.string().min(8, { message: "La confirmation du mot de passe doit contenir au moins 8 caractères." }),
+  role: z.nativeEnum(Role, { errorMap: () => ({ message: "Veuillez sélectionner un rôle." }) }),
 });
 
 type RegisterFormData = z.infer<typeof registerSchema>;
@@ -43,7 +44,7 @@ function isSerializedError(error: unknown): error is SerializedError {
 }
 
 export function RegisterForm() {
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<RegisterFormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors }, setError } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
   });
 
@@ -77,7 +78,12 @@ export function RegisterForm() {
   }, [isSuccess, isError, registerErrorData, toast, router]);
 
   const onSubmit = async (data: RegisterFormData) => {
-    await registerUser(data);
+    if (data.password !== data.confirmPassword) {
+      setError("confirmPassword", { type: "manual", message: "Les mots de passe ne correspondent pas." });
+      return;
+    }
+
+    await registerUser(data); // Don't send confirmPassword to the API
   };
 
   return (
@@ -128,6 +134,23 @@ export function RegisterForm() {
             )}
           />
           <FormError error={errors.password} className="pl-4" />
+        </div>
+
+        {/* Add confirm password field */}
+        <div className="space-y-2">
+          <Label htmlFor="confirmPassword" className="pl-4">Confirmer le mot de passe</Label>
+          <Input
+            id="confirmPassword"
+            type="password"
+            placeholder="••••••••"
+            {...register("confirmPassword")}
+            aria-invalid={errors.confirmPassword ? "true" : "false"}
+            className={cn(
+              "bg-background border-0 rounded-full shadow-neumorphic-inset transition-shadow focus-visible:shadow-none focus-visible:ring-2 focus-visible:ring-ring",
+              errors.confirmPassword && "focus-visible:ring-destructive"
+            )}
+          />
+          <FormError error={errors.confirmPassword} className="pl-4" />
         </div>
         
         <div className="space-y-2">

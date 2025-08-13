@@ -5,7 +5,7 @@ import { getServerSession } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest, { params }: { params: { sessionId: string } }) {
   const sessionInfo = await getServerSession();
-  if (!sessionInfo?.userId) {
+  if (!sessionInfo?.user.id) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
   }
 
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest, { params }: { params: { session
     }
 
     // Security check: Only the host can end the session
-    if (session.hostId !== sessionInfo.userId) {
+    if (session.hostId !== sessionInfo.user.id) {
         return NextResponse.json({ message: 'Seul l\'hôte peut terminer la session' }, { status: 403 });
     }
 

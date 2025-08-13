@@ -9,7 +9,7 @@ export const loginSchema = z.object({
 export const registerSchema = z
   .object({
     email: z.string().email({ message: 'Adresse e-mail invalide.' }),
-    name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }),
+    name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }).optional(),
     password: z
       .string()
       .min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères.' }),

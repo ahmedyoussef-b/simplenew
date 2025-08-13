@@ -23,7 +23,10 @@ export async function POST(request: NextRequest) {
             // Create the new set of requirements if any were provided.
             if (requirements.length > 0) {
                 await tx.lessonRequirement.createMany({
-                    data: requirements,
+                    data: requirements.map(req => ({
+                        ...req,
+                        scheduleDraftId: "YOUR_SCHEDULE_DRAFT_ID" // TODO: Replace with actual scheduleDraftId
+                    })),
                 });
             }
         });

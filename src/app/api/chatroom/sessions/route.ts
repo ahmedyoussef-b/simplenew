@@ -6,7 +6,7 @@ import { ActiveSession } from '@/lib/redux/slices/session/types';
 
 export async function POST(request: NextRequest) {
   const sessionInfo = await getServerSession();
-  if (!sessionInfo?.userId) {
+  if (!sessionInfo?.user.id) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
   }
 
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const hostId = sessionInfo.userId;
+    const hostId = sessionInfo.user.id;
 
     const newSession = await prisma.chatroomSession.create({
       data: {

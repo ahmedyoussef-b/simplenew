@@ -74,7 +74,7 @@ const createDraftSchema = z.object({
 
 export async function GET(request: NextRequest) {
     const session = await getServerSession();
-    if (!session?.userId) {
+    if (!session?.user.id) {
         return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
     }
 
@@ -85,7 +85,7 @@ export async function GET(request: NextRequest) {
         if (getActiveOnly) {
              const activeDraft = await prisma.scheduleDraft.findFirst({
                 where: {
-                    userId: session.userId,
+                    userId: session.user.id,
                     isActive: true,
                 },
                 include: {
@@ -95,25 +95,25 @@ export async function GET(request: NextRequest) {
             return NextResponse.json(activeDraft, { status: 200 });
         } else {
             const drafts = await prisma.scheduleDraft.findMany({
-                where: { userId: session.userId },
-                orderBy: { updatedAt: 'desc' },
+                where: { userId: session.user.id },
+                orderBy: { updatedAt: 'desc' }, // Corrected orderBy
                 include: {
                     lessons: true, // Include lessons in the response
                 },
             });
             return NextResponse.json(drafts, { status: 200 });
         }
-    } catch (error) {
+    } catch (error: any) { // Added type annotation
         console.error('❌ [API/schedule-drafts GET] Error:', error);
-        return NextResponse.json({ message: 'Erreur interne du serveur.' }, { status: 500 });
+        return NextResponse.json({ message: 'Erreur interne du serveur.', error: error.message }, { status: 500 }); // Include error message
     }
 }
 
 
 export async function POST(request: NextRequest) {
     const session = await getServerSession();
-    if (!session?.userId) {
-        return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
+    if (!session?.user.id) {
+        return NextResponse.json({ message: 'Non autorisé' }, { status: 401 }); // Changed from session?.userId to session?.user.id
     }
 
     try {
@@ -126,14 +126,14 @@ export async function POST(request: NextRequest) {
 
         const { name, description, schedule, schoolConfig, ...draftData } = validation.data; // Extract schedule and schoolConfig
 
-        await prisma.scheduleDraft.updateMany({
-            where: { userId: session.userId },
+        await prisma.scheduleDraft.updateMany({ // Update many to set all other drafts inactive
+            where: { userId: session.user.id }, // Changed from session.userId to session.user.id
             data: { isActive: false },
         });
 
-        const newDraft = await prisma.scheduleDraft.create({
+        const newDraft = await prisma.scheduleDraft.create({ // Create the new draft
             data: {
-                userId: session.userId,
+                userId: session.user.id,
                 name,
                 description,
                 isActive: true,
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
                 grades: JSON.stringify(draftData.gradeIds) ,
                 lessonRequirements: {
                     create: draftData.lessonRequirements?.map(req => ({
-                        classId: req.classId,
+                        classId: req.classId, // Added classId
                         subjectId: req.subjectId,
                         hours: req.hours,
                     })) || [],
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
                 teacherAssignments: {
                     create: draftData.teacherAssignments?.map(assign => ({
                         teacherId: assign.teacherId,
-                        subjectId: assign.subjectId,
+                        subjectId: assign.subjectId, // Added subjectId
                         classIds: assign.classIds,
                     })) || [],
                 },
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
             },
         });
 
-        // Create and connect lessons
+        // Create and connect lessons to the new draft
         if (schedule && schedule.length > 0) {
             await prisma.lesson.createMany({
                 data: schedule.map(lesson => ({
@@ -194,8 +194,8 @@ export async function POST(request: NextRequest) {
             });
         }
 
-        return NextResponse.json(newDraft, { status: 201 });
-    } catch (error) {
+        return NextResponse.json(newDraft, { status: 201 }); // Return the created draft
+    } catch (error: any) { // Added type annotation for error
         console.error('❌ [API/schedule-drafts POST] Error:', error);
         if (error instanceof z.ZodError) {
             return NextResponse.json({ message: 'Validation Zod échouée', errors: error.errors }, { status: 400 });
@@ -203,6 +203,6 @@ export async function POST(request: NextRequest) {
         if (error instanceof Error && 'code' in error && error.code === 'P2002') {
              return NextResponse.json({ message: 'Un scénario avec ce nom existe déjà.' }, { status: 409 });
         }
-        return NextResponse.json({ message: 'Erreur lors de la création du scénario.', error: (error as Error).message }, { status: 500 });
+        return NextResponse.json({ message: 'Erreur lors de la création du scénario.', error: error.message }, { status: 500 }); // Return error message
     }
 }

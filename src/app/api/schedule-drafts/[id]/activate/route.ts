@@ -5,7 +5,7 @@ import { getServerSession } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
     const session = await getServerSession();
-    if (!session?.userId) {
+    if (!session?.user.id) {
         return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
     }
     
@@ -16,16 +16,16 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
             // Deactivate all other drafts for this user
             await tx.scheduleDraft.updateMany({
                 where: {
-                    userId: session.userId,
-                    NOT: { id },
+                    userId: session.user.id,
+                    NOT: { id: id },
                 },
                 data: { isActive: false },
             });
             
             // Activate the selected draft
-            await tx.scheduleDraft.update({
-                where: { id, userId: session.userId },
-                data: { isActive: true },
+ await tx.scheduleDraft.update({
+                where: { id, userId: session.user.id },
+                data: { isActive: true }
             });
         });
         

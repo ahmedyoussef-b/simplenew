@@ -5,7 +5,7 @@ import { getServerSession } from '@/lib/auth-utils';
 
 export async function POST(request: NextRequest, { params }: { params: { sessionId: string } }) {
   const sessionInfo = await getServerSession();
-  if (!sessionInfo?.userId) {
+  if (!sessionInfo?.user.id) {
     return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
   }
 
@@ -21,7 +21,7 @@ export async function POST(request: NextRequest, { params }: { params: { session
     const participant = await prisma.sessionParticipant.findUnique({
       where: {
         userId_chatroomSessionId: {
-          userId: sessionInfo.userId,
+          userId: sessionInfo.user.id,
           chatroomSessionId: sessionId,
         },
       },
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: { session
       data: {
         content,
         chatroomSessionId: sessionId,
-        authorId: sessionInfo.userId,
+        authorId: sessionInfo.user.id,
       },
       include: {
         author: {

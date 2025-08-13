@@ -13,7 +13,7 @@ const JWT_ACCESS_TOKEN_EXPIRATION_TIME = '1h'; // Use a direct string literal
 
 export async function PUT(request: NextRequest) {
   const session = await getServerSession();
-  if (!session?.userId || !session.role) {
+  if (!session?.user.id || !session?.user.role) {
     return NextResponse.json({ message: "Non autorisé" }, { status: 401 });
   }
   
@@ -23,7 +23,7 @@ export async function PUT(request: NextRequest) {
   }
 
   try {
-    const currentUser = await prisma.user.findUnique({ where: { id: session.userId } });
+    const currentUser = await prisma.user.findUnique({ where: { id: session.user.id } });
     if (!currentUser) {
       return NextResponse.json({ message: "Utilisateur de la session non trouvé." }, { status: 404 });
     }
@@ -74,7 +74,7 @@ export async function PUT(request: NextRequest) {
       }
 
       const finalUser = await tx.user.update({
-        where: { id: session.userId },
+        where: { id: session.user.id },
         data: userData,
       });
 
@@ -87,22 +87,22 @@ export async function PUT(request: NextRequest) {
       if (img !== undefined) profileData.img = img;
       
       if (Object.keys(profileData).length > 0) {
-          switch (session.role) {
+          switch (session.user.role) {
             case Role.ADMIN:
-              await tx.admin.update({ where: { userId: session.userId }, data: { name: profileData.name, surname: profileData.surname, phone: profileData.phone } });
+              await tx.admin.update({ where: { userId: session.user.id }, data: { name: profileData.name, surname: profileData.surname, phone: profileData.phone } });
               break;
             case Role.TEACHER:
-              await tx.teacher.update({ where: { userId: session.userId }, data: profileData });
+              await tx.teacher.update({ where: { userId: session.user.id }, data: profileData });
               break;
             case Role.STUDENT:
                // Students cannot update their own name/surname via this form
                const { name: _n, surname: _s, ...studentData } = profileData;
                if (Object.keys(studentData).length > 0) {
-                 await tx.student.update({ where: { userId: session.userId }, data: studentData });
+                 await tx.student.update({ where: { userId: session.user.id }, data: studentData });
                }
                break;
             case Role.PARENT:
-              await tx.parent.update({ where: { userId: session.userId }, data: profileData });
+              await tx.parent.update({ where: { userId: session.user.id }, data: profileData });
               break;
           }
       }
@@ -114,8 +114,8 @@ export async function PUT(request: NextRequest) {
 
     // Re-issue JWT with new data
     const tokenPayload = {
-        userId: safeUser.id,
-        role: safeUser.role,
+        userId: safeUser.id, // Keep userId in token payload for clarity, but use safeUser.id
+        role: safeUser.role, // Keep role in token payload for clarity, but use safeUser.role
         email: safeUser.email,
         name: safeUser.name,
         img: safeUser.img // Include new image in token

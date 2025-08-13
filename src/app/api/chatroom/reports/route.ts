@@ -22,21 +22,21 @@ export async function GET(request: NextRequest) {
   console.log("➡️ [API] GET /api/chatroom/reports: Requête reçue pour les rapports.");
   const sessionInfo  = await getServerSession();
   if (!sessionInfo?.user?.id) {
-    console.warn("❌ [API] GET /api/chatroom/reports: Non autorisé, aucun ID utilisateur trouvé dans la session.");
+    console.warn("❌ [API] GET /api/chatroom/reports: Unauthorized, no user ID found in session.");
     return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
   }
 
   try {
-    const whereClause: any = {
+    const whereClause: { status: string; hostId?: string } = {
       status: 'ENDED',
     };
 
     // If the user is a teacher, only fetch their own reports. Admin sees all.
     if (sessionInfo.user.role === Role.TEACHER) {
       whereClause.hostId = sessionInfo.user.id;
-      console.log(`[API] Filtre appliqué pour l'enseignant ID: ${sessionInfo.user.id}`);
+      console.log(`[API] Filter applied for teacher ID: ${sessionInfo.user.id}`);
     } else {
-      console.log("[API] L'administrateur demande tous les rapports.");
+      console.log("[API] Administrator requests all reports.");
     }
 
     const sessions = await prisma.chatroomSession.findMany({
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       },
     }) as ChatroomSessionWithRelations[]; // Explicitly cast the result
     
-    console.log(`[API] ${sessions.length} sessions terminées trouvées.`);
+    console.log(`[API] ${sessions.length} completed sessions found.`);
 
     // Format data for the frontend
     const reports: SessionReport[] = sessions.map(session => {
@@ -96,11 +96,11 @@ export async function GET(request: NextRequest) {
         }
     });
 
-    console.log(`✅ [API] Envoi de ${reports.length} rapports formatés.`);
+    console.log(`✅ [API] Sending ${reports.length} formatted reports.`);
     return NextResponse.json(reports);
 
   } catch (error) {
-    console.error("❌ [API] GET /api/chatroom/reports: Erreur lors de la récupération des rapports:", error);
+    console.error("❌ [API] GET /api/chatroom/reports: Error fetching reports:", error);
     return NextResponse.json({ message: "Erreur lors de la récupération des rapports." }, { status: 500 });
   }
 }
