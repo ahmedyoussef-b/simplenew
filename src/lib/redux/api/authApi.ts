@@ -1,149 +1,160 @@
 // src/lib/redux/api/authApi.ts
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { setUser, logout as logoutAction } from '../slices/authSlice';
-import type { AuthResponse, LoginSchema } from '@/types';
-import type {
-  RegisterSchema,
-  ForgotPasswordSchema,
-  ResetPasswordSchema,
-  Verify2FASchema,
-} from '@/types';
+import type { SafeUser, Role } from '@/types/index';
+import type { 
+    LoginSchema, 
+    RegisterSchema, 
+    ForgotPasswordSchema, 
+    ResetPasswordSchema, 
+    Verify2FASchema,
+    ProfileUpdateSchema
+} from '@/lib/formValidationSchemas';
+
+// --- Response Types ---
+
+export interface AuthResponse {
+  message?: string; // Optional message for some responses
+  user: SafeUser;
+}
+
+export interface TwoFactorResponse {
+    twoFactorRequired: boolean;
+    tempToken: string;
+    twoFactorCode?: string; // For prototyping, should not be in production
+}
+
+export type LoginResponse = AuthResponse | TwoFactorResponse;
+
+export interface LogoutResponse {
+    message: string;
+}
+
+export interface SessionResponse {
+  user: SafeUser | null; 
+}
+
+
+// --- Request Types ---
+
+export interface SocialLoginRequest {
+  idToken: string;
+}
+
+
+// --- API Definition ---
 
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/auth/' }),
   endpoints: (builder) => ({
-    login: builder.mutation<any, LoginSchema>({
-      query: (credentials) => {
-        console.log('🔑 [RTK Query] Déclenchement de la mutation login...');
-        return {
-            url: 'login',
-            method: 'POST',
-            body: credentials,
-        };
-      },
+    login: builder.mutation<LoginResponse, LoginSchema>({
+      query: (credentials) => ({
+        url: 'login',
+        method: 'POST',
+        body: credentials,
+      }),
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        console.log('🔑 [RTK Query] login a démarré.');
         try {
             const { data } = await queryFulfilled;
-            // Ne met à jour l'utilisateur que si la 2FA n'est pas requise.
-            // Si la 2FA est requise, la mise à jour se fera après la vérification.
-            if (!data.requires2FA) {
-                console.log('✅ [RTK Query] login réussi sans 2FA, mise à jour de l\'utilisateur.');
-                dispatch(setUser(data));
-            } else {
-                console.log('🔒 [RTK Query] 2FA requise, attente de la vérification.');
+            if ('user' in data) { // Check if it's AuthResponse
+                dispatch(setUser(data.user));
             }
+            // If it's TwoFactorResponse, we wait for the 2FA verification step
         } catch (error) {
-            console.error('❌ [RTK Query] Échec de login:', error);
+            // Error handling can be done globally or per-component
         }
       },
     }),
     register: builder.mutation<AuthResponse, RegisterSchema>({
-      query: (userInfo) => {
-        console.log('🌱 [RTK Query] Déclenchement de la mutation register...');
-        return {
-            url: 'register',
-            method: 'POST',
-            body: userInfo,
-        };
-      },
+      query: (userInfo) => ({
+        url: 'register',
+        method: 'POST',
+        body: userInfo,
+      }),
     }),
-    socialLogin: builder.mutation<AuthResponse, { idToken: string }>({
-        query: ({ idToken }) => {
-            console.log('🌐 [RTK Query] Déclenchement de la mutation socialLogin...');
-            return {
-                url: 'social-login',
-                method: 'POST',
-                body: { idToken },
-            };
-        },
+    socialLogin: builder.mutation<AuthResponse, SocialLoginRequest>({
+        query: ({ idToken }) => ({
+            url: 'social-login',
+            method: 'POST',
+            body: { idToken },
+        }),
         async onQueryStarted(args, { dispatch, queryFulfilled }) {
-            console.log('🌐 [RTK Query] socialLogin a démarré.');
             try {
                 const { data } = await queryFulfilled;
-                console.log('✅ [RTK Query] socialLogin réussi, mise à jour de l\'utilisateur.');
                 dispatch(setUser(data.user));
             } catch (error) {
-                console.error('❌ [RTK Query] Échec de socialLogin:', error);
+                // Handle error
             }
         },
     }),
     forgotPassword: builder.mutation<void, ForgotPasswordSchema>({
-      query: (email) => {
-        console.log('🔑 [RTK Query] Déclenchement de la mutation forgotPassword...');
-        return {
-          url: 'forgot-password',
-          method: 'POST',
-          body: email,
-        };
-      },
+      query: (email) => ({
+        url: 'forgot-password',
+        method: 'POST',
+        body: email,
+      }),
     }),
     resetPassword: builder.mutation<void, ResetPasswordSchema & { token: string }>({
-      query: ({ token, ...body }) => {
-        console.log('🔄 [RTK Query] Déclenchement de la mutation resetPassword...');
-        return {
-          url: 'reset-password',
-          method: 'POST',
-          body: { ...body, token },
-        };
-      },
+      query: ({ token, ...body }) => ({
+        url: 'reset-password',
+        method: 'POST',
+        body: { ...body, token },
+      }),
     }),
     verify2fa: builder.mutation<AuthResponse, Verify2FASchema & { tempToken: string }>({
-      query: (data) => {
-        console.log('🔐 [RTK Query] Déclenchement de la mutation verify2fa...');
-        return {
-            url: 'verify-2fa',
-            method: 'POST',
-            body: data,
-        };
-      },
+      query: (data) => ({
+        url: 'verify-2fa',
+        method: 'POST',
+        body: data,
+      }),
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        console.log('🔐 [RTK Query] verify2fa a démarré.');
         try {
             const { data } = await queryFulfilled;
-            console.log('✅ [RTK Query] verify2fa réussi, mise à jour de l\'utilisateur.');
             dispatch(setUser(data.user));
         } catch (error) {
-            console.error('❌ [RTK Query] Échec de verify2fa:', error);
+            // Handle error
         }
       },
     }),
-    getSession: builder.query<AuthResponse, void>({
-      query: () => {
-        console.log('🔎 [RTK Query] Déclenchement de la query getSession...');
-        return 'session';
-      },
+    getSession: builder.query<SessionResponse, void>({
+      query: () => 'session',
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        console.log('🔎 [RTK Query] getSession a démarré.');
         try {
           const { data } = await queryFulfilled;
-          if (data && data.user) {
-            console.log('✅ [RTK Query] Session récupérée, mise à jour de l\'utilisateur:', data.user.email);
+          if (data?.user) {
             dispatch(setUser(data.user));
           } else {
-             console.log('🚫 [RTK Query] Aucune session, déconnexion.');
              dispatch(logoutAction());
           }
         } catch (error) {
-          console.error('❌ [RTK Query] Échec de getSession, déconnexion.', error);
           dispatch(logoutAction());
         }
       },
     }),
-    logout: builder.mutation<void, void>({
-      query: () => {
-        console.log('👋 [RTK Query] Déclenchement de la mutation logout...');
-        return {
-            url: 'logout',
-            method: 'POST',
-        };
-      },
+    logout: builder.mutation<LogoutResponse, void>({
+      query: () => ({
+        url: 'logout',
+        method: 'POST',
+      }),
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        console.log('👋 [RTK Query] logout a démarré.');
         await queryFulfilled;
-        console.log('✅ [RTK Query] Déconnexion réussie, nettoyage de l\'état.');
         dispatch(logoutAction());
+      },
+    }),
+    updateProfile: builder.mutation<AuthResponse, Partial<ProfileUpdateSchema>>({
+      query: (body) => ({
+        url: '/api/profile', // Note: This endpoint is outside the /api/auth base
+        method: 'PUT',
+        body,
+      }),
+       async onQueryStarted(args, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setUser(data.user));
+        } catch (error) {
+          // Handle error if profile update fails
+        }
       },
     }),
   }),
@@ -158,4 +169,5 @@ export const {
   useVerify2faMutation,
   useGetSessionQuery,
   useLogoutMutation,
+  useUpdateProfileMutation,
 } = authApi;

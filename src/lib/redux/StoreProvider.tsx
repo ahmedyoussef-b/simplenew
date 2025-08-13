@@ -16,7 +16,7 @@ function AuthInitializer({ children }: { children: React.ReactNode }) {
 }
 
 
-export default function StoreProvider({
+export function StoreProvider({
   children,
 }: {
   children: React.ReactNode

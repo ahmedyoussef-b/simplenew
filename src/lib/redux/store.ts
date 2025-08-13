@@ -81,6 +81,7 @@ if (typeof window !== 'undefined') {
     }, 2000)); // Throttle saving to every 2 seconds
 }
 
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof rootReducer>;
 export type AppDispatch = typeof store.dispatch;
 export const useAppSelector: TypedUseSelectorHook<RootState> = useSelector;
+export type AppStore = typeof store;

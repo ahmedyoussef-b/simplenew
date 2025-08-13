@@ -45,3 +45,5 @@ export function AppHeaderLogoutButton() {
     </button>
   );
 }
+
+export default AppHeaderLogoutButton;

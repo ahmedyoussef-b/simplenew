@@ -1,6 +1,7 @@
 // src/lib/redux/slices/authSlice.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { SafeUser } from '@/types';
+import { RootState } from '../store';
 
 interface AuthState {
   user: SafeUser | null;
@@ -36,8 +37,15 @@ const authSlice = createSlice({
         state.isLoading = action.payload;
     }
   },
+  selectors: {
+    selectCurrentUser: (state) => state.user,
+    selectIsAuthenticated: (state) => state.isAuthenticated,
+    selectIsAuthLoading: (state) => state.isLoading,
+  },
 });
 
 export const { setUser, logout, setLoading } = authSlice.actions;
+
+export const { selectCurrentUser, selectIsAuthenticated, selectIsAuthLoading } = authSlice.selectors;
 
 export default authSlice.reducer;

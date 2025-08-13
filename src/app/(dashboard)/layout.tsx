@@ -11,10 +11,7 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  const session = await getServerSession().catch((error) => {
-    console.error("Erreur de session:", error)
-    redirect('/login')
-  })
+  const session = await getServerSession()
 
   if (!session?.user?.id) {
     redirect('/login')

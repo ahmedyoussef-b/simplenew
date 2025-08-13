@@ -1,3 +1,4 @@
+// src/components/layout/AuthLayout.tsx
 import type React from 'react';
 import Image from 'next/image';
 
@@ -7,7 +8,7 @@ interface AuthLayoutProps {
   description?: string;
 }
 
-export function AuthLayout({ children, title, description }: AuthLayoutProps) {
+export default function AuthLayout({ children, title, description }: AuthLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 sm:p-6">
       <div className="w-full max-w-md">

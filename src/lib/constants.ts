@@ -44,7 +44,7 @@ export const menuItems: Array<{
   {
     title: "MENU",
     items: [
-      { icon: Home, label: "Accueil", href: "/", visible: [Role.ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT], },
+      { icon: Home, label: "Accueil", href: "/accueil", visible: [Role.ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT], },
       { icon: Calendar, label: "Planificateur", href: "/shuddle", visible: [Role.ADMIN], },
       { icon: BarChart, label: "Rapports", href: "/admin/reports", visible: [Role.ADMIN], },
       { icon: BookUser, label: "Enseignants", href: "/list/teachers", visible: [Role.ADMIN, Role.TEACHER], },
