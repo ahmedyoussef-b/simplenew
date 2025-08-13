@@ -51,6 +51,26 @@ export default function LoginForm() {
 
   return (
     <div className="space-y-6">
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <filter id="unopaq">
+          <feTurbulence type="fractalNoise" baseFrequency="0.5 1.5" numOctaves="2" stitchTiles="stitch" result="noise" />
+          <feDiffuseLighting in="noise" lightingColor="#fff" surfaceScale="1" result="diffuse">
+            <feDistantLight azimuth="0" elevation="25" />
+          </feDiffuseLighting>
+        </filter>
+        <filter id="unopaq2">
+          <feTurbulence type="fractalNoise" baseFrequency="0.2 1.5" numOctaves="2" stitchTiles="stitch" result="noise" />
+          <feDiffuseLighting in="noise" lightingColor="#fff" surfaceScale="1" result="diffuse">
+            <feDistantLight azimuth="0" elevation="25" />
+          </feDiffuseLighting>
+        </filter>
+        <filter id="unopaq3">
+          <feTurbulence type="fractalNoise" baseFrequency="0.1 0.5" numOctaves="2" stitchTiles="stitch" result="noise" />
+          <feDiffuseLighting in="noise" lightingColor="#fff" surfaceScale="1" result="diffuse">
+            <feDistantLight azimuth="0" elevation="25" />
+          </feDiffuseLighting>
+        </filter>
+      </svg>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         
         <div className="neumorphic-container">
@@ -90,13 +110,28 @@ export default function LoginForm() {
         </div>
 
         <div className="btn">
-          <button type="submit" className="button1" disabled={isLoading}>
-            {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LogIn className="mr-2 h-4 w-4" />}
-            Se Connecter
-          </button>
-           <Link href="/register" className="button2">
-              Inscrivez-vous
-          </Link>
+            <div className="button-container">
+                <button type="submit" disabled={isLoading} className="real-button"></button>
+                <div className="button-body">
+                    <div className="backdrop"></div>
+                    <div className="spin spin-blur"></div>
+                    <div className="spin spin-intense"></div>
+                    <div className="spin spin-inside"></div>
+                    <span>{isLoading ? 'Chargement...' : 'Se Connecter'}</span>
+                </div>
+            </div>
+            <div className="button-container">
+                <Link href="/register" passHref>
+                    <a className="real-button"></a>
+                </Link>
+                <div className="button-body">
+                    <div className="backdrop"></div>
+                    <div className="spin spin-blur"></div>
+                    <div className="spin spin-intense"></div>
+                    <div className="spin spin-inside"></div>
+                    <span>Inscrivez-vous</span>
+                </div>
+            </div>
         </div>
       </form>
       <SocialSignInButtons />
