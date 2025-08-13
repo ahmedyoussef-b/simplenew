@@ -1,3 +1,4 @@
+
 // src/ap/(dashboard)/parent/page.tsx
 import prisma from "@/lib/prisma";
 import { getServerSession } from "@/lib/auth-utils";
@@ -71,7 +72,7 @@ const ParentPage = async () => {
   const childrenClassIds = [...new Set(children.map(child => child.classId).filter(id => id !== null))] as number[];
   console.log(`👨‍👩‍👧 [ParentPage] Récupération des données de l'emploi du temps pour les IDs de classe : ${childrenClassIds.join(', ')}.`);
   
-  const [lessons, allSubjects, allTeachers, allClassrooms] = await Promise.all([
+  const [lessons, allSubjects, allTeachersFromDb, allClassrooms] = await Promise.all([
     prisma.lesson.findMany({
       where: {
         classId: {
@@ -100,17 +101,18 @@ const ParentPage = async () => {
         include: { 
             user: true, 
             subjects: true, 
-            classes: true,
+            lessons: { select: { classId: true }, distinct: ['classId'] }
         } 
     }),
     prisma.classroom.findMany(),
   ]);
 
-  const teachersWithCount: TeacherWithDetails[] = allTeachers.map(t => ({
+  const teachersWithCount: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
     ...t,
+    classes: [], // This is not needed for the count logic
     _count: {
         subjects: t.subjects.length,
-        classes: t.classes.length,
+        classes: new Set(t.lessons.map(l => l.classId)).size,
     }
   }));
 

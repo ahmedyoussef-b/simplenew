@@ -23,6 +23,7 @@ const TeacherPage = async () => {
       include: {
         user: true,
         subjects: true,
+        lessons: { select: { classId: true }, distinct: ['classId'] }
       }
   });
 
@@ -81,7 +82,7 @@ const TeacherPage = async () => {
     classes: [],
     _count: {
       subjects: teacherFromDb.subjects.length,
-      classes: classIds.length,
+      classes: new Set(teacherFromDb.lessons.map(l => l.classId)).size,
     }
   };
   

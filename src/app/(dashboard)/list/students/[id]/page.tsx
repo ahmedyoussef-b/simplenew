@@ -99,7 +99,7 @@ const SingleStudentPage = async ({
             user: true, 
             subjects: true, 
             lessons: { select: { classId: true }, distinct: ['classId'] }
-        } 
+        }
     }),
     prisma.classroom.findMany(),
   ]);
