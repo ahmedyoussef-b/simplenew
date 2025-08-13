@@ -60,12 +60,13 @@ export function LoginForm() {
              });
              router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
         } else {
-             console.log("✅ [LoginForm] Login successful, no 2FA. The main page effect will handle redirection.");
+             console.log("✅ [LoginForm] Login successful, no 2FA. Redirecting to dashboard root.");
              toast({
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
             });
-             router.push('/');
+             // Explicitly redirect to the dashboard redirector page on success.
+             router.push('/dashboard');
         }
     }
     if (isError && loginErrorData) {

@@ -13,29 +13,45 @@ export async function middleware(req: NextRequest) {
   const userRole = session?.user?.role as Role | undefined;
   console.log(`[Middleware] Session role found: ${userRole}`);
 
+  const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register');
+
   // If user is authenticated, redirect from auth pages to their dashboard
-  if (userRole) {
-    if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
-      const dashboardPath = `/`; // Redirect to root, which will handle role-based redirection
-      console.log(`[Middleware] Authenticated user on auth page. Redirecting to ${dashboardPath}`);
-      return NextResponse.redirect(new URL(dashboardPath, req.url));
-    }
+  if (userRole && isAuthPage) {
+    const dashboardPath = `/dashboard`;
+    console.log(`[Middleware] Authenticated user on auth page. Redirecting to ${dashboardPath}`);
+    return NextResponse.redirect(new URL(dashboardPath, req.url));
+  }
+  
+  // If user is NOT authenticated and trying to access a protected page (not root, not auth pages)
+  if (!userRole && pathname !== '/' && !isAuthPage) {
+      // Check if the route is a protected one
+      for (const route in routeAccessMap) {
+        const regex = new RegExp(`^${route.replace('*', '.*')}$`);
+        if (regex.test(pathname)) {
+            console.log(`[Middleware] Unauthenticated user on protected page ${pathname}. Redirecting to /`);
+            return NextResponse.redirect(new URL('/', req.url));
+        }
+      }
   }
 
-  // Route protection
-  for (const route in routeAccessMap) {
-    const regex = new RegExp(`^${route.replace('*', '.*')}$`);
-    if (regex.test(pathname)) {
-      const allowedRoles = routeAccessMap[route];
-      console.log(`[Middleware] Path ${pathname} matches route ${route}. Allowed roles: ${allowedRoles}`);
-      if (!userRole || !allowedRoles.includes(userRole)) {
-        console.log(`[Middleware] Access denied for role '${userRole}'. Redirecting to /login`);
-        return NextResponse.redirect(new URL('/login', req.url));
+
+  // Route protection for authenticated users
+  if(userRole) {
+      for (const route in routeAccessMap) {
+        const regex = new RegExp(`^${route.replace('*', '.*')}$`);
+        if (regex.test(pathname)) {
+          const allowedRoles = routeAccessMap[route];
+          console.log(`[Middleware] Path ${pathname} matches route ${route}. Allowed roles: ${allowedRoles}`);
+          if (!allowedRoles.includes(userRole)) {
+            console.log(`[Middleware] Access denied for role '${userRole}'. Redirecting to /`);
+            return NextResponse.redirect(new URL('/', req.url));
+          }
+          console.log(`[Middleware] Access granted for role '${userRole}'.`);
+          break; 
+        }
       }
-      console.log(`[Middleware] Access granted for role '${userRole}'.`);
-      break; 
-    }
   }
+
 
   console.log(`[Middleware] No specific rule matched. Allowing request for ${pathname}`);
   return NextResponse.next();
