@@ -18,10 +18,10 @@ export function AppHeaderLogoutButton() {
     try {
       await logout().unwrap();
       toast({ title: "Déconnexion réussie", description: "Vous avez été déconnecté avec succès." });
-      window.location.href = '/login'; // Force reload to ensure session state is cleared
+      window.location.href = '/'; // Force reload to ensure session state is cleared and redirect to home
     } catch (err) {
       toast({ variant: "destructive", title: "Échec de la déconnexion", description: "Une erreur est survenue lors de la déconnexion." });
-      window.location.href = '/login'; // Still redirect on error
+      window.location.href = '/'; // Still redirect on error
     }
   };
 
