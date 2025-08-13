@@ -69,8 +69,37 @@ export default function AccueilZenPage() {
   };
 
   return (
-    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background text-foreground font-alegreya p-4">
-      <div className="absolute top-4 right-4">
+    <main className="flex min-h-screen w-full flex-col items-center justify-center p-4 relative">
+        <div className="futuristic-pattern">
+            <svg className="texture-filter">
+                <filter id="advanced-texture">
+                <feTurbulence
+                    type="fractalNoise"
+                    baseFrequency="0.7"
+                    numOctaves="3"
+                    result="noise"
+                ></feTurbulence>
+                <feSpecularLighting
+                    in="noise"
+                    surfaceScale="2"
+                    specularConstant="0.8"
+                    specularExponent="20"
+                    lighting-color="#fff"
+                    result="specular"
+                >
+                    <fePointLight x="50" y="50" z="100"></fePointLight>
+                </feSpecularLighting>
+                <feComposite
+                    in="specular"
+                    in2="SourceGraphic"
+                    operator="in"
+                    result="litNoise"
+                ></feComposite>
+                <feBlend in="SourceGraphic" in2="litNoise" mode="overlay"></feBlend>
+                </filter>
+            </svg>
+        </div>
+      <div className="absolute top-4 right-4 z-10">
         {currentUser ? (
              <Button asChild variant="outline">
                 <Link href={`/dashboard`}>
@@ -88,7 +117,7 @@ export default function AccueilZenPage() {
         )}
       </div>
 
-      <div className="text-center animate-fade-in-slow">
+      <div className="text-center animate-fade-in-slow z-10">
         {isLoadingGreeting ? (
           <div className="h-20 flex items-center justify-center">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
@@ -128,7 +157,7 @@ export default function AccueilZenPage() {
         </div>
       </div>
 
-       <footer className="absolute bottom-4 text-xs text-muted-foreground/50">
+       <footer className="absolute bottom-4 text-xs text-muted-foreground/50 z-10">
             Propulsé par <Sparkles className="inline-block h-3 w-3 text-accent" /> Genkit AI
        </footer>
     </main>
