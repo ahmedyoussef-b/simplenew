@@ -10,7 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2, Sparkles, User, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { useAppSelector } from '@/hooks/redux-hooks';
-import { selectCurrentUser } from '@/lib/redux/slices/authSlice';
+import { selectCurrentUser } from '@/lib/redux/features/auth/authSlice';
 
 export default function AccueilZenPage() {
   const [greeting, setGreeting] = useState('');
@@ -73,14 +73,14 @@ export default function AccueilZenPage() {
       <div className="absolute top-4 right-4">
         {currentUser ? (
              <Button asChild variant="outline">
-                <Link href={`/${currentUser.role.toLowerCase()}`}>
+                <Link href={`/dashboard`}>
                     <User className="mr-2 h-4 w-4" />
                     Mon tableau de bord
                 </Link>
             </Button>
         ) : (
             <Button asChild variant="outline">
-                <Link href="/">
+                <Link href="/login">
                      <LogIn className="mr-2 h-4 w-4" />
                     Se connecter
                 </Link>

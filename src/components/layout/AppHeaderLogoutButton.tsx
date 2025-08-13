@@ -1,4 +1,4 @@
-
+// src/components/layout/AppHeaderLogoutButton.tsx
 "use client";
 
 import { LogOut } from "lucide-react";
@@ -18,10 +18,10 @@ export function AppHeaderLogoutButton() {
     try {
       await logout().unwrap();
       toast({ title: "Déconnexion réussie", description: "Vous avez été déconnecté avec succès." });
-      router.push('/');
+      window.location.href = '/login'; // Force reload to ensure session state is cleared
     } catch (err) {
       toast({ variant: "destructive", title: "Échec de la déconnexion", description: "Une erreur est survenue lors de la déconnexion." });
-      router.push('/');
+      window.location.href = '/login'; // Still redirect on error
     }
   };
 

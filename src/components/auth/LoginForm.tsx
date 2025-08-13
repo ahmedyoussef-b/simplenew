@@ -30,16 +30,13 @@ export default function LoginForm() {
   });
 
   useEffect(() => {
-    console.log(`➡️ [LoginForm] useEffect triggered. isSuccess: ${isSuccess} isError: ${isError} loginSuccessData:`, loginSuccessData);
     if (isSuccess && loginSuccessData) {
-      if ('user' in loginSuccessData) {
-        console.log("✅ [LoginForm] Login successful. Redirecting to /dashboard.");
-        // Forcing a full page reload to ensure session is read correctly on the server
-        window.location.href = '/';
-      } else if ('tempToken' in loginSuccessData) {
-        console.log("🔐 [LoginForm] 2FA required. Redirecting to verification page.");
-        router.push(`/verify-2fa?token=${loginSuccessData.tempToken}`);
-      }
+        toast({
+          title: "Connexion réussie!",
+          description: "Vous allez être redirigé vers votre tableau de bord."
+        });
+        // Force a full page reload to the dashboard redirector
+        window.location.href = '/dashboard';
     }
     if (isError) {
       const apiError = loginErrorData as any;
@@ -52,7 +49,6 @@ export default function LoginForm() {
   }, [isSuccess, isError, loginSuccessData, loginErrorData, router, toast]);
 
   const onSubmit: SubmitHandler<LoginFormValues> = async (data) => {
-    console.log("➡️ [LoginForm] Submitting login form with data:", data);
     await login(data);
   };
 

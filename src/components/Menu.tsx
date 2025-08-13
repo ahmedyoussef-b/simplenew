@@ -51,8 +51,8 @@ const Menu: React.FC<MenuProps> = ({ role }) => {
 
           {group.items.map((item, index) => {
             if (item.visible.includes(userRole)) {
-              const baseHref = item.href === "/" && userRole ? `/${userRole.toLowerCase()}` : item.href;
-              const finalHref = baseHref;
+              // The home link always points to the role-specific dashboard page
+              const finalHref = item.href === "/accueil" ? `/${userRole.toLowerCase()}` : item.href;
               const IconComponent = item.icon;
               
               return (

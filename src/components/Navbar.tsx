@@ -98,10 +98,11 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                            Navigation principale de l'application
                        </SheetDescription>
                     </SheetHeader>
+                    <Menu role={currentUser?.role} />
                 </SheetContent>
               </Sheet>
               
-              <Link href={rolePath ? `/${rolePath}` : `/`} className="hidden md:flex items-center gap-2 flex-shrink-0">
+              <Link href={rolePath ? `/${rolePath}` : `/accueil`} className="hidden md:flex items-center gap-2 flex-shrink-0">
                   <Image src={'/logo.svg'} alt="logo" width={32} height={32} data-ai-hint="logo company" priority />
                   <span className="font-bold text-lg text-primary">College Riadh5</span>
               </Link>
