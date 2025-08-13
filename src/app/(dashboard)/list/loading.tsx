@@ -2,8 +2,14 @@
 const Loading = () => {
   return (
     <div className="flex items-center justify-center h-[80vh]">
-      <div className="spinner">
-          <div className="spinner1"></div>
+      <div id="page">
+        <div id="container">
+            <div id="ring"></div>
+            <div id="ring"></div>
+            <div id="ring"></div>
+            <div id="ring"></div>
+            <div id="h3">loading</div>
+        </div>
       </div>
     </div>
   );
