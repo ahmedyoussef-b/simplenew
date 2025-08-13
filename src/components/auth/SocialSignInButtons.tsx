@@ -6,8 +6,15 @@ import { useToast } from '@/hooks/use-toast';
 import { getAuth, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
 import { useSocialLoginMutation } from '@/lib/redux/api/authApi';
 import { initializeFirebaseApp } from '@/lib/firebase';
-import { FaGoogle } from 'react-icons/fa';
 import { Loader2 } from 'lucide-react';
+
+const GoogleIcon = (props: React.ComponentProps<'svg'>) => (
+    <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" {...props}>
+        <title>Google</title>
+        <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.85 3.18-1.73 4.1-1.02 1.02-2.9 2.04-5.08 2.04-4.36 0-7.92-3.57-7.92-7.92s3.56-7.92 7.92-7.92c2.41 0 3.79.96 4.69 1.82l2.31-2.31C18.6 1.91 16.02 0 12.48 0 5.88 0 0 5.88 0 12.48s5.88 12.48 12.48 12.48c6.92 0 12.08-4.79 12.08-12.08 0-.66-.07-1.32-.19-1.98z" />
+    </svg>
+);
+
 
 export default function SocialSignInButtons() {
     const { toast } = useToast();
@@ -60,7 +67,7 @@ export default function SocialSignInButtons() {
                 {isLoading ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
-                    <FaGoogle className="mr-2 h-4 w-4" />
+                    <GoogleIcon className="mr-2 h-4 w-4" />
                 )}
                 Google
             </Button>
