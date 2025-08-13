@@ -3,7 +3,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,16 +19,8 @@ import { Spinner } from "@/components/ui/spinner";
 import SocialSignInButtons from "./SocialSignInButtons";
 import FormError from "@/components/forms/FormError";
 import { cn } from "@/lib/utils";
+import { registerSchema, type RegisterSchema as RegisterFormData } from '@/lib/formValidationSchemas'; // Import the central schema
 
-const registerSchema = z.object({
-  name: z.string().min(2, { message: "Le nom doit contenir au moins 2 caractères." }).optional(),
-  email: z.string().email({ message: "Adresse e-mail invalide." }),
-  password: z.string().min(8, { message: "Le mot de passe doit contenir au moins 8 caractères." }),
-  confirmPassword: z.string().min(8, { message: "La confirmation du mot de passe doit contenir au moins 8 caractères." }),
-  role: z.nativeEnum(Role, { errorMap: () => ({ message: "Veuillez sélectionner un rôle." }) }),
-});
-
-type RegisterFormData = z.infer<typeof registerSchema>;
 
 interface ApiErrorData {
   message: string;

@@ -14,7 +14,7 @@ export const registerSchema = z
       .string()
       .min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères.' }),
     confirmPassword: z.string(),
-    role: z.enum([Role.TEACHER, Role.PARENT]),
+    role: z.nativeEnum(Role),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Les mots de passe ne correspondent pas.",
