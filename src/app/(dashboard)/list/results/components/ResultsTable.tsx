@@ -50,8 +50,8 @@ export const ResultsTable = ({ data, userRole }: ResultsTableProps) => {
               studentId: item.studentId,
               examId: item.examId,
               assignmentId: item.assignmentId,
-            }} className={""} />
-            <FormContainer table="result" type="delete" id={item.id} className={""} />
+            }} />
+            <FormContainer table="result" type="delete" id={item.id} />
           </div>
         </td>
       )}

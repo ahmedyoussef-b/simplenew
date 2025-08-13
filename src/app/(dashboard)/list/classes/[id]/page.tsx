@@ -65,7 +65,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
          <Button variant="outline" size="sm" asChild>
-          <Link href={`/list/classes?viewGradeId=${classData.gradeId}`}>
+          <Link href={`/list/classes?viewGradeId=${classData.grade.level}`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour aux Classes du Niveau {classData.grade.level}
           </Link>

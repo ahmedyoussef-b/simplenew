@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Eye, Trash2 } from 'lucide-react';
-import FormModal from '@/components/FormModal';
+import FormContainer from '@/components/FormContainer';
 import { Badge } from '@/components/ui/badge';
 import DynamicAvatar from '@/components/DynamicAvatar';
 import {Role, StudentWithClassAndUser } from '@/types';
@@ -56,7 +56,7 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, userRole, isLCP = fa
                   </button>
               </Link>
               {userRole === Role.ADMIN && (
-                  <FormModal table="student" type="delete" id={student.id} className=""/>
+                  <FormContainer table="student" type="delete" id={student.id} />
               )}
           </div>
       </div>

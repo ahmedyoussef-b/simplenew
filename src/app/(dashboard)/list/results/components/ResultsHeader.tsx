@@ -22,7 +22,7 @@ export const ResultsHeader = ({ userRole }: ResultsHeaderProps) => {
             <Image src="/sort.png" alt="sort" width={14} height={14} />
           </button>
           {(userRole === Role.ADMIN || userRole === Role.TEACHER) && (
-            <FormContainer table="result" type="create" className={""} />
+            <FormContainer table="result" type="create" />
           )}
         </div>
       </div>

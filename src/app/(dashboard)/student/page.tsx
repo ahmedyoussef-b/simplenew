@@ -103,7 +103,7 @@ const StudentPage = async () => {
       scheduleDraftId: null,
       schoolConfig: {}
     },
-    classes: [studentClass as ClassWithGrade],
+    classes: [studentClass as unknown as ClassWithGrade],
     subjects: allSubjects as Subject[],
     teachers: allTeachers as TeacherWithDetails[],
     rooms: allClassrooms as Classroom[],
@@ -125,7 +125,6 @@ const StudentPage = async () => {
         <h1 className="text-xl font-semibold mb-4">Mon Horaire</h1>
         <TimetableDisplay wizardData={wizardData} viewMode={"class"} selectedViewId={student.classId?.toString() || ""} />
       </div>
-      <Announcements />
     </div>
   );
 };

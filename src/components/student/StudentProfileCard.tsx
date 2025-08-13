@@ -37,7 +37,8 @@ export default function StudentProfileCard({ student, userRole }: StudentProfile
                 username: student.user?.username,
                 email: student.user?.email,
                 birthday: student.birthday ? new Date(student.birthday) : undefined,
-              }} className={""}            />
+              }}
+            />
           )}
         </div>
         <p className="text-sm text-gray-500">

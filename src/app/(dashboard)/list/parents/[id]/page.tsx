@@ -119,7 +119,7 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
     prisma.subjectRequirement.findMany(),
   ]);
 
-  const childrenClasses = parent.students.map((c: ParentWithDetails['students'][number]) => c.class).filter((c): c is ClassWithGrade => !!c);
+  const childrenClasses = parent.students.map((c: ParentWithDetails['students'][number]) => c.class).filter((c): c is ClassWithGrade => !!(c as any)?.grade);
   const uniqueChildrenClasses = Array.from(new Map(childrenClasses.map(item => [item.id, item])).values());
   
   const wizardData: WizardData = {

@@ -3,7 +3,7 @@
 
 import Link from 'next/link';
 import { Eye, Trash2, MessageSquare } from 'lucide-react';
-import FormModal from '@/components/FormModal';
+import FormContainer from '@/components/FormContainer';
 import { Badge } from '@/components/ui/badge';
 import DynamicAvatar from '@/components/DynamicAvatar';
 import { useState } from 'react';
@@ -76,7 +76,7 @@ const ParentCard: React.FC<ParentCardProps> = ({ parent, userRole, isLCP = false
                     </button>
                 )}
                 {userRole === AppRole.ADMIN && (
-                    <FormModal table="parent" type="delete" id={parent.id} className=""/>
+                    <FormContainer table="parent" type="delete" id={parent.id} />
                 )}
             </div>
         </div>

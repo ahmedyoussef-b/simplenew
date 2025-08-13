@@ -25,7 +25,7 @@ const SingleTeacherPage = async ({
   const id = params.id;
 
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined;
+  const userRole = session?.user?.role as Role | undefined;
 
   if (!session) redirect(`/login`);
 
@@ -76,12 +76,12 @@ const SingleTeacherPage = async ({
     },
   });
   
-  const classIds = [...new Set(lessons.map(l => l.classId))];
+  const classIds = [...new Set(lessons.map(l => l.classId).filter(id => id !== null))];
 
   const teacherClasses = await prisma.class.findMany({
-    where: { id: { in: classIds } },
+    where: { id: { in: classIds as number[] } },
     include: { grade: true },
-  }) as ClassWithGrade[];
+  }) as unknown as ClassWithGrade[];
 
   const [allSubjects, allClassrooms] = await Promise.all([
     prisma.subject.findMany(),
@@ -127,7 +127,6 @@ const SingleTeacherPage = async ({
       <div className="w-full xl:w-1/3 flex flex-col gap-4">
         <TeacherShortcuts teacherId={teacher.id}  />
         <Performance title="Performance" />
-        <Announcements />
       </div>
     </div>
   );

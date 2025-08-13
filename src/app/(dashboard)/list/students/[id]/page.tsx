@@ -104,7 +104,7 @@ const SingleStudentPage = async ({
     prisma.classroom.findMany(),
   ]);
 
-  const studentClass = student.class as ClassWithGrade;
+  const studentClass = student.class as unknown as ClassWithGrade;
 
   const wizardData: WizardData = {
     school: {
@@ -146,7 +146,6 @@ const SingleStudentPage = async ({
         <Suspense fallback={<Skeleton className="h-[320px] w-full" />}>
             <StudentWeeklyAttendanceChart studentId={student.id} />
         </Suspense>
-        <Announcements />
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ const TeacherPage = async () => {
   console.log("🧑‍🏫 [TeacherPage] Rendu de la page d'accueil de l'enseignant. Vérification de la session.");
   const session = await getServerSession();
 
-  if (!session || session.user.role !== Role.TEACHER) { 
+  if (!session || !session.user || session.user.role !== Role.TEACHER) { 
      console.warn("🧑‍🏫 [TeacherPage] Session invalide ou rôle incorrect. Redirection...");
      redirect(session ? `/${(session.user.role as string).toLowerCase()}` : `/login`);
   }
@@ -86,9 +86,9 @@ const TeacherPage = async () => {
 
   // 3. Fetch only the classes this teacher teaches in, with their grades
   const teacherClasses = await prisma.class.findMany({
-    where: { id: { in: classIds } },
+    where: { id: { in: classIds as number[] } },
     include: { grade: true },
-  }) as ClassWithGrade[];
+  }) as unknown as ClassWithGrade[];
 
   // 4. Fetch all subjects and classrooms for context mapping
   const [allSubjects, allClassrooms] = await Promise.all([

@@ -64,7 +64,6 @@ const ParentPage = async () => {
       <div className="p-4 text-center">
         <h1 className="text-xl font-semibold mb-4">Tableau de Bord Parent</h1>
         <p>Aucun étudiant associé à ce compte parent.</p>
-        <Announcements />
       </div>
     );
   }
@@ -108,7 +107,7 @@ const ParentPage = async () => {
     prisma.classroom.findMany(),
   ]);
   
-  const childrenClasses = children.map(c => c.class).filter((c): c is ClassWithGrade => c !== null);
+  const childrenClasses = children.map(c => c.class).filter((c): c is ClassWithGrade => !!(c as any)?.grade);
   const uniqueChildrenClasses = Array.from(new Map(childrenClasses.map(item => [item['id'], item])).values());
 
 

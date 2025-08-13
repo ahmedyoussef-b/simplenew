@@ -20,9 +20,10 @@ const useClassForm = ({
   } = useForm<ClassSchema>({
     resolver: zodResolver(classSchema),
     defaultValues: data ? { 
-      ...data, 
-      gradeLevel: data.grade?.level, 
-      capacity: data.capacity || 0 
+      name: data.name,
+      abbreviation: data.abbreviation || '',
+      capacity: data.capacity || 0,
+      gradeLevel: data.gradeLevel || data.grade?.level || 0,
     } : { 
       capacity: 25 
     },

@@ -34,7 +34,7 @@ const StudentListPage = async ({
       if (typeof query.class !== 'object' || query.class === null) {
         query.class = {};
       }
-      query.class.lessons = { some: { teacherId: teacherId } };
+      (query.class as Prisma.ClassRelationFilter).lessons = { some: { teacherId: teacherId } };
     }
   }
 
@@ -63,11 +63,11 @@ const StudentListPage = async ({
       query.class = {};
     }
 
-    if (!Array.isArray(query.class.AND)) {
-      query.class.AND = query.class.AND ? [query.class.AND as Prisma.ClassWhereInput] : [];
+    if (!Array.isArray((query.class as Prisma.ClassRelationFilter).AND)) {
+      (query.class as Prisma.ClassRelationFilter).AND = (query.class as Prisma.ClassRelationFilter).AND ? [(query.class as Prisma.ClassRelationFilter).AND as Prisma.ClassWhereInput] : [];
     }
     
-    (query.class.AND as Prisma.Enumerable<Prisma.ClassWhereInput>).push(teacherSpecificClassCondition);
+    ((query.class as Prisma.ClassRelationFilter).AND as Prisma.Enumerable<Prisma.ClassWhereInput>).push(teacherSpecificClassCondition);
   }
 
 

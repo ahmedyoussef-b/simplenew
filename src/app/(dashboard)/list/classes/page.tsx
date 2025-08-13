@@ -60,7 +60,7 @@ const ClassesPage = async ({
             <FormContainer
               table="class"
               type="create"
-              data={{ gradeId: selectedGrade.id }}
+              data={{ gradeId: selectedGrade.id, gradeLevel: selectedGrade.level }}
             />
           )}
         </div>
