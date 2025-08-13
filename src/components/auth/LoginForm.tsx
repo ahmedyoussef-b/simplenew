@@ -60,12 +60,13 @@ export function LoginForm() {
              });
              router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
         } else {
-             console.log("✅ [LoginForm] Login successful, no 2FA. The main page effect will handle redirection.");
+             console.log("✅ [LoginForm] Login successful, no 2FA. Redirecting to /accueil.");
              toast({
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
             });
-             // The redirection is now handled by the RootPage's useEffect, which waits for the state to update.
+            // The redirection is now handled by the RootPage's useEffect, which waits for the state to update.
+            router.push('/accueil');
         }
     }
     if (isError && loginErrorData) {
