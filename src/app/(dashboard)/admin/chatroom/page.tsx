@@ -78,7 +78,7 @@ async function getStats() {
 
 export default async function AdminChatroomDashboardPage() {
     const session = await getServerSession();
-    if (!session || session.role !== Role.ADMIN) {
+    if (!session || session.user.role !== Role.ADMIN) {
         redirect('/login');
     }
 

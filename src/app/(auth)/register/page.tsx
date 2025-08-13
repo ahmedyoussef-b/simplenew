@@ -1,6 +1,6 @@
 // src/app/(auth)/register/page.tsx
 import AuthLayout from '@/components/layout/AuthLayout';
-import RegisterForm from '@/components/auth/RegisterForm';
+import {RegisterForm} from '@/components/auth/RegisterForm';
 import Link from 'next/link';
 
 export default function RegisterPage() {

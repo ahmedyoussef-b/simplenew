@@ -2,7 +2,7 @@
 'use client'
 
 import AuthLayout from '@/components/layout/AuthLayout';
-import ResetPasswordForm from '@/components/auth/ResetPasswordForm';
+import {ResetPasswordForm} from '@/components/auth/ResetPasswordForm';
 import { Suspense } from 'react';
 
 function ResetPasswordContent() {
@@ -11,7 +11,7 @@ function ResetPasswordContent() {
       title="Reset your password"
       description="Enter a new password for your account below."
     >
-      <ResetPasswordForm />
+      <ResetPasswordForm token={''} />
     </AuthLayout>
   )
 }

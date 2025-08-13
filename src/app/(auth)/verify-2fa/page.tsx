@@ -10,7 +10,7 @@ function Verify2FAPageContent() {
             title="Two-Factor Authentication"
             description="Enter the code from your authenticator app to continue."
         >
-            <Verify2FAForm />
+            <Verify2FAForm token={''} />
         </AuthLayout>
     );
 }
