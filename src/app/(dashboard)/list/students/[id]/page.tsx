@@ -26,8 +26,8 @@ const SingleStudentPage = async ({
   const { id } = params;
 
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined;
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as Role | undefined;
+  const currentUserId = session?.user?.id;
 
   if (!session) redirect(`/login`);
 
@@ -60,9 +60,11 @@ const SingleStudentPage = async ({
     });
     if (teacherClasses.length > 0) canView = true;
   } else if (userRole === Role.PARENT && currentUserId) {
-    if (student.parentId === currentUserId) canView = true;
+    // Check if the current user is the parent of the student
+    const parentProfile = await prisma.parent.findUnique({ where: { userId: currentUserId }});
+    if(parentProfile && student.parentId === parentProfile.id) canView = true;
   } else if (userRole === Role.STUDENT && currentUserId) {
-    if (student.id === currentUserId) canView = true;
+    if (student.userId === currentUserId) canView = true;
   }
 
   if (!canView) {

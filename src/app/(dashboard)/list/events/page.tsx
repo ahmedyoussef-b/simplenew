@@ -17,8 +17,8 @@ const EventListPage = async ({
 }) => {
 
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined; 
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as Role | undefined; 
+  const currentUserId = session?.user?.id;
 
   const columns = [
     { header: "Titre", accessor: "title" },
@@ -57,15 +57,18 @@ const EventListPage = async ({
               query.classId = null;
           }
       } else if (userRole === Role.PARENT) {
-          const children = await prisma.student.findMany({ where: { parentId: currentUserId } });
-          const classIds = children.map(child => child.classId).filter(id => id !== null) as number[];
-          if (classIds.length > 0) {
-              query.OR = [
-                  { classId: null },
-                  { classId: { in: classIds } }
-              ];
-          } else {
-              query.classId = null;
+          const parent = await prisma.parent.findUnique({ where: { userId: currentUserId }, select: { id: true } });
+          if (parent) {
+            const children = await prisma.student.findMany({ where: { parentId: parent.id } });
+            const classIds = children.map(child => child.classId).filter(id => id !== null) as number[];
+            if (classIds.length > 0) {
+                query.OR = [
+                    { classId: null },
+                    { classId: { in: classIds } }
+                ];
+            } else {
+                query.classId = null;
+            }
           }
       }
   }

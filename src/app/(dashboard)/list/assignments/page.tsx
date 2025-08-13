@@ -25,8 +25,8 @@ const AssignmentListPage = async ({
 }) => {
 
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined; 
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as Role | undefined; 
+  const currentUserId = session?.user?.id;
   
   const columns = [
     { header: "Matière", accessor: "name" },
@@ -54,8 +54,8 @@ const AssignmentListPage = async ({
       {(userRole === Role.ADMIN || userRole === Role.TEACHER) && (
         <td>
           <div className="flex items-center gap-2">
-            <FormContainer table="assignment" type="update" data={item} className={""} />
-            <FormContainer table="assignment" type="delete" id={item.id} className={""} />
+            <FormContainer table="assignment" type="update" data={item} />
+            <FormContainer table="assignment" type="delete" id={item.id} />
           </div>
         </td>
       )}
@@ -90,13 +90,16 @@ const AssignmentListPage = async ({
         break;
       case Role.STUDENT:
         query.lesson.class = {
-          students: { some: { id: currentUserId } },
+          students: { some: { userId: currentUserId } },
         };
         break;
       case Role.PARENT:
-        query.lesson.class = {
-          students: { some: { parentId: currentUserId } },
-        };
+         const parent = await prisma.parent.findUnique({ where: { userId: currentUserId }, select: { id: true } });
+         if (parent) {
+            query.lesson.class = {
+              students: { some: { parentId: parent.id } },
+            };
+         }
         break;
       default: 
         break;
@@ -138,7 +141,7 @@ const AssignmentListPage = async ({
               <Image src="/sort.png" alt="sort" width={14} height={14} />
             </button>
             {(userRole === Role.ADMIN || userRole === Role.TEACHER) && (
-                <FormContainer table="assignment" type="create" className={""} />
+                <FormContainer table="assignment" type="create" />
               )}
           </div>
         </div>

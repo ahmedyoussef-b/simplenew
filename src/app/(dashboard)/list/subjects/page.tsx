@@ -18,7 +18,7 @@ const SubjectListPage = async ({
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined; 
+  const userRole = session?.user?.role as Role | undefined; 
 
   const columns = [
     { header: "Nom de la Matière", accessor: "name" },
@@ -41,8 +41,8 @@ const SubjectListPage = async ({
       {userRole === Role.ADMIN && (
         <td>
           <div className="flex items-center gap-2">
-            <FormContainer table="subject" type="update" data={item} className={""} />
-            <FormContainer table="subject" type="delete" id={item.id} className={""} />
+            <FormContainer table="subject" type="update" data={item} />
+            <FormContainer table="subject" type="delete" id={item.id} />
           </div>
         </td>
       )}
@@ -91,7 +91,7 @@ const SubjectListPage = async ({
               <Image src="/sort.png" alt="sort" width={14} height={14} />
             </button>
             {userRole === Role.ADMIN && (
-              <FormContainer table="subject" type="create" className={""} />
+              <FormContainer table="subject" type="create" />
             )}
           </div>
         </div>

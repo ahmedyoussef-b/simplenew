@@ -23,7 +23,7 @@ const ClassesPage = async ({
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const session = await getServerSession();
-  const userRole = session?.role as AppRole | undefined;
+  const userRole = session?.user?.role as AppRole | undefined;
 
   const viewGradeId = searchParams?.viewGradeId ? Number(searchParams.viewGradeId as string) : null;
 
@@ -60,7 +60,8 @@ const ClassesPage = async ({
             <FormContainer
               table="class"
               type="create"
-              data={{ gradeId: selectedGrade.id }} className={""}            />
+              data={{ gradeId: selectedGrade.id }}
+            />
           )}
         </div>
 
@@ -100,7 +101,7 @@ const ClassesPage = async ({
             </div>
         </div>
         {userRole === AppRole.ADMIN && (
-          <FormContainer table="grade" type="create" className={""} />
+          <FormContainer table="grade" type="create" />
         )}
       </div>
 

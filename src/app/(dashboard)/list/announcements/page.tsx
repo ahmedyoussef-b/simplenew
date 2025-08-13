@@ -24,8 +24,8 @@ const AnnouncementListPage = async ({
 }) => {
   
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined;
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as Role | undefined;
+  const currentUserId = session?.user?.id;
   
   const baseColumns: ColumnConfig[] = [
     { header: "Titre", accessor: "title" },
@@ -69,15 +69,20 @@ const AnnouncementListPage = async ({
       }
     } else if (userRole === Role.PARENT) { 
        // Parents see announcements for their children's classes, or for everyone.
-       const children = await prisma.student.findMany({ where: { parentId: currentUserId }, select: { classId: true } });
-       const classIds = children.map(c => c.classId).filter((id): id is number => id !== null);
-       if (classIds.length > 0) {
-            query.OR = [
-                { classId: null },
-                { classId: { in: classIds } },
-            ];
+       const parent = await prisma.parent.findUnique({ where: { userId: currentUserId }, select: { id: true } });
+       if (parent) {
+          const children = await prisma.student.findMany({ where: { parentId: parent.id }, select: { classId: true } });
+          const classIds = children.map(c => c.classId).filter((id): id is number => id !== null);
+          if (classIds.length > 0) {
+                query.OR = [
+                    { classId: null },
+                    { classId: { in: classIds } },
+                ];
+          } else {
+              query.classId = null; // Only see global announcements if no children in classes
+          }
        } else {
-           query.classId = null; // Only see global announcements if no children in classes
+          query.classId = null;
        }
     }
   }

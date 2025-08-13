@@ -18,17 +18,17 @@ const ParentPage = async () => {
   console.log("👨‍👩‍👧 [ParentPage] Rendu de la page d'accueil du parent. Vérification de la session.");
   const session = await getServerSession();
   
-  if (!session || session.role !== Role.PARENT) { 
+  if (!session || !session.user || session.user.role !== Role.PARENT) { 
     console.warn("👨‍👩‍👧 [ParentPage] Session invalide ou rôle incorrect. Redirection...");
-    redirect(session ? `/${session.role.toLowerCase()}` : `/login`);
+    redirect(session?.user ? `/${session.user.role.toLowerCase()}` : `/login`);
   }
 
   const parent = await prisma.parent.findUnique({
-    where: { userId: session.userId }
+    where: { userId: session.user.id }
   });
 
   if (!parent) {
-     console.error("👨‍👩‍👧 [ParentPage] Profil parent non trouvé pour l'ID utilisateur:", session.userId);
+     console.error("👨‍👩‍👧 [ParentPage] Profil parent non trouvé pour l'ID utilisateur:", session.user.id);
      return (
         <div className="p-4 md:p-6 text-center">
             <Card className="inline-block p-8">

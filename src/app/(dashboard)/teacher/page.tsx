@@ -12,13 +12,13 @@ const TeacherPage = async () => {
   console.log("🧑‍🏫 [TeacherPage] Rendu de la page d'accueil de l'enseignant. Vérification de la session.");
   const session = await getServerSession();
 
-  if (!session || session.role !== Role.TEACHER) { 
+  if (!session || session.user.role !== Role.TEACHER) { 
      console.warn("🧑‍🏫 [TeacherPage] Session invalide ou rôle incorrect. Redirection...");
-     redirect(session ? `/${(session.role as string).toLowerCase()}` : `/login`);
+     redirect(session ? `/${(session.user.role as string).toLowerCase()}` : `/login`);
   }
 
   const teacher = await prisma.teacher.findUnique({
-      where: { userId: session.userId },
+      where: { userId: session.user.id },
       include: {
         user: true,
         subjects: true,
@@ -33,7 +33,7 @@ const TeacherPage = async () => {
   });
 
   if (!teacher) {
-    console.error("🧑‍🏫 [TeacherPage] Profil enseignant non trouvé pour l'ID utilisateur:", session.userId);
+    console.error("🧑‍🏫 [TeacherPage] Profil enseignant non trouvé pour l'ID utilisateur:", session.user.id);
     return (
       <div className="p-4 md:p-6 text-center">
         <Card className="inline-block p-8">

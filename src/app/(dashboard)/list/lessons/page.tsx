@@ -25,7 +25,7 @@ const LessonListPage = async ({
 }) => {
 
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined; 
+  const userRole = session?.user?.role as Role | undefined; 
 
   const columns = [
     { header: "Matière", accessor: "name" },
@@ -49,8 +49,8 @@ const LessonListPage = async ({
       {userRole === Role.ADMIN && (
         <td>
           <div className="flex items-center gap-2">
-            <FormContainer table="lesson" type="update" data={item} className={""} />
-            <FormContainer table="lesson" type="delete" id={item.id} className={""} />
+            <FormContainer table="lesson" type="update" data={item} />
+            <FormContainer table="lesson" type="delete" id={item.id} />
           </div>
         </td>
       )}
@@ -117,7 +117,7 @@ const LessonListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="sort" width={14} height={14} />
             </button>
-            {userRole === Role.ADMIN && <FormContainer table="lesson" type="create" className={""} />}
+            {userRole === Role.ADMIN && <FormContainer table="lesson" type="create" />}
           </div>
         </div>
       </div>

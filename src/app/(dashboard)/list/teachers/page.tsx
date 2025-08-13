@@ -31,11 +31,10 @@ const TeachersPage = async ({ searchParams }: { searchParams: { q: string, p: st
         OR: [
             { name: { contains: q, mode: 'insensitive' } },
             { surname: { contains: q, mode: 'insensitive' } },
-            { email: { contains: q, mode: 'insensitive' } },
+            { user: { email: { contains: q, mode: 'insensitive' } } },
             { phone: { contains: q, mode: 'insensitive' } },
             { address: { contains: q, mode: 'insensitive' } },
             { user: { username: { contains: q, mode: 'insensitive' } } },
-            { user: { email: { contains: q, mode: 'insensitive' } } },
             { subjects: { some: { name: { contains: q, mode: 'insensitive' } } } },
             { classes: { some: { name: { contains: q, mode: 'insensitive' } } } },
         ],
@@ -79,7 +78,7 @@ const TeachersPage = async ({ searchParams }: { searchParams: { q: string, p: st
                 <button className="p-2.5 hover:bg-muted rounded-md transition-colors" title="Trier">
                   <ArrowUpDown size={18} className="text-muted-foreground" />
                 </button>
-                {session.role === Role.ADMIN && <FormContainer table="teacher" type="create" className={""} />}
+                {session.user.role === Role.ADMIN && <FormContainer table="teacher" type="create" />}
               </div>
           </div>
         </div>
@@ -95,7 +94,7 @@ const TeachersPage = async ({ searchParams }: { searchParams: { q: string, p: st
                     <TeacherCard
                         key={teacher.id}
                         teacher={teacher}
-                        userRole={session.role}
+                        userRole={session.user.role}
                         isLCP={index < 4}
                     />
                 ))}

@@ -20,8 +20,8 @@ const StudentListPage = async ({
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const session = await getServerSession();
-  const userRole = session?.role as AppRole | undefined;
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as AppRole | undefined;
+  const currentUserId = session?.user?.id;
 
   const pageParam = searchParams?.page;
   const p = pageParam ? parseInt(Array.isArray(pageParam) ? pageParam[0] : pageParam) : 1;
@@ -67,7 +67,7 @@ const StudentListPage = async ({
       query.class.AND = query.class.AND ? [query.class.AND as Prisma.ClassWhereInput] : [];
     }
     
-    query.class.AND.push(teacherSpecificClassCondition);
+    (query.class.AND as Prisma.Enumerable<Prisma.ClassWhereInput>).push(teacherSpecificClassCondition);
   }
 
 
@@ -101,7 +101,7 @@ const StudentListPage = async ({
               <ArrowUpDown size={18} className="text-muted-foreground" />
             </button>
             {userRole === AppRole.ADMIN && (
-              <FormContainer table="student" type="create" className={""} />
+              <FormContainer table="student" type="create" />
             )}
           </div>
         </div>

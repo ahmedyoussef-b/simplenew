@@ -20,12 +20,12 @@ const TimetableDisplay = dynamic(() => import('@/components/schedule/TimetableDi
 const StudentPage = async () => {
   const session = await getServerSession();
 
-  if (!session || session.role !== Role.STUDENT) {
-    redirect(session ? `/${session.role.toLowerCase()}` : `/login`);
+  if (!session || !session.user || session.user.role !== Role.STUDENT) {
+    redirect(session?.user ? `/${session.user.role.toLowerCase()}` : `/login`);
   }
 
   const student = await prisma.student.findUnique({
-    where: { userId: session.userId },
+    where: { userId: session.user.id },
     include: {
       class: { include: { grade: true } },
     },

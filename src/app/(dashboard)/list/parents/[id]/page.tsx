@@ -37,8 +37,8 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
   const { id } = params;
 
   const session = await getServerSession();
-  const userRole = session?.role as AppRole | undefined;
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as AppRole | undefined;
+  const currentUserId = session?.user?.id;
   
   if (!session) {
     redirect(`/login`);

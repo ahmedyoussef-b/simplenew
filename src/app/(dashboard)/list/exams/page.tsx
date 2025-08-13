@@ -25,8 +25,8 @@ const ExamListPage = async ({
 }) => {
 
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined; 
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as Role | undefined; 
+  const currentUserId = session?.user?.id;
 
   const columns = [
     { header: "Matière", accessor: "name" },
@@ -54,8 +54,8 @@ const ExamListPage = async ({
       {(userRole === Role.ADMIN || userRole === Role.TEACHER) && (
         <td>
           <div className="flex items-center gap-2">
-            <FormContainer table="exam" type="update" data={item} className={""} />
-            <FormContainer table="exam" type="delete" id={item.id} className={""} />
+            <FormContainer table="exam" type="update" data={item} />
+            <FormContainer table="exam" type="delete" id={item.id} />
           </div>
         </td>
       )}
@@ -90,13 +90,16 @@ const ExamListPage = async ({
         break;
       case Role.STUDENT:
         query.lesson.class = {
-          students: { some: { id: currentUserId } },
+          students: { some: { userId: currentUserId } },
         };
         break;
       case Role.PARENT:
-        query.lesson.class = {
-          students: { some: { parentId: currentUserId } },
-        };
+         const parent = await prisma.parent.findUnique({ where: { userId: currentUserId }, select: { id: true } });
+         if (parent) {
+            query.lesson.class = {
+                students: { some: { parentId: parent.id } },
+            };
+         }
         break;
       default:
         break;
@@ -136,7 +139,7 @@ const ExamListPage = async ({
               <Image src="/sort.png" alt="sort" width={14} height={14} />
             </button>
             {(userRole === Role.ADMIN || userRole === Role.TEACHER) && (
-              <FormContainer table="exam" type="create" className={""} />
+              <FormContainer table="exam" type="create" />
             )}
           </div>
         </div>

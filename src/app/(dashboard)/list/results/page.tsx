@@ -9,8 +9,8 @@ import { ResultsPageProps } from "./types";
 
 const ResultListPage = async ({ searchParams }: ResultsPageProps) => {
   const session = await getServerSession();
-  const userRole = session?.role as Role | undefined; 
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as Role | undefined; 
+  const currentUserId = session?.user?.id;
 
   const { data, count, currentPage } = await fetchResults({
     searchParams,

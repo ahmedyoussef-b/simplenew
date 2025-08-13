@@ -20,8 +20,8 @@ const ParentListPage = async ({
   searchParams: { [key: string]: string | string[] | undefined };
 }) => {
   const session = await getServerSession();
-  const userRole = session?.role as AppRole | undefined;
-  const currentUserId = session?.userId;
+  const userRole = session?.user?.role as AppRole | undefined;
+  const currentUserId = session?.user?.id;
 
   let teacherClassIds: number[] = [];
   if (userRole === AppRole.TEACHER && currentUserId) {
@@ -86,7 +86,7 @@ const ParentListPage = async ({
             <button className="p-2.5 hover:bg-muted rounded-md transition-colors" title="Trier">
               <ArrowUpDown size={18} className="text-muted-foreground" />
             </button>
-            {userRole === AppRole.ADMIN && <FormContainer table="parent" type="create" className={""} />}
+            {userRole === AppRole.ADMIN && <FormContainer table="parent" type="create" />}
           </div>
         </div>
       </div>

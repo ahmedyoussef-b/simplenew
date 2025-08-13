@@ -3,10 +3,11 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { ITEM_PER_PAGE } from "@/lib/constants";
 import { ResultWithDetails, ResultListDisplayItem } from "../types";
+import { Role } from "@/types";
 
 interface FetchResultsParams {
   searchParams: { [key: string]: string | string[] | undefined };
-  userRole?: string;
+  userRole?: Role;
   currentUserId?: string;
 }
 
@@ -39,17 +40,20 @@ export const fetchResults = async ({
 
   if (userRole && currentUserId) {
     switch (userRole) {
-      case 'TEACHER':
+      case Role.TEACHER:
         query.OR = [
           { exam: { lesson: { teacherId: currentUserId } } },
           { assignment: { lesson: { teacherId: currentUserId } } },
         ];
         break;
-      case 'STUDENT':
-        query.studentId = currentUserId;
+      case Role.STUDENT:
+        query.student = { userId: currentUserId };
         break;
-      case 'PARENT':
-        query.student = { parentId: currentUserId };
+      case Role.PARENT:
+         const parent = await prisma.parent.findUnique({ where: { userId: currentUserId }, select: { id: true } });
+         if (parent) {
+            query.student = { parentId: parent.id };
+         }
         break;
       default:
         break;
