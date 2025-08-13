@@ -20,15 +20,15 @@ export default function RootPage() {
   const user = useAppSelector(selectCurrentUser);
 
   useEffect(() => {
-    // Si l'utilisateur est authentifié, le rediriger vers son tableau de bord.
+    // Si l'utilisateur est authentifié, le rediriger vers sa page de tableau de bord temporaire.
     if (!isLoading && isAuthenticated && user?.role) {
-      console.log(`✅ [RootPage] User is authenticated with role ${user.role}, redirecting to /${user.role.toLowerCase()}`);
-      router.replace(`/${user.role.toLowerCase()}`);
+      console.log(`✅ [RootPage] User is authenticated with role ${user.role}, redirecting to /temp-${user.role.toLowerCase()}`);
+      router.replace(`/temp-${user.role.toLowerCase()}`);
     }
   }, [isAuthenticated, isLoading, user, router]);
 
   // Affiche un spinner pendant le chargement initial ou la redirection.
-  if (isLoading || isAuthenticated) {
+  if (isLoading || (isAuthenticated && user)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Spinner size="lg" />
