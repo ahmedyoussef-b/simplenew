@@ -109,7 +109,6 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
             user: true, 
             subjects: true, 
             classes: true,
-            _count: { select: { classes: true, subjects: true } } 
         } 
     }),
     prisma.classroom.findMany(),
@@ -122,6 +121,15 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
   const childrenClasses = parent.students.map((c: ParentWithDetails['students'][number]) => c.class).filter((c): c is ClassWithGrade => !!(c as any)?.grade);
   const uniqueChildrenClasses = Array.from(new Map(childrenClasses.map(item => [item.id, item])).values());
   
+  const teachersWithCount: TeacherWithDetails[] = allTeachers.map(t => ({
+    ...t,
+    _count: {
+        subjects: t.subjects.length,
+        classes: t.classes.length,
+    }
+  }));
+
+
   const wizardData: WizardData = {
     school: {
       name: `Emploi du temps des enfants de ${parent.name} ${parent.surname}`,
@@ -134,7 +142,7 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
     },
     classes: uniqueChildrenClasses,
     subjects: allSubjects as Subject[],
-    teachers: allTeachers as TeacherWithDetails[],
+    teachers: teachersWithCount,
     rooms: allClassrooms as Classroom[],
     grades: allGrades as Grade[],
     lessonRequirements: allLessonRequirements as LessonRequirement[],

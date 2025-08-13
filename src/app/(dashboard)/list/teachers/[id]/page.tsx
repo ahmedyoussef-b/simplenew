@@ -35,25 +35,27 @@ const SingleTeacherPage = async ({
     redirect(`/${userRole?.toLowerCase() || 'login'}`);
   }
 
-  const teacher: Omit<TeacherWithDetails, 'lessons'> & { lessons?: Lesson[] } | null =
-    await prisma.teacher.findUnique({
+  const teacherFromDb = await prisma.teacher.findUnique({
       where: { id },
       include: {
         user: true,
         subjects: true,
         classes: true,
-        _count: {
-          select: {
-            classes: true,
-            subjects: true,
-          }
-        }
       },
   });
 
-  if (!teacher) {
+  if (!teacherFromDb) {
     return notFound();
   }
+  
+  const teacher: TeacherWithDetails = {
+    ...teacherFromDb,
+    _count: {
+      subjects: teacherFromDb.subjects.length,
+      classes: teacherFromDb.classes.length,
+    }
+  }
+
 
   // --- REFACTORED DATA FETCHING ---
   const lessons = await prisma.lesson.findMany({

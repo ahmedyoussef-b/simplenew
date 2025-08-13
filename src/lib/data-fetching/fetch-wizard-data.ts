@@ -19,7 +19,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       school,
       classes,
       subjects,
-      teachers,
+      teachersFromDb,
       rooms,
       grades,
       lessonRequirements,
@@ -31,7 +31,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       prisma.school.findFirst(),
       prisma.class.findMany({ include: { grade: true, _count: { select: { students: true, lessons: true } } } }),
       prisma.subject.findMany({orderBy: {name: 'asc'}}),
-      prisma.teacher.findMany({ include: { user: true, subjects: true, classes: true, _count: { select: { classes: true, subjects: true } } } }),
+      prisma.teacher.findMany({ include: { user: true, subjects: true, classes: true } }),
       prisma.classroom.findMany({orderBy: {name: 'asc'}}),
       prisma.grade.findMany({orderBy: {level: 'asc'}}),
       prisma.lessonRequirement.findMany(),
@@ -40,6 +40,15 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       prisma.teacherAssignment.findMany(),
       prisma.lesson.findMany()
     ]);
+    
+    const teachers: TeacherWithDetails[] = teachersFromDb.map(t => ({
+        ...t,
+        _count: {
+            subjects: t.subjects.length,
+            classes: t.classes.length,
+        }
+    }));
+
 
     // This is now the definitive default structure for school configuration
     const defaultSchoolConfig: SchoolData = {

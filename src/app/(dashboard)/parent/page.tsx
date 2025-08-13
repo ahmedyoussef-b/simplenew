@@ -101,11 +101,19 @@ const ParentPage = async () => {
             user: true, 
             subjects: true, 
             classes: true,
-            _count: { select: { classes: true, subjects: true } } 
         } 
     }),
     prisma.classroom.findMany(),
   ]);
+
+  const teachersWithCount: TeacherWithDetails[] = allTeachers.map(t => ({
+    ...t,
+    _count: {
+        subjects: t.subjects.length,
+        classes: t.classes.length,
+    }
+  }));
+
   
   const childrenClasses = children.map(c => c.class).filter((c): c is ClassWithGrade => !!(c as any)?.grade);
   const uniqueChildrenClasses = Array.from(new Map(childrenClasses.map(item => [item['id'], item])).values());
@@ -123,7 +131,7 @@ const ParentPage = async () => {
     },
     classes: uniqueChildrenClasses,
     subjects: allSubjects,
-    teachers: allTeachers as TeacherWithDetails[],
+    teachers: teachersWithCount,
     rooms: allClassrooms,
     grades: [],
     lessonRequirements: [],

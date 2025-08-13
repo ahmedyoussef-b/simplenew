@@ -17,22 +17,16 @@ const TeacherPage = async () => {
      redirect(session ? `/${(session.user.role as string).toLowerCase()}` : `/login`);
   }
 
-  const teacher = await prisma.teacher.findUnique({
+  const teacherFromDb = await prisma.teacher.findUnique({
       where: { userId: session.user.id },
       include: {
         user: true,
         subjects: true,
         classes: true,
-        _count: {
-          select: {
-            classes: true,
-            subjects: true,
-          }
-        }
       }
   });
 
-  if (!teacher) {
+  if (!teacherFromDb) {
     console.error("🧑‍🏫 [TeacherPage] Profil enseignant non trouvé pour l'ID utilisateur:", session.user.id);
     return (
       <div className="p-4 md:p-6 text-center">
@@ -47,6 +41,14 @@ const TeacherPage = async () => {
       </div>
     );
   }
+  
+  const teacher: TeacherWithDetails = {
+    ...teacherFromDb,
+    _count: {
+      subjects: teacherFromDb.subjects.length,
+      classes: teacherFromDb.classes.length
+    }
+  };
   
   console.log(`🧑‍🏫 [TeacherPage] Profil enseignant trouvé pour ${teacher.name}. Récupération des données de l'emploi du temps.`);
 

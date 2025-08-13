@@ -50,7 +50,7 @@ const StudentPage = async () => {
 
   const studentClass = student.class;
 
-  const [lessonsFromDb, allSubjects, allTeachers, allClassrooms] = await Promise.all([
+  const [lessonsFromDb, allSubjects, allTeachersFromDb, allClassrooms] = await Promise.all([
     prisma.lesson.findMany({
       where: {
         classId: studentClass.id,
@@ -78,11 +78,18 @@ const StudentPage = async () => {
             user: true, 
             subjects: true, 
             classes: true,
-            _count: { select: { classes: true, subjects: true } } 
         } 
     }),
     prisma.classroom.findMany(),
   ]);
+
+  const allTeachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
+      ...t,
+      _count: {
+          subjects: t.subjects.length,
+          classes: t.classes.length,
+      }
+  }));
 
   const lessons: Lesson[] = lessonsFromDb.map(lesson => ({
     ...lesson,
@@ -105,7 +112,7 @@ const StudentPage = async () => {
     },
     classes: [studentClass as unknown as ClassWithGrade],
     subjects: allSubjects as Subject[],
-    teachers: allTeachers as TeacherWithDetails[],
+    teachers: allTeachers,
     rooms: allClassrooms as Classroom[],
     grades: [],
     lessonRequirements: [],
