@@ -105,10 +105,13 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     }, [dispatch, initialData]);
 
     useEffect(() => {
-        if (viewMode === 'class' && wizardData.classes.length > 0 && !selectedViewId) {
-            setSelectedViewId(wizardData.classes[0].id.toString());
-        } else if (viewMode === 'teacher' && wizardData.teachers.length > 0 && !selectedViewId) {
-            setSelectedViewId(wizardData.teachers[0].id);
+        // Only set the default selected ID if it's currently empty
+        if (!selectedViewId) {
+            if (viewMode === 'class' && wizardData.classes.length > 0) {
+                setSelectedViewId(wizardData.classes[0].id.toString());
+            } else if (viewMode === 'teacher' && wizardData.teachers.length > 0) {
+                setSelectedViewId(wizardData.teachers[0].id);
+            }
         }
     }, [viewMode, wizardData.classes, wizardData.teachers, selectedViewId]);
 
@@ -336,9 +339,10 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                             // Reset selectedViewId when changing mode to avoid invalid state
                             setSelectedViewId('');
                         }}
-                        selectedClassId={viewMode === 'class' ? selectedViewId : ''}
+                        selectedClassId={selectedViewId}
                         onClassChange={setSelectedViewId}
-                        selectedTeacherId={viewMode === 'teacher' ? selectedViewId : ''}
+                        selectedTeacherId={selectedViewId}
+                        onTeacherChange={setSelectedViewId}
                         classes={wizardData.classes}
                         teachers={wizardData.teachers}
                     />
