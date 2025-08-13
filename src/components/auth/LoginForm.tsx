@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useLoginMutation } from "@/lib/redux/api/authApi";
 import { useToast } from "@/hooks/use-toast";
-import Link from "next/link";
 import { useRouter } from "next/navigation"; 
 import { useEffect } from "react";
 import type { SerializedError } from '@reduxjs/toolkit';
@@ -36,20 +35,17 @@ export function LoginForm() {
     resolver: zodResolver(loginSchema),
   });
 
-  const [login, { isLoading, isSuccess, isError, error: loginErrorData, data: loginSuccessData }] = useLoginMutation();
+  const [login, { isLoading, isSuccess, isError, error: loginErrorData }] = useLoginMutation();
   const { toast } = useToast();
   const router = useRouter(); 
 
   useEffect(() => {
-    console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError, "loginSuccessData:", loginSuccessData);
-    if (isSuccess && loginSuccessData) {
-        console.log("✅ [LoginForm] Login successful. Redirecting to /dashboard.");
-        toast({
-            title: "Connexion réussie",
-            description: "Vous allez être redirigé...",
-        });
-        router.push('/dashboard');
-        router.refresh();
+    console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError);
+    if (isSuccess) {
+        console.log("✅ [LoginForm] Login successful. Forcing page refresh for redirection.");
+        // Instead of router.push, we do a full page reload to the root.
+        // The root page will handle the server-side redirect to the correct dashboard.
+        window.location.href = '/';
     }
     if (isError && loginErrorData) {
        console.error("❌ [LoginForm] Login mutation failed. Error data:", loginErrorData);
@@ -73,7 +69,7 @@ export function LoginForm() {
         description: description,
       });
     }
-  }, [isSuccess, isError, loginErrorData, loginSuccessData, toast, router]);
+  }, [isSuccess, isError, loginErrorData, toast]);
 
   const onSubmit = async (data: LoginCredentials) => {
     console.log("➡️ [LoginForm] Submitting login form with data:", data);

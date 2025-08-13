@@ -1,12 +1,12 @@
 // src/app/api/auth/login/route.ts
-import { NextResponse } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { loginSchema } from '@/lib/formValidationSchemas';
 import { SESSION_COOKIE_NAME } from '@/lib/constants';
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   console.log('--- 🚀 API: Login Attempt ---');
   try {
     const body = await req.json();
@@ -34,28 +34,23 @@ export async function POST(req: Request) {
       process.env.JWT_SECRET!,
       { expiresIn: '7d' }
     );
-
-    const response = NextResponse.json({ 
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        img: user.img,
-        active: user.active,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        twoFactorEnabled: user.twoFactorEnabled
-    });
-
+    
+    // Instead of returning JSON, we set the cookie and then redirect the user.
+    // This is the POST-Redirect-GET pattern.
+    console.log('🍪 Cookie de session créé. Préparation de la redirection...');
+    
+    // Create a response object to set the cookie
+    const response = NextResponse.json({ success: true, message: 'Login successful' });
+    
     response.cookies.set(SESSION_COOKIE_NAME, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24 * 7, // 1 week
       path: '/',
     });
-    console.log('🍪 Cookie de session créé.');
 
     return response;
+
   } catch (error) {
     console.error('❌ Erreur dans /api/auth/login:', error);
     return NextResponse.json({ message: 'An error occurred' }, { status: 500 });

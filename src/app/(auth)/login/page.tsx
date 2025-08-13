@@ -12,12 +12,6 @@ export default function LoginPage() {
       description="Entrez vos identifiants pour accéder à votre tableau de bord."
     >
       <LoginForm />
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        Pas encore de compte ?{' '}
-        <Link href="/register" className="font-medium text-primary hover:underline">
-          S'inscrire
-        </Link>
-      </p>
     </AuthLayout>
   );
 }
