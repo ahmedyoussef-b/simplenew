@@ -1,4 +1,3 @@
-import type { EntityType as EntityTypeFromIndex } from '@/types/index';
 import { fetchBaseQuery } from '@reduxjs/toolkit/query';
 
 // Define the type locally to break the circular dependency chain
