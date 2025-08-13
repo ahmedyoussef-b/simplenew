@@ -31,7 +31,9 @@ export const SchoolConfigForm: React.FC<SchoolConfigFormProps> = () => {
   };
   
   const handleDraftDetailsChange = (field: 'name' | 'description', value: string) => {
-    dispatch(updateActiveDraftDetails({ [field]: value }));
+    if (activeDraft) {
+      dispatch(updateActiveDraftDetails({ [field]: value }));
+    }
   };
   
   const dayOptions = [
