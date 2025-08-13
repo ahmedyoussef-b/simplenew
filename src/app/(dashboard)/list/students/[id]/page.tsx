@@ -98,7 +98,7 @@ const SingleStudentPage = async ({
             user: true, 
             subjects: true, 
             classes: true,
-            _count: { select: { classes: true, subjects: true } } 
+            _count: { select: {  subjects: true } } 
         } 
     }),
     prisma.classroom.findMany(),

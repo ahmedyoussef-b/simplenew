@@ -17,51 +17,61 @@ import Pagination from "@/components/Pagination";
 
 const ITEM_PER_PAGE = 12;
 
-const TeachersPage = async ({ searchParams }: { searchParams: { q: string, p: string } }) => {
+const TeachersPage = async ({ searchParams }: { searchParams: { q?: string, p?: string } }) => {
     const session = await getServerSession();
     
-    if (!session) {
+    if (!session?.user) {
       redirect(`/login`);
     }
 
     const q = searchParams?.q || "";
-    const p = parseInt(searchParams?.p) || 1;
+    const p = parseInt(searchParams?.p || "1") || 1;
 
     const query = {
         OR: [
             { name: { contains: q, mode: 'insensitive' } },
             { surname: { contains: q, mode: 'insensitive' } },
             { user: { email: { contains: q, mode: 'insensitive' } } },
-            { phone: { contains: q, mode: 'insensitive' } },
-            { address: { contains: q, mode: 'insensitive' } },
+            { phone: { contains: q, mode: 'insensitive' } } as any, // Cast to any to avoid type issue on optional field
+            { address: { contains: q, mode: 'insensitive' } } as any,
             { user: { username: { contains: q, mode: 'insensitive' } } },
             { subjects: { some: { name: { contains: q, mode: 'insensitive' } } } },
-            { classes: { some: { name: { contains: q, mode: 'insensitive' } } } },
         ],
     };
 
-    const [data, count] = await Promise.all([
+    const [teachersFromDb, count] = await Promise.all([
         prisma.teacher.findMany({
-            where: query as any, 
+            where: query, 
             include: {
-              user: true, // Include all user fields, Prisma handles password omission
+              user: true, 
               subjects: true,
-              classes: true,
+              lessons: {
+                  select: {
+                      class: true
+                  },
+                  distinct: ['classId']
+              }
             },
             orderBy: [{ surname: 'asc' }, {name: 'asc'}],
             take: ITEM_PER_PAGE,
             skip: ITEM_PER_PAGE * (p - 1),
           }),
-          prisma.teacher.count({ where: query as any }),
+          prisma.teacher.count({ where: query }),
     ]);
         
-    const teachersWithCount: TeacherWithDetails[] = data.map(t => ({
-        ...t,
-        _count: {
-          subjects: t.subjects.length,
-          classes: t.classes.length,
-        },
-    }));
+    const teachersWithCount: TeacherWithDetails[] = teachersFromDb.map(t => {
+        const uniqueClasses = t.lessons.map(l => l.class);
+        return {
+            ...t,
+            user: t.user, // Ensure user is passed
+            subjects: t.subjects, // Ensure subjects are passed
+            classes: uniqueClasses, // Pass the derived classes
+            _count: {
+              subjects: t.subjects.length,
+              classes: uniqueClasses.length,
+            },
+        };
+    });
 
     return (
       <div className="bg-background p-4 md:p-6 rounded-lg flex-1 m-4 mt-0">
