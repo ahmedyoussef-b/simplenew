@@ -19,7 +19,7 @@ import { Spinner } from "@/components/ui/spinner";
 import SocialSignInButtons from "./SocialSignInButtons";
 import FormError from "@/components/forms/FormError";
 import { cn } from "@/lib/utils";
-import { registerSchema, type RegisterSchema as RegisterFormData } from '@/lib/formValidationSchemas'; // Import the central schema
+import { registerSchema, type RegisterSchema as RegisterFormData} from '@/lib/formValidationSchemas'; // Import the central schema
 
 
 interface ApiErrorData {
