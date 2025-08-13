@@ -20,8 +20,8 @@ type ChatroomSessionWithRelations = ChatroomSession & {
 
 export async function GET(request: NextRequest) {
   console.log("➡️ [API] GET /api/chatroom/reports: Requête reçue pour les rapports.");
-  const sessionInfo = await getServerSession();
-  if (!sessionInfo?.userId) {
+  const sessionInfo  = await getServerSession();
+  if (!sessionInfo?.user?.id) {
     console.warn("❌ [API] GET /api/chatroom/reports: Non autorisé, aucun ID utilisateur trouvé dans la session.");
     return NextResponse.json({ message: 'Non autorisé' }, { status: 401 });
   }
@@ -32,9 +32,9 @@ export async function GET(request: NextRequest) {
     };
 
     // If the user is a teacher, only fetch their own reports. Admin sees all.
-    if (sessionInfo.role === Role.TEACHER) {
-      whereClause.hostId = sessionInfo.userId;
-      console.log(`[API] Filtre appliqué pour l'enseignant ID: ${sessionInfo.userId}`);
+    if (sessionInfo.user.role === Role.TEACHER) {
+      whereClause.hostId = sessionInfo.user.id;
+      console.log(`[API] Filtre appliqué pour l'enseignant ID: ${sessionInfo.user.id}`);
     } else {
       console.log("[API] L'administrateur demande tous les rapports.");
     }
@@ -43,9 +43,11 @@ export async function GET(request: NextRequest) {
       where: whereClause,
       include: {
         host: true,
+        
         participants: {
           include: {
             user: true,
+              
           },
         },
         _count: {

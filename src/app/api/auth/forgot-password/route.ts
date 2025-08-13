@@ -41,7 +41,7 @@ export async function POST(req: Request) {
         },
       });
 
-      console.log('📬 Envoi de l'e-mail de réinitialisation...');
+      console.log('📬 Envoi de l e-mail de réinitialisation...');
       await transporter.sendMail({
           from: `"${process.env.EMAIL_FROM_NAME}" <${process.env.EMAIL_FROM_EMAIL}>`,
           to: email,

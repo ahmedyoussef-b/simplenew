@@ -17,7 +17,7 @@ interface ClassWithStudents {
   gradeId: number;
   capacity: number;
   abbreviation: string | null;
-  supervisorId: string | null;
+  superviseurId: string | null;
   students: StudentDetails[];
 }
 
@@ -30,7 +30,6 @@ export async function GET() {
           orderBy: { name: 'asc' },
         },
       },
-      orderBy: { name: 'asc' },
     }) as ClassWithStudents[];
 
     const classRooms = classesWithStudents.map((cls) => ({
