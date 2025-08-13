@@ -22,8 +22,8 @@ interface NavbarProps {
   user: SafeUser | null;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ user }) => {
-    const currentUser: SafeUser | null = useSelector(selectCurrentUser);
+const Navbar: React.FC<NavbarProps> = ({ user: initialUser }) => {
+    const currentUser = useSelector(selectCurrentUser);
     const unreadNotifications = useSelector(selectUnreadCount);
     const [mounted, setMounted] = useState(false);
     const router = useRouter();
@@ -31,7 +31,8 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
     const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   
-    const rolePath = currentUser?.role.toLowerCase();
+    const userToDisplay = currentUser || initialUser;
+    const rolePath = userToDisplay?.role.toLowerCase();
   
     useEffect(() => {
       setSearchQuery(searchParams.get('search') || '');
@@ -62,7 +63,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
   
     if (!mounted) {
       return (
-<div className="flex items-center justify-between p-4 border-b bg-background w-full fixed top-0 left-0 right-0 z-50">
+        <div className="flex items-center justify-between p-4 border-b bg-background w-full fixed top-0 left-0 right-0 z-50">
             <div className="flex items-center gap-4">
               <div className="h-10 w-10 bg-muted rounded-md animate-pulse"></div>
               <div className="hidden md:block h-8 w-40 bg-muted rounded-lg animate-pulse"></div>
@@ -98,7 +99,7 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                            Navigation principale de l'application
                        </SheetDescription>
                     </SheetHeader>
-                    <Menu role={currentUser?.role} />
+                    <Menu role={userToDisplay?.role} />
                 </SheetContent>
               </Sheet>
               
@@ -144,17 +145,17 @@ const Navbar: React.FC<NavbarProps> = ({ user }) => {
                   <NotificationDropdown />
               </DropdownMenu>
   
-              {currentUser ? (
+              {userToDisplay ? (
                   <>
                       <div className="hidden sm:flex flex-col text-right">
-                          <span className="text-sm font-semibold">{currentUser.name || currentUser.email}</span>
+                          <span className="text-sm font-semibold">{userToDisplay.name || userToDisplay.email}</span>
                           <span className="text-xs text-muted-foreground capitalize">
-                              {currentUser.role.toLowerCase()}
+                              {userToDisplay.role.toLowerCase()}
                           </span>
                       </div>
                       <div className="relative h-10 w-10">
                           <Image
-                              src={currentUser.img ? currentUser.img : `https://api.dicebear.com/8.x/avataaars/svg?seed=${currentUser.id}`}
+                              src={userToDisplay.img ? userToDisplay.img : `https://api.dicebear.com/8.x/avataaars/svg?seed=${userToDisplay.id}`}
                               alt="Photo de profil"
                               fill
                               sizes="40px"
