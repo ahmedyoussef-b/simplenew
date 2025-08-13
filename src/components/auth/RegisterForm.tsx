@@ -19,7 +19,8 @@ import { Spinner } from "@/components/ui/spinner";
 import SocialSignInButtons from "./SocialSignInButtons";
 import FormError from "@/components/forms/FormError";
 import { cn } from "@/lib/utils";
-import { registerSchema, type RegisterSchema as RegisterFormData} from '@/lib/formValidationSchemas'; // Import the central schema
+import { registerSchema } from '@/lib/formValidationSchemas'; // Import the central schema
+import z from "zod";
 
 
 interface ApiErrorData {
@@ -35,7 +36,7 @@ function isSerializedError(error: unknown): error is SerializedError {
 }
 
 export function RegisterForm() {
-  const { register, handleSubmit, setValue, watch, formState: { errors }, setError } = useForm<RegisterFormData>({
+  const { register, handleSubmit, setValue, watch, formState: { errors }, setError } = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
   });
 
@@ -68,7 +69,7 @@ export function RegisterForm() {
     }
   }, [isSuccess, isError, registerErrorData, toast, router]);
 
-  const onSubmit = async (data: RegisterFormData) => {
+  const onSubmit = async (data: z.infer<typeof registerSchema>) => {
     if (data.password !== data.confirmPassword) {
       setError("confirmPassword", { type: "manual", message: "Les mots de passe ne correspondent pas." });
       return;

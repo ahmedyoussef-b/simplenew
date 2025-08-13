@@ -68,9 +68,8 @@ export type LessonRequirement = Omit<PrismaLessonRequirement, 'id' | 'scheduleDr
 export type SubjectRequirement = Omit<PrismaSubjectRequirement, 'allowedRoomIds' | 'scheduleDraftId'> & { allowedRoomIds: number[], scheduleDraftId: string | null };
 export type TeacherConstraint = PrismaTeacherConstraint;
 export type ClassAssignment = PrismaClassAssignment;
-export type TeacherAssignment = Omit<PrismaTeacherAssignment, 'classAssignments'> & {
-    classAssignments: ClassAssignment[];
-};
+
+export type TeacherAssignment = Omit<PrismaTeacherAssignment, 'classAssignments'> & {classIds: number[], classAssignments: ClassAssignment[];};
 
 export type ChatroomSession = PrismaChatroomSession;
 export type ScheduleDraft = Omit<PrismaScheduleDraft, 'createdAt' | 'updatedAt'> & {

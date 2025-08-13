@@ -45,6 +45,7 @@ export const teacherAssignmentsSlice = createSlice({
                 subjectId,
                 classIds,
                 scheduleDraftId: null,
+                classAssignments: []
             });
         }
         
@@ -88,6 +89,7 @@ export const teacherAssignmentsSlice = createSlice({
                     subjectId,
                     classIds: [classId],
                     scheduleDraftId: null,
+                    classAssignments: []
                 });
             }
         }

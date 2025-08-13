@@ -64,6 +64,7 @@ export function LoginForm() {
                 description: description,
                 duration: 10000, // Make it stay longer to copy the code
              });
+             console.log("➡️ 😁[LoginForm] 2FA required. Redirecting to /verify-2fa with token:", twoFactorResponse.twoFactorToken);
              router.push(`/verify-2fa?token=${twoFactorResponse.twoFactorToken}`);
         } else {
              console.log("✅ [LoginForm] Login successful, no 2FA. The main page effect will handle redirection.");

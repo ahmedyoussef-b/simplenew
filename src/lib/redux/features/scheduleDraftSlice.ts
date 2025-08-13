@@ -105,7 +105,7 @@ export const fetchScheduleDraft = createAsyncThunk<
                     isActive: true,
                     createdAt: now,
                     updatedAt: now,
-                    schoolId: initialWizardData.school.id?.toString() || null,
+                    schoolId: initialWizardData.school.id as number | null,
                     schoolConfig: JSON.stringify(initialWizardData.school),
                     classes: JSON.stringify(initialWizardData.classes),
                     subjects: JSON.stringify(initialWizardData.subjects),

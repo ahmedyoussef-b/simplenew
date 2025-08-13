@@ -4,6 +4,7 @@
 import { useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -38,8 +39,9 @@ export default function Verify2FAForm({ token }: Verify2FAFormProps) {
       console.log("✅ [Verify2FAForm] 2FA verification successful.");
       toast({
         title: 'Connexion réussie',
-        description: 'Vous êtes maintenant connecté.',
+        description: 'Vous êtes maintenant connecté. Redirection...',
       });
+      router.push('/'); // Redirection vers la page principale
     }
     if (isError && verifyErrorData) {
       console.log("❌ [Verify2FAForm] 2FA verification failed. Error:", verifyErrorData);
