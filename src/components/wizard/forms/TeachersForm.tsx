@@ -1,9 +1,9 @@
 // src/components/wizard/forms/TeachersForm.tsx
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
-import { Users, BookOpen, AlertCircle, Trash2, Edit, Plus, Check } from 'lucide-react';
+import { Users, BookOpen, AlertCircle, Trash2, Edit, Plus, Check, Hourglass } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Accordion,
@@ -34,16 +34,41 @@ import {
   selectAllProfesseurs,
 } from '@/lib/redux/features/teachers/teachersSlice';
 import { selectAllClasses } from '@/lib/redux/features/classes/classesSlice';
+import { selectAllMatieres } from '@/lib/redux/features/subjects/subjectsSlice';
+import { selectLessonRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
 import type { TeacherWithDetails, Subject } from '@/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+
+const TEACHER_HOURS_QUOTA = 25; // Weekly hours quota
 
 const TeachersForm: React.FC = () => {
     const dispatch = useAppDispatch();
     const { toast } = useToast();
     const teachers = useAppSelector(selectAllProfesseurs);
     const classes = useAppSelector(selectAllClasses);
+    const subjects = useAppSelector(selectAllMatieres);
     const teacherAssignments = useAppSelector(selectTeacherAssignments);
+    const lessonRequirements = useAppSelector(selectLessonRequirements);
+
+    const teacherWorkloads = useMemo(() => {
+        const workloads: Record<string, number> = {};
+        teachers.forEach(teacher => {
+            const assignments = teacherAssignments.filter(a => a.teacherId === teacher.id);
+            let totalHours = 0;
+            assignments.forEach(assignment => {
+                assignment.classIds.forEach(classId => {
+                    const req = lessonRequirements.find(r => r.classId === classId && r.subjectId === assignment.subjectId);
+                    const subjectDefaultHours = subjects.find(s => s.id === assignment.subjectId)?.weeklyHours || 0;
+                    totalHours += req ? req.hours : subjectDefaultHours;
+                });
+            });
+            workloads[teacher.id] = totalHours;
+        });
+        return workloads;
+    }, [teacherAssignments, lessonRequirements, teachers, subjects]);
+
 
     const handleClassToggle = (teacherId: string, subjectId: number, classId: number) => {
         dispatch(toggleClassAssignment({ teacherId, subjectId, classId }));
@@ -98,7 +123,11 @@ const TeachersForm: React.FC = () => {
                         </Alert>
                     ) : (
                         <Accordion type="single" collapsible className="w-full">
-                            {teachers.map((teacher: TeacherWithDetails) => (
+                            {teachers.map((teacher: TeacherWithDetails) => {
+                                const workload = teacherWorkloads[teacher.id] || 0;
+                                const isOverloaded = workload > TEACHER_HOURS_QUOTA;
+
+                                return (
                                 <AccordionItem value={`teacher-${teacher.id}`} key={teacher.id}>
                                     <AccordionTrigger className="hover:no-underline">
                                         <div className="flex justify-between items-center w-full pr-4">
@@ -106,7 +135,15 @@ const TeachersForm: React.FC = () => {
                                                 <Users className="h-5 w-5" />
                                                 {teacher.name} {teacher.surname}
                                             </span>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-4">
+                                              <div className={cn(
+                                                  "flex items-center gap-2 text-sm font-medium p-2 rounded-lg",
+                                                  isOverloaded ? "bg-destructive/10 text-destructive" : "bg-muted/70 text-muted-foreground"
+                                                )}>
+                                                  <Hourglass size={14} />
+                                                  <span>{workload}h / {TEACHER_HOURS_QUOTA}h</span>
+                                                  {isOverloaded && <AlertTriangle size={14} title="Charge horaire dépassée" />}
+                                              </div>
                                               <span className="text-sm text-muted-foreground">
                                                   {teacher.subjects.length} matière(s)
                                               </span>
@@ -176,7 +213,7 @@ const TeachersForm: React.FC = () => {
                                         </div>
                                     </AccordionContent>
                                 </AccordionItem>
-                            ))}
+                            )})}
                         </Accordion>
                     )}
                 </CardContent>
