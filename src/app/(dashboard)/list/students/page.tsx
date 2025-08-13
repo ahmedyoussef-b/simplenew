@@ -25,55 +25,52 @@ const StudentListPage = async ({
 
   const pageParam = searchParams?.page;
   const p = pageParam ? parseInt(Array.isArray(pageParam) ? pageParam[0] : pageParam) : 1;
-  let query: Prisma.StudentWhereInput = {};
+  
+  const where: Prisma.StudentWhereInput = {};
+  const conditions: Prisma.StudentWhereInput[] = [];
 
   const teacherIdParam = searchParams?.teacherId;
   if (teacherIdParam) {
     const teacherId = Array.isArray(teacherIdParam) ? teacherIdParam[0] : teacherIdParam;
     if (userRole === AppRole.TEACHER || userRole === AppRole.ADMIN) { 
-      if (typeof query.class !== 'object' || query.class === null) {
-        query.class = {};
-      }
-      (query.class as Prisma.ClassRelationFilter).lessons = { some: { teacherId: teacherId } };
+      conditions.push({ class: { lessons: { some: { teacherId: teacherId } } } });
     }
   }
 
   const classIdParam = searchParams?.classId;
   if (classIdParam) {
-    query.classId = parseInt(Array.isArray(classIdParam) ? classIdParam[0] : classIdParam);
+    conditions.push({ classId: parseInt(Array.isArray(classIdParam) ? classIdParam[0] : classIdParam) });
   }
   
   const searchString = searchParams?.search;
   if (searchString && typeof searchString === 'string' && searchString.trim() !== '') {
-    query.OR = [
-        { name: { contains: searchString, mode: "insensitive" } },
-        { surname: { contains: searchString, mode: "insensitive" } },
-        { user: { email: { contains: searchString, mode: "insensitive" }}},
-        { user: { username: { contains: searchString, mode: "insensitive" }}},
-        { class: { name: { contains: searchString, mode: "insensitive" }}}
-    ];
+    conditions.push({
+      OR: [
+          { name: { contains: searchString, mode: "insensitive" } },
+          { surname: { contains: searchString, mode: "insensitive" } },
+          { user: { email: { contains: searchString, mode: "insensitive" }}},
+          { user: { username: { contains: searchString, mode: "insensitive" }}},
+          { class: { name: { contains: searchString, mode: "insensitive" }}}
+      ]
+    });
   }
   
   if (userRole === AppRole.TEACHER && currentUserId && !teacherIdParam) {
-    const teacherSpecificClassCondition: Prisma.ClassWhereInput = {
-      lessons: { some: { teacherId: currentUserId } }
-    };
-    
-    if (typeof query.class !== 'object' || query.class === null) {
-      query.class = {};
-    }
-
-    if (!Array.isArray((query.class as Prisma.ClassRelationFilter).AND)) {
-      (query.class as Prisma.ClassRelationFilter).AND = (query.class as Prisma.ClassRelationFilter).AND ? [(query.class as Prisma.ClassRelationFilter).AND as Prisma.ClassWhereInput] : [];
-    }
-    
-    ((query.class as Prisma.ClassRelationFilter).AND as Prisma.Enumerable<Prisma.ClassWhereInput>).push(teacherSpecificClassCondition);
+    conditions.push({
+      class: {
+        lessons: { some: { teacherId: currentUserId } }
+      }
+    });
+  }
+  
+  if(conditions.length > 0) {
+    where.AND = conditions;
   }
 
 
   const [data, count]: [StudentWithClassAndUser[], number] = await prisma.$transaction([
     prisma.student.findMany({
-      where: query,
+      where,
       include: {
         class: { select: { id:true, name: true } },
         user: { select: { id: true, username: true, email: true, img: true } }, 
@@ -82,7 +79,7 @@ const StudentListPage = async ({
       take: ITEM_PER_PAGE,
       skip: ITEM_PER_PAGE * (p - 1),
     }),
-    prisma.student.count({ where: query }),
+    prisma.student.count({ where }),
   ]);
   
   return (
