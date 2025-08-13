@@ -1,3 +1,4 @@
+
 // src/app/(dashboard)/list/teachers/[id]/page.tsx
 import Announcements from "@/components/Announcements";
 import Performance from "@/components/Performance";
@@ -29,8 +30,6 @@ const SingleTeacherPage = async ({
 
   if (!session) redirect(`/login`);
 
-  // Allow admins and any teacher to view this page.
-  // Redirect other roles to their respective dashboards.
   if (userRole !== Role.ADMIN && userRole !== Role.TEACHER) {
     redirect(`/${userRole?.toLowerCase() || 'login'}`);
   }
@@ -47,71 +46,68 @@ const SingleTeacherPage = async ({
     return notFound();
   }
   
-  // --- REFACTORED DATA FETCHING ---
   const lessons = await prisma.lesson.findMany({
     where: { teacherId: id },
     select: {
-      id: true,
-      name: true,
-      day: true,
-      startTime: true,
-      endTime: true,
-      subjectId: true,
-      classId: true,
-      teacherId: true,
-      classroomId: true,
-      scheduleDraftId: true, // Add this line
-      subject: { select: { name: true } },
-      class: { select: { name: true } },
-      createdAt: true, // Add createdAt
-      updatedAt: true, // Add updatedAt
+      id: true, name: true, day: true, startTime: true, endTime: true,
+      subjectId: true, classId: true, teacherId: true, classroomId: true,
+      scheduleDraftId: true, subject: { select: { name: true } },
+      class: { select: { name: true } }, createdAt: true, updatedAt: true,
     },
   });
   
   const classIds = [...new Set(lessons.map(l => l.classId).filter(id => id !== null))];
-
-  const teacher: TeacherWithDetails = {
-    ...teacherFromDb,
-    classes: [], // Classes data is not directly needed here, count is derived from lessons
-    _count: {
-      subjects: teacherFromDb.subjects.length,
-      classes: classIds.length,
-    }
-  }
 
   const teacherClasses = await prisma.class.findMany({
     where: { id: { in: classIds as number[] } },
     include: { grade: true },
   }) as unknown as ClassWithGrade[];
 
-  const [allSubjects, allClassrooms] = await Promise.all([
+  const [allSubjects, allClassrooms, allTeachersFromDb] = await Promise.all([
     prisma.subject.findMany(),
     prisma.classroom.findMany(),
+    prisma.teacher.findMany({ 
+        include: { 
+            user: true, 
+            subjects: true, 
+            lessons: { select: { classId: true }, distinct: ['classId'] }
+        }
+    }),
   ]);
+
+  const allTeachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
+    ...t,
+    classes: [],
+    _count: {
+      subjects: t.subjects.length,
+      classes: new Set(t.lessons.map(l => l.classId)).size
+    }
+  }));
 
   const wizardData: WizardData = {
     school: {
-      name: `Emploi du temps de ${teacher.name} ${teacher.surname}`,
-      startTime: '08:00',
-      endTime: '18:00',
+      name: `Emploi du temps de ${teacherFromDb.name} ${teacherFromDb.surname}`,
+      startTime: '08:00', endTime: '18:00',
       schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-      sessionDuration: 60,
-      scheduleDraftId: null, // Add missing property
-      schoolConfig: {}, // Add missing property
+      sessionDuration: 60, scheduleDraftId: null, schoolConfig: {},
     },
     classes: teacherClasses,
     subjects: allSubjects as Subject[],
-    teachers: [teacher] as TeacherWithDetails[], // Only this teacher
+    teachers: allTeachers, // Pass all teachers
     rooms: allClassrooms as Classroom[],
-    grades: [],
-    lessonRequirements: [],
-    teacherConstraints: [],
-    subjectRequirements: [],
-    teacherAssignments: [],
-    scheduleDraftId: null,
+    grades: [], lessonRequirements: [], teacherConstraints: [],
+    subjectRequirements: [], teacherAssignments: [], scheduleDraftId: null,
     schedule: []
   };
-  // --- END REFACTORED DATA FETCHING ---
+
+  const teacher: TeacherWithDetails = {
+    ...teacherFromDb,
+    classes: [],
+    _count: {
+      subjects: teacherFromDb.subjects.length,
+      classes: classIds.length,
+    }
+  }
 
   return (
     <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">

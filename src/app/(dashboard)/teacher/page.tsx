@@ -45,22 +45,12 @@ const TeacherPage = async () => {
   
   // --- REFACTORED DATA FETCHING ---
 
-  // 1. Fetch only the lessons for this teacher to get class IDs and for the schedule display
   const lessonsFromDb = await prisma.lesson.findMany({
-    where: { teacherId: teacherFromDb.id }, // Use the teacher's actual ID
+    where: { teacherId: teacherFromDb.id },
     select: {
-      id: true,
-      name: true,
-      day: true,
-      startTime: true,
-      endTime: true,
-      subjectId: true,
-      classId: true,
-      teacherId: true,
-      createdAt: true, // Include createdAt
-      updatedAt: true, // Include updatedAt
-      classroomId: true,
-      scheduleDraftId: true, // Include scheduleDraftId
+      id: true, name: true, day: true, startTime: true, endTime: true,
+      subjectId: true, classId: true, teacherId: true, createdAt: true,
+      updatedAt: true, classroomId: true, scheduleDraftId: true,
       subject: { select: { name: true } },
       class: { select: { name: true } },
     },
@@ -74,33 +64,34 @@ const TeacherPage = async () => {
     updatedAt: lesson.updatedAt.toISOString(),
   }));
   
-  // 2. Extract unique class IDs from the lessons
   const classIds = [...new Set(lessons.map(l => l.classId))];
 
-  const teacher: TeacherWithDetails = {
-    ...teacherFromDb,
-    classes: [],
-    _count: {
-      subjects: teacherFromDb.subjects.length,
-      classes: new Set(teacherFromDb.lessons.map(l => l.classId)).size,
-    }
-  };
-  
-  // 3. Fetch only the classes this teacher teaches in, with their grades
   const teacherClasses = await prisma.class.findMany({
     where: { id: { in: classIds as number[] } },
     include: { grade: true },
   }) as unknown as ClassWithGrade[];
 
-  // 4. Fetch all subjects and classrooms for context mapping
-  const [allSubjects, allClassrooms] = await Promise.all([
+  const [allSubjects, allClassrooms, allTeachersFromDb] = await Promise.all([
     prisma.subject.findMany(),
     prisma.classroom.findMany(),
+    prisma.teacher.findMany({ 
+        include: { 
+            user: true, 
+            subjects: true, 
+            lessons: { select: { classId: true }, distinct: ['classId'] } 
+        } 
+    }),
   ]);
   
-  console.log(`🧑‍🏫 [TeacherPage] ${lessons.length} leçons, ${teacherClasses.length} classes, et ${allSubjects.length} matières récupérées.`);
+  const allTeachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
+      ...t,
+      classes: [],
+      _count: {
+          subjects: t.subjects.length,
+          classes: new Set(t.lessons.map(l => l.classId)).size,
+      }
+  }));
 
-  // 5. Construct wizardData with filtered data
   const wizardData: WizardData = {
     school: {
       name: 'Mon Emploi du Temps',
@@ -111,9 +102,9 @@ const TeacherPage = async () => {
       scheduleDraftId: null,
       schoolConfig: {}
     },
-    classes: teacherClasses, // Use the explicitly filtered classes
+    classes: teacherClasses,
     subjects: allSubjects as Subject[],
-    teachers: [teacher] as TeacherWithDetails[], // Only this teacher
+    teachers: allTeachers, // Pass all teachers
     rooms: allClassrooms as Classroom[],
     grades: [],
     lessonRequirements: [],
@@ -123,8 +114,6 @@ const TeacherPage = async () => {
     schedule: lessons,
     scheduleDraftId: null
   };
-  
-  // --- END REFACTORED DATA FETCHING ---
   
   console.log("🧑‍🏫 [TeacherPage] Rendu de l'emploi du temps.");
   return (
@@ -137,7 +126,11 @@ const TeacherPage = async () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TimetableDisplay wizardData={wizardData} viewMode={"class"} selectedViewId={""} />
+          <TimetableDisplay 
+            wizardData={wizardData} 
+            viewMode={"teacher"} 
+            selectedViewId={teacherFromDb.id} 
+          />
         </CardContent>
       </Card>
     </div>
