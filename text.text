@@ -2,12 +2,12 @@ GEMINI_API_KEY=AIzaSyD4X0183mMiD5h1Kit1GAjj1PsLqZ5gQ_s# Add your Firebase config
 # You can find these values in your Firebase project settings.
 # Firebase Config (Exposé côté client)
 # Firebase Config (Exposé côté client)
-NEXT_PUBLIC_FIREBASE_API_KEY=AIzaSyBlnzRo66fiWmFwd8TJC37-LpywJjdobZU
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=lamadevschool.firebaseapp.com
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=lamadevschool
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=lamadevschool.appspot.com  # Note: corrigez "firebasestorage.app" en "appspot.com" si nécessaire
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=644460153608
-NEXT_PUBLIC_FIREBASE_APP_ID=1:644460153608:web:0111898c616f609ccf3abd
+NEXT_PUBLIC_FIREBASE_API_KEY=your-api-key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your-auth-domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your-project-id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your-storage-bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your-messaging-sender-id
+NEXT_PUBLIC_FIREBASE_APP_ID=your-app-id
 GEMINI_API_KEY=AIzaSyDxU_uAI9mO1p5sIpLCXiGtaA2-wRCDDrs
 JWT_ACCESS_TOKEN_EXPIRATION_TIME=1h
 
@@ -36,3 +36,14 @@ SMTP_PORT=587
 SMTP_USER=ahmedyoussefabbes@gmail.com
 SMTP_PASS=ecfh xmfr lctn munz
 EMAIL_FROM=ahmedyoussefabbes@gmail.com
+JWT_SECRET=your-super-secret-key-that-is-at-least-32-characters-long
+# Configuration Firebase
+FIREBASE_SERVICE_ACCOUNT_KEY="{\"type\": \"service_account\", \"project_id\": \"lamadevschool\", \"private_key_id\": \"2f75a60b190755290e6f1a0b4a467ecf22508d27\", \"private_key\": \"-----BEGIN PRIVATE KEY-----\\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCg56IsLJKSQV2s\\nlbq5OCf/Nf+tJ5n+5QB79idtoZUkEH1s3/WTh7C31J/UY2dH4kaH5GTsBqr8MajB\\nkPXGxtWYmtrEjwtQlnZzPww0IG2yN5MjSeMsY5OVW6QcG0w+uEOBJVrLAfYd52vy\\np7Ldp6Htwdb6oX4Tqus2/ZzWao+DYsKRQRtrbLFyG+wxHNSUW3tgpnpIWf0vHWoF\\nweO7vK58wX+lV41cxc5Bex6hpJ7auRn6PJlfBvxl55qsMrgNJPX2b+wWaGzOa3lE\\nQopAjXa5BlSgy2EvqmIU+RDO16GfvfTP03Y7gKsmAVsxnhpkTLLTkbt0vmuPyJEN\\nRhca3IYNAgMBAAECggEAAVkPZblV3P3JMBns/4I165BjPOsZAiae82rjd6qj2jJ9\\nKn1RzFOVqmSQljHi+potpxPFuKhxpD0yQbTaKjkeLvIVJRJhsOIhyeNcUc93u8d1\\nZxVGXufSo6yp2kZsRBY9EobilNLGYge/QsAe4nZ2B8zY5S6XJMkIwWQsfStVWm9k\\n7//83oq/J0ZiRAtKhOwZOjSx/LWd2nlQ2HReS7H9LXtLNYuxA880wMeUar+glgmS\\nR72BWZrmJ2Mo0ySYvURHJHrqfRTN5WAS4HWDHemB4C1Wxz0Pq9kwzaprASnoiunG\\nX678FXxBeSLeS/KDfNrcFxjggvxXacY5HlxqNFNGIQKBgQDixuB7oz2E4zuBeRjn\\nd6BERFXt+HAu2/v8jwIdvFREgsGytdKnuyQ1/SWiyNB6X9VdWi1fOVSrdmkQQx8J\\nkRGt3qQFhkssE4pG9dxJstps6Luzr8QQ3yCtOekzI7K4bNuF8RQz22wo7OaHUYLE\\n5SdQkiL84Vj2B3mFgoHPiRoyhQKBgQC1o7WNWWIknvJZu3xvk9EPzJzug2QuVz+W\\nmwVecusJsubDrzc6uyzBxkbvzZ3lOCKKHocGVhNrYZefQMdDTIEjXi5OFVcVvxcr\\nh5K/p/zQI6jXsicQeSus/t0xVOs588kec8v1N1p5Ljh4GYzorSXgLWWZzUlLguH6\\n8vg95e/P6QKBgBF5da7RQ1pMEDfH1w1vAGCCS4TM0ggqV158vpMAAhZNZROaQyM9\\nnmqymQXUJ4xmehB5dGmUB1w3AZ2JLokULqKRN15dnMlGsC8Lnu/m4kHmJSCReLA8\\nIU532epg49KmQLwveXkNfWYh6xmeRE9bwQ3KVPvbeXlr1gddqRcO33/pAoGBAKvR\\n4qmFBeuyV3o+eiVp5HdXjJOqwpd7fPFQTzHa7y7LhrNRCaOK73mVwACTtmrgQPv6\\niKubvN71AGJq+pNUyUvViWPfl/NAQgCxTEXz+JhDQzJWmdFhbclFhaNmuuSlEXi2\\n/RZHeFPtPwmM0dhAAfYfu15T7KN7eZzTPbP/0GwRAoGAUwKrMFsEbU7CCdAmLI+E\\nphCecTDjYZIz4DFWB2anhpAYG4f2DwdOX0PtYJUoCwnuklAkPKrGQCQSUT+gYc0Y\\nD4qLnYWYViETNoUkBs9pGCD6pQpTM9wHzfKkV4/6QscaMn5GJ8LZqUntoXAEGNti\\nK/BpyTaqIL6Woy1Uz+2ow/g=\\n-----END PRIVATE KEY-----\\n\", \"client_email\": \"firebase-adminsdk-fbsvc@lamadevschool.iam.gserviceaccount.com\", \"client_id\": \"106621417986904451557\", \"auth_uri\": \"https://accounts.google.com/o/oauth2/auth\", \"token_uri\": \"https://oauth2.googleapis.com/token\", \"auth_provider_x509_cert_url\": \"https://www.googleapis.com/oauth2/v1/certs\", \"client_x509_cert_url\": \"https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40lamadevschool.iam.gserviceaccount.com\", \"universe_domain\": \"googleapis.com\"}"
+
+# Configuration Email (exemple avec SendGrid - à adapter)
+EMAIL_SERVER_HOST=smtp.gmail.com
+EMAIL_SERVER_PORT=587
+EMAIL_SERVER_USER=ahmedyoussefabbes@gmail.com
+EMAIL_SERVER_PASSWORD=xhmu ndhr cskp uxzd
+EMAIL_FROM_NAME="La Madev School"
+EMAIL_FROM_EMAIL=ahmedyoussefabbes@gmail.com

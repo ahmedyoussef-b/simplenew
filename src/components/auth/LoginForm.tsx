@@ -72,6 +72,7 @@ export function LoginForm() {
                 title: "Connexion réussie",
                 description: "Vous êtes maintenant connecté. Redirection...",
             });
+            console.log("redirection vers / 😎")
             router.push('/');
         }
     }
