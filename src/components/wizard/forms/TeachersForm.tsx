@@ -3,7 +3,7 @@
 
 import React from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
-import { Users, BookOpen, AlertCircle, Trash2, Edit } from 'lucide-react';
+import { Users, BookOpen, AlertCircle, Trash2, Edit, Plus, Check } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Accordion,
@@ -160,6 +160,7 @@ const TeachersForm: React.FC = () => {
                                                                         )}
                                                                         title={isAssignedToOther ? "Déjà assignée à un autre professeur pour cette matière" : cls.name}
                                                                     >
+                                                                         {isAssignedToThis ? <Check size={16} className="mr-2"/> : <Plus size={16} className="mr-2"/>}
                                                                         {cls.name}
                                                                     </Button>
                                                                 )
