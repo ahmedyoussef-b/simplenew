@@ -28,3 +28,4 @@ export const routeAccessMap: RouteAccessMap = {
   "/profile(.*)": [Role.ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT],
   "/settings(.*)": [Role.ADMIN, Role.TEACHER, Role.STUDENT, Role.PARENT],
 };
+
