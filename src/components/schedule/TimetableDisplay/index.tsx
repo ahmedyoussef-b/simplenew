@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { WizardData, Lesson, Subject, Day } from '@/types';
 import { type Lesson as PrismaLesson } from '@prisma/client';
-import LessonCell from './components/LessonCell'; // Changed from DraggableLesson
+import LessonCell from './components/LessonCell';
 import InteractiveEmptyCell from './components/InteractiveEmptyCell';
 import { formatTimeSimple } from './components/utils';
 import { generateTimeSlots } from '@/lib/time-utils';
