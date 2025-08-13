@@ -1,12 +1,13 @@
 
 import type { Subject, WizardData, Lesson, Day } from '@/types';
-import { timeToMinutes } from '@/lib/time-utils';
+import { timeToMinutes as timeToMinutesFromLib } from '@/lib/time-utils';
 
 export const formatTimeSimple = (date: string | Date): string => {
     const d = new Date(date);
     return `${d.getUTCHours().toString().padStart(2, '0')}:${d.getUTCMinutes().toString().padStart(2, '0')}`;
   };
   
+  export const timeToMinutes = timeToMinutesFromLib;
   
   export const getSubjectColorClass = (subjectId: number): string => {
     const subjectColors = [
@@ -64,3 +65,4 @@ export const formatTimeSimple = (date: string | Date): string => {
     return wizardData.rooms.filter(room => !occupiedRoomIdsInSlot.has(room.id));
   };
   
+
