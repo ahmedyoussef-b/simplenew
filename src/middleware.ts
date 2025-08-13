@@ -13,7 +13,7 @@ export async function middleware(req: NextRequest) {
 
   // If user is authenticated, redirect from auth pages to their dashboard
   if (userRole) {
-    if (pathname.startsWith('/login') || pathname.startsWith('/register') || pathname === '/') {
+    if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
       const dashboardPath = `/${userRole.toLowerCase()}`;
       return NextResponse.redirect(new URL(dashboardPath, req.url));
     }

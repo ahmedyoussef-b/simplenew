@@ -65,8 +65,8 @@ export function LoginForm() {
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
             });
-            // La redirection est gérée par le middleware ou la page principale après la mise à jour de l'état Redux.
-             window.location.href = '/';
+            // The redirection is now handled by the root page/middleware.
+            // No need to call router.push('/') here, which caused the loop.
         }
     }
     if (isError && loginErrorData) {
