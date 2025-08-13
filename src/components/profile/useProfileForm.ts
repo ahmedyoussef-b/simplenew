@@ -27,13 +27,18 @@ const useProfileForm = (userProfile: UserProfile): ProfileFormReturn => {
   });
 
   const [imgUrl, setImgUrl] = useState<string | null>(userProfile.user.img || null);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState<boolean>(userProfile.user.twoFactorEnabled || false);
+  
+  // twoFactorEnabled state is no longer needed
+  const twoFactorEnabled = watch("twoFactorEnabled");
 
   const onSubmit = async (data: any) => {
     const payload: any = { ...data };
     if (payload.password && payload.password.trim() === '') {
       delete payload.password;
     }
+
+    // Remove 2FA from payload
+    delete payload.twoFactorEnabled;
 
     try {
       await updateProfile(payload).unwrap();

@@ -21,25 +21,6 @@ export const registerSchema = z
     path: ['confirmPassword'],
   });
 
-export const forgotPasswordSchema = z.object({
-  email: z.string().email({ message: 'Veuillez entrer une adresse email valide.' }),
-});
-
-export const resetPasswordSchema = z
-  .object({
-    password: z.string().min(8, 'Le mot de passe doit contenir au moins 8 caractères.'),
-    confirmPassword: z.string(),
-    token: z.string().min(1, 'Jeton de réinitialisation invalide.'),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: 'Les mots de passe ne correspondent pas.',
-    path: ['confirmPassword'],
-  });
-
-export const verify2FASchema = z.object({
-  code: z.string().length(6, { message: 'Le code doit contenir 6 chiffres.' }),
-});
-
 export const gradeSchema = z.object({
   id: z.coerce.number().optional(),
   level: z.coerce.number({ required_error: "Le niveau est requis.", invalid_type_error: "Le niveau doit être un nombre."}).min(1, { message: "Le niveau doit être au moins 1." }),

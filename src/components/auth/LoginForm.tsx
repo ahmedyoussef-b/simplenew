@@ -15,7 +15,6 @@ import type { SerializedError } from '@reduxjs/toolkit';
 import type { FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import type { LoginResponse } from "@/lib/redux/api/authApi";
 import FormError from "@/components/forms/FormError";
 import { loginSchema, type LoginSchema as LoginCredentials } from "@/lib/formValidationSchemas";
 
@@ -44,28 +43,13 @@ export function LoginForm() {
   useEffect(() => {
     console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError, "loginSuccessData:", loginSuccessData);
     if (isSuccess && loginSuccessData) {
-        const twoFactorResponse = loginSuccessData as Partial<LoginResponse> & { requires2FA?: boolean, tempToken?: string, twoFactorCode?: string };
-        if (twoFactorResponse.requires2FA && twoFactorResponse.tempToken) {
-             console.log("✅ [LoginForm] 2FA required. Redirecting...");
-
-             const description = twoFactorResponse.twoFactorCode
-                ? `Pour le prototypage, votre code est : ${twoFactorResponse.twoFactorCode}`
-                : "Un code de vérification a été envoyé à votre e-mail.";
-
-             toast({
-                title: "Vérification Requise",
-                description: description,
-                duration: 10000, 
-             });
-             router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
-        } else {
-             console.log("✅ [LoginForm] Login successful, no 2FA. Redirecting to /dashboard.");
-             toast({
-                title: "Connexion réussie",
-                description: "Vous allez être redirigé...",
-            });
-            router.push('/dashboard');
-        }
+        console.log("✅ [LoginForm] Login successful. Redirecting to /dashboard.");
+        toast({
+            title: "Connexion réussie",
+            description: "Vous allez être redirigé...",
+        });
+        router.push('/dashboard');
+        router.refresh();
     }
     if (isError && loginErrorData) {
        console.error("❌ [LoginForm] Login mutation failed. Error data:", loginErrorData);
@@ -117,9 +101,6 @@ export function LoginForm() {
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label htmlFor="password" className="pl-4">Mot de passe</Label>
-          <Link href="/forgot-password" className="text-sm font-medium text-primary hover:underline pr-4">
-            Mot de passe oublié ?
-          </Link>
         </div>
         <Input
           id="password"

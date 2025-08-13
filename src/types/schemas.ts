@@ -16,18 +16,12 @@ import {
     studentSchema,
     subjectSchema,
     teacherSchema,
-    registerSchema,
-    forgotPasswordSchema,
-    resetPasswordSchema,
-    verify2FASchema
+    registerSchema
 } from '@/lib/formValidationSchemas';
 
 // --- ZOD SCHEMAS AS TYPES ---
 export type LoginSchema = z.infer<typeof loginSchema>;
 export type RegisterSchema = z.infer<typeof registerSchema>;
-export type ForgotPasswordSchema = z.infer<typeof forgotPasswordSchema>;
-export type ResetPasswordSchema = z.infer<typeof resetPasswordSchema>;
-export type Verify2FASchema = z.infer<typeof verify2FASchema>;
 
 export type GradeSchema = z.infer<typeof gradeSchema>;
 export type SubjectSchema = z.infer<typeof subjectSchema>;

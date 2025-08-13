@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Save, Loader2 } from 'lucide-react';
 import PersonalInfoCard from './PersonalInfoCard';
 import AuthInfoCard from './AuthInfoCard';
-import TwoFactorCard from './TwoFactorCard'; // Import the new component
 import useProfileForm from './useProfileForm';
 import { UserProfile } from './types';
 
@@ -17,7 +16,6 @@ const ProfileForm: React.FC<{ userProfile: UserProfile }> = ({ userProfile }) =>
     onSubmit,
     setValue,
     imgUrl,
-    twoFactorEnabled,
   } = useProfileForm(userProfile);
 
   return (
@@ -36,12 +34,6 @@ const ProfileForm: React.FC<{ userProfile: UserProfile }> = ({ userProfile }) =>
         errors={errors}
         isLoading={isLoading}
         userProfile={userProfile}
-      />
-
-      <TwoFactorCard
-        setValue={setValue}
-        isLoading={isLoading}
-        twoFactorEnabled={twoFactorEnabled}
       />
 
       <div className="flex justify-end">

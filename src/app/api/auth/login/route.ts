@@ -27,15 +27,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Invalid credentials' }, { status: 401 });
     }
     console.log('🔑 Mot de passe valide.');
-
-    if (user.twoFactorEnabled) {
-      console.log('🔒 2FA activé. Génération du jeton temporaire.');
-      const tempToken = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '10m' });
-      // For this example, we'll skip sending and assume a fixed code or another verification method
-      console.log(`🤫 Code 2FA pour ${user.email}: 123456 (Ne pas utiliser en production)`);
-      return NextResponse.json({ requires2FA: true, tempToken });
-    }
-
+    
     console.log('✅ Connexion réussie. Génération du JWT final.');
     const token = jwt.sign(
       { userId: user.id, role: user.role, email: user.email },
