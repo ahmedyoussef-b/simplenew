@@ -9,7 +9,7 @@ import type { UserProfile } from "@/components/profile/types";
 const ProfilePage = async () => {
   const session = await getServerSession();
 
-  if (!session?.userId || !session.role) {
+  if (!session?.user?.id || !session.user.role) {
     redirect(`/login`);
     return null;
   }
@@ -22,18 +22,18 @@ const ProfilePage = async () => {
   };
 
   try {
-    switch (session.role) {
+    switch (session.user.role) {
       case Role.ADMIN:
-        userProfile = await prisma.admin.findUnique({ where: { userId: session.userId }, include: includeUser }) as UserProfile;
+        userProfile = await prisma.admin.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
         break;
       case Role.TEACHER:
-        userProfile = await prisma.teacher.findUnique({ where: { userId: session.userId }, include: includeUser }) as UserProfile;
+        userProfile = await prisma.teacher.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
         break;
       case Role.STUDENT:
-        userProfile = await prisma.student.findUnique({ where: { userId: session.userId }, include: includeUser }) as UserProfile;
+        userProfile = await prisma.student.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
         break;
       case Role.PARENT:
-        userProfile = await prisma.parent.findUnique({ where: { userId: session.userId }, include: includeUser }) as UserProfile;
+        userProfile = await prisma.parent.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
         break;
       default:
         // Handle VISITOR or other roles if necessary
