@@ -1,11 +1,10 @@
-
 // src/app/[locale]/(dashboard)/list/events/page.tsx
 import FormContainer from "@/components/FormContainer";
 import Pagination from "@/components/Pagination";
 import Table from "@/components/Table";
 import TableSearch from "@/components/TableSearch";
 import prisma from "@/lib/prisma";
-import {  type EventWithClass } from "@/types/index"; 
+import { type EventWithClass } from "@/types/index"; 
 import Image from "next/image";
 import { getServerSession } from "@/lib/auth-utils";
 import { Prisma, Role } from "@prisma/client";
@@ -31,6 +30,64 @@ const EventListPage = async ({
       ? [{ header: "Actions", accessor: "action" }]
       : []),
   ];
+
+  const pageParam = searchParams?.page;
+  const p = pageParam ? parseInt(Array.isArray(pageParam) ? pageParam[0] : pageParam) : 1;
+  const query: Prisma.EventWhereInput = {};
+
+  const searchString = searchParams?.search;
+  if (searchString && typeof searchString === 'string' && searchString.trim() !== '') {
+    query.title = { contains: searchString, mode: "insensitive" };
+  }
+
+  if (userRole && currentUserId && userRole !== Role.ADMIN) {
+      if (userRole === Role.TEACHER) {
+          query.OR = [
+              { classId: null },
+              { class: { lessons: { some: { teacherId: currentUserId } } } },
+          ];
+      } else if (userRole === Role.STUDENT) {
+          const student = await prisma.student.findUnique({ where: { userId: currentUserId } });
+          if (student?.classId) {
+              query.OR = [
+                  { classId: null },
+                  { classId: student.classId }
+              ];
+          } else {
+              query.classId = null;
+          }
+      } else if (userRole === Role.PARENT) {
+          const children = await prisma.student.findMany({ where: { parentId: currentUserId } });
+          const classIds = children.map(child => child.classId).filter(id => id !== null) as number[];
+          if (classIds.length > 0) {
+              query.OR = [
+                  { classId: null },
+                  { classId: { in: classIds } }
+              ];
+          } else {
+              query.classId = null;
+          }
+      }
+  }
+
+  const [data, count] = await prisma.$transaction([
+    prisma.event.findMany({
+      where: query,
+      include: {
+        class: { select: { name: true } }, 
+      },
+      orderBy: { startTime: 'desc' },
+      take: ITEM_PER_PAGE,
+      skip: ITEM_PER_PAGE * (p - 1),
+    }),
+    prisma.event.count({ where: query }),
+  ]);
+  
+  const allSystemClasses = userRole === Role.ADMIN ? await prisma.class.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: 'asc'}
+  }) : [];
+
 
   const renderRow = (item: EventWithClass) => (
     <tr
@@ -59,61 +116,13 @@ const EventListPage = async ({
       {userRole === Role.ADMIN && (
         <td>
           <div className="flex items-center gap-2">
-            <FormContainer table="event" type="update" data={item} className={""} />
-            <FormContainer table="event" type="delete" id={item.id} className={""} />
+            <FormContainer table="event" type="update" data={item} relatedData={{ classes: allSystemClasses }} />
+            <FormContainer table="event" type="delete" id={item.id} />
           </div>
         </td>
       )}
     </tr>
   );
-
-  const pageParam = searchParams?.page;
-  const p = pageParam ? parseInt(Array.isArray(pageParam) ? pageParam[0] : pageParam) : 1;
-  const query: Prisma.EventWhereInput = {};
-
-  const searchString = searchParams?.search;
-  if (searchString && typeof searchString === 'string' && searchString.trim() !== '') {
-    query.title = { contains: searchString, mode: "insensitive" };
-  }
-
-  if (userRole && currentUserId) {
-    if (userRole === Role.TEACHER) {
-      query.OR = [
-        { classId: null },
-        {
-          class: {
-            OR: [
-               
-                { lessons: { some: { teacherId: currentUserId } } }
-            ]
-          }
-        }
-      ];
-    } else if (userRole === Role.STUDENT) {
-      query.OR = [
-        { classId: null },
-        { class: { students: { some: { id: currentUserId } } } },
-      ];
-    } else if (userRole === Role.PARENT) {
-      query.OR = [
-        { classId: null },
-        { class: { students: { some: { parentId: currentUserId } } } },
-      ];
-    }
-  }
-
-  const [data, count] = await prisma.$transaction([
-    prisma.event.findMany({
-      where: query,
-      include: {
-        class: { select: { name: true } }, 
-      },
-      orderBy: { startTime: 'desc' },
-      take: ITEM_PER_PAGE,
-      skip: ITEM_PER_PAGE * (p - 1),
-    }),
-    prisma.event.count({ where: query }),
-  ]);
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -128,7 +137,7 @@ const EventListPage = async ({
             <button className="w-8 h-8 flex items-center justify-center rounded-full bg-lamaYellow">
               <Image src="/sort.png" alt="sort" width={14} height={14} />
             </button>
-            {userRole === Role.ADMIN && <FormContainer table="event" type="create" className={""} />}
+            {userRole === Role.ADMIN && <FormContainer table="event" type="create" relatedData={{ classes: allSystemClasses }} />}
           </div>
         </div>
       </div>

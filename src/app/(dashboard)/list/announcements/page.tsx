@@ -9,7 +9,7 @@ import { getServerSession } from "@/lib/auth-utils";
 import { type AnnouncementWithClass } from "@/types/index"; 
 import { Prisma, Role } from "@prisma/client"; 
 import prisma from "@/lib/prisma";
-import AnnouncementContent from "@/components/announcements/AnnouncementContent"; // Import the new component
+import AnnouncementContent from "@/components/announcements/AnnouncementContent";
 
 interface ColumnConfig {
   header: string;
@@ -39,28 +39,6 @@ const AnnouncementListPage = async ({
 
   const columns: ColumnConfig[] = [...baseColumns, ...adminColumns]; 
 
-  const renderRow = (item: AnnouncementWithClass) => (
-      <tr
-        key={item.id}
-        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
-      >
-        <td className="p-4 font-medium align-top">{item.title}</td>
-        <td className="p-4 align-top">
-          <AnnouncementContent announcement={item} />
-        </td>
-        <td className="p-4 align-top">{item.class?.name || "Tous"}</td>
-        <td className="hidden md:table-cell p-4 align-top">{new Intl.DateTimeFormat("fr-FR").format(new Date(item.date))}</td>
-        {userRole === Role.ADMIN && (
-          <td className="p-4 align-top">
-            <div className="flex items-center gap-2">
-              <FormContainer table="announcement" type="update" data={item} className={""} />
-              <FormContainer table="announcement" type="delete" id={item.id} className={""} />
-            </div>
-          </td>
-        )}
-      </tr>
-    );
-
   const pageParam = searchParams?.page;
   const p = pageParam ? parseInt(Array.isArray(pageParam) ? pageParam[0] : pageParam) : 1;
 
@@ -79,15 +57,28 @@ const AnnouncementListPage = async ({
         { class: { lessons: { some: { teacherId: currentUserId } } } }
       ];
     } else if (userRole === Role.STUDENT) { 
-      query.OR = [
-        { classId: null },
-        { class: { students: { some: { id: currentUserId } } } },
-      ];
+      // Students see announcements for their class, or for everyone.
+      const student = await prisma.student.findUnique({ where: { userId: currentUserId }, select: { classId: true } });
+      if (student?.classId) {
+        query.OR = [
+            { classId: null },
+            { classId: student.classId },
+        ];
+      } else {
+        query.classId = null; // Only see global announcements if not in a class
+      }
     } else if (userRole === Role.PARENT) { 
-      query.OR = [
-        { classId: null },
-        { class: { students: { some: { parentId: currentUserId } } } },
-      ];
+       // Parents see announcements for their children's classes, or for everyone.
+       const children = await prisma.student.findMany({ where: { parentId: currentUserId }, select: { classId: true } });
+       const classIds = children.map(c => c.classId).filter((id): id is number => id !== null);
+       if (classIds.length > 0) {
+            query.OR = [
+                { classId: null },
+                { classId: { in: classIds } },
+            ];
+       } else {
+           query.classId = null; // Only see global announcements if no children in classes
+       }
     }
   }
   
@@ -112,7 +103,34 @@ const AnnouncementListPage = async ({
       class: classInfo ? { name: classInfo.name } : null, 
     } as AnnouncementWithClass;
   });
+
+  const allSystemClasses = userRole === Role.ADMIN ? await prisma.class.findMany({
+    select: { id: true, name: true },
+    orderBy: { name: 'asc'}
+  }) : [];
   
+
+  const renderRow = (item: AnnouncementWithClass) => (
+      <tr
+        key={item.id}
+        className="border-b border-gray-200 even:bg-slate-50 text-sm hover:bg-lamaPurpleLight"
+      >
+        <td className="p-4 font-medium align-top">{item.title}</td>
+        <td className="p-4 align-top">
+          <AnnouncementContent announcement={item} />
+        </td>
+        <td className="p-4 align-top">{item.class?.name || "Tous"}</td>
+        <td className="hidden md:table-cell p-4 align-top">{new Intl.DateTimeFormat("fr-FR").format(new Date(item.date))}</td>
+        {userRole === Role.ADMIN && (
+          <td className="p-4 align-top">
+            <div className="flex items-center gap-2">
+              <FormContainer table="announcement" type="update" data={item} relatedData={{ classes: allSystemClasses }} />
+              <FormContainer table="announcement" type="delete" id={item.id} />
+            </div>
+          </td>
+        )}
+      </tr>
+    );
 
   return (
     <div className="bg-white p-4 rounded-md flex-1 m-4 mt-0">
@@ -130,7 +148,7 @@ const AnnouncementListPage = async ({
               <Image src="/sort.png" alt="" width={14} height={14} />
             </button>
             {userRole === Role.ADMIN && ( 
-              <FormContainer table="announcement" type="create" className={""} />
+              <FormContainer table="announcement" type="create" relatedData={{ classes: allSystemClasses }} />
             )}
           </div>
         </div>

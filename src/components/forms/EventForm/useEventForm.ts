@@ -1,20 +1,18 @@
+// src/components/forms/EventForm/useEventForm.ts
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, SubmitHandler } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { useCreateEventMutation, useUpdateEventMutation } from "@/lib/redux/api/entityApi/index";
 import { eventSchema, type EventSchema } from "@/lib/formValidationSchemas";
-import type { EventFormProps, EventFormReturn } from "./types";
+import type { UseEventFormProps, EventFormReturn } from "./types";
 
 const useEventForm = ({
   initialData,
-  onSubmit: onFormSubmit,
-}: EventFormProps): EventFormReturn => {
+  setOpen,
+  createEvent,
+  updateEvent
+}: UseEventFormProps): EventFormReturn => {
   const router = useRouter();
-  const [createEvent, { isLoading: isCreating }] = useCreateEventMutation();
-  const [updateEvent, { isLoading: isUpdating }] = useUpdateEventMutation();
-
-  const isLoading = isCreating || isUpdating;
 
   const { register, handleSubmit, formState: { errors } } = useForm<EventSchema>({
     resolver: zodResolver(eventSchema),
@@ -27,7 +25,7 @@ const useEventForm = ({
     },
   });
 
-  const actualOnSubmit: SubmitHandler<EventSchema> = async (data) => {
+  const onSubmit: SubmitHandler<EventSchema> = async (data) => {
     try {
       if (initialData?.id) {
         await updateEvent({ id: initialData.id, ...data }).unwrap();
@@ -36,7 +34,7 @@ const useEventForm = ({
         await createEvent(data).unwrap();
         toast({ title: "Succès", description: "Événement créé avec succès." });
       }
-      onFormSubmit(data);
+      setOpen(false);
       router.refresh();
     } catch (error: any) {
       toast({
@@ -50,9 +48,8 @@ const useEventForm = ({
   return {
     register,
     handleSubmit,
-    actualOnSubmit,
+    onSubmit,
     errors,
-    isLoading,
   };
 };
 

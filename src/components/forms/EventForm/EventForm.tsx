@@ -4,23 +4,35 @@
 import { Button } from "@/components/ui/button";
 import FormFields from "./FormFields";
 import useEventForm from "./useEventForm";
-import { EventFormProps } from "./types";
+import type { EventFormProps } from "./types";
+import { useCreateEventMutation, useUpdateEventMutation } from "@/lib/redux/api/entityApi";
 
 const EventForm = ({
   initialData,
   availableClasses,
-  onSubmit: onFormSubmit,
+  setOpen, // Added setOpen prop
 }: EventFormProps) => {
+
+  const [createEvent, { isLoading: isCreating }] = useCreateEventMutation();
+  const [updateEvent, { isLoading: isUpdating }] = useUpdateEventMutation();
+
   const {
     register,
     handleSubmit,
     errors,
-    isLoading,
-    actualOnSubmit,
-  } = useEventForm({ initialData, availableClasses, onSubmit: onFormSubmit });
+    onSubmit, // Use the onSubmit from the hook
+  } = useEventForm({ 
+    initialData, 
+    availableClasses, 
+    setOpen,
+    createEvent,
+    updateEvent
+  });
+
+  const isLoading = isCreating || isUpdating;
 
   return (
-    <form onSubmit={handleSubmit(actualOnSubmit)} className="space-y-6">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <h1 className="text-xl font-semibold">
         {initialData ? "Modifier l'Événement" : "Créer un Nouvel Événement"}
       </h1>

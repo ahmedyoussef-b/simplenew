@@ -1,4 +1,3 @@
-
 //src/components/forms/StudentForm/useStudentForm.ts
 "use client";
 
@@ -7,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import type { SubmitHandler, UseFormRegister, UseFormHandleSubmit, FieldErrors, UseFormSetValue } from "react-hook-form";
-import type { StudentSchema, Student, StudentFormProps, TeacherFormReturn } from "@/types/index";
+import type { StudentSchema, StudentFormProps } from "@/types/index";
 import { studentSchema } from "@/lib/formValidationSchemas";
 import {
   useCreateStudentMutation,
@@ -97,6 +96,14 @@ const useStudentForm = ({
       }
   }, [watchedImg, imgPreview]);
 
+
+  useEffect(() => {
+    if (createIsError || updateIsError) {
+      const apiError = (createErrorData || updateErrorData) as any;
+      const errorMessage = apiError?.data?.message || `Failed to ${type === "create" ? "create" : "update"} student.`;
+      toast({ variant: "destructive", title: "Error", description: errorMessage });
+    }
+  }, [createIsError, updateIsError, createErrorData, updateErrorData, type]);
 
   return {
     register,

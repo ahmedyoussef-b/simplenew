@@ -2,16 +2,11 @@
 "use client";
 
 import React from 'react';
-import {
-  UseFormRegister,
-  UseFormHandleSubmit,
-  FieldErrors,
-  UseFormSetValue,
-} from "react-hook-form";
 import FormFields from "./FormFields";
 import useSubjectForm from "./useSubjectForm";
-import { SubjectFormProps, SubjectFormReturn } from "./types";
-import { SubjectSchema } from "@/lib/formValidationSchemas";
+import type { SubjectFormProps } from "./types";
+import { Button } from '@/components/ui/button';
+import { useCreateSubjectMutation, useUpdateSubjectMutation } from "@/lib/redux/api/entityApi";
 
 const SubjectForm = ({
   type,
@@ -19,22 +14,39 @@ const SubjectForm = ({
   setOpen,
   relatedData,
 }: SubjectFormProps) => {
-  const formMethods = useSubjectForm({ type, data, setOpen, relatedData });
+
+  const [createSubject, { isLoading: isCreating }] = useCreateSubjectMutation();
+  const [updateSubject, { isLoading: isUpdating }] = useUpdateSubjectMutation();
+
+  const { register, handleSubmit, errors, setValue, selectedTeachers, onSubmit } = useSubjectForm({ 
+      type, 
+      data, 
+      setOpen, 
+      relatedData,
+      createSubject,
+      updateSubject,
+  });
+
+  const isLoading = isCreating || isUpdating;
 
   return (
-    <form onSubmit={formMethods.handleSubmit(formMethods.onSubmit)} className="space-y-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+       <h1 className="text-xl font-semibold">
+        {type === "create" ? "Créer une Nouvelle Matière" : "Mettre à jour la Matière"}
+      </h1>
       <FormFields
-        register={formMethods.register}
-        errors={formMethods.errors}
-        isLoading={formMethods.isLoading}
-        setValue={formMethods.setValue}
-        teachers={relatedData?.selectedTeachers || []}
-        type={type} selectedTeachers={[]}        // Removed data prop as it's not expected by FormFieldsProps
+        register={register}
+        errors={errors}
+        isLoading={isLoading}
+        setValue={setValue}
+        teachers={relatedData?.teachers || []}
+        type={type} 
+        selectedTeachers={selectedTeachers}
       />
-      {/* Add form submission button or actions here if needed */}
-      <button type="submit" disabled={formMethods.isLoading} className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50">
-        {formMethods.isLoading ? 'Saving...' : 'Save'}
-      </button>
+      <Button type="submit" disabled={isLoading} className="w-full">
+        {isLoading ? 'Enregistrement...' : 
+         (type === 'update' ? "Mettre à jour la matière" : "Créer la matière")}
+      </Button>
     </form>
   );
 };
