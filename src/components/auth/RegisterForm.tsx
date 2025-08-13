@@ -7,10 +7,6 @@ import { registerSchema, RegisterSchema } from '@/lib/formValidationSchemas';
 import { useRegisterMutation } from '@/lib/redux/api/authApi';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Loader2, UserPlus } from 'lucide-react';
 import Link from 'next/link';
 import FormError from '@/components/forms/FormError';
@@ -55,51 +51,65 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="email">Adresse e-mail</Label>
-        <Input id="email" type="email" placeholder="nom@exemple.com" {...register('email')} disabled={isLoading} />
-        <FormError error={errors.email} />
+      <div className="neumorphic-container">
+        <input id="email" type="email" required placeholder=" " {...register('email')} disabled={isLoading} className="neumorphic-input" />
+        <label htmlFor="email" className="neumorphic-label">Adresse e-mail</label>
       </div>
+      <FormError error={errors.email} />
 
-      <div className="space-y-2">
-        <Label htmlFor="password">Mot de passe</Label>
-        <Input id="password" type="password" {...register('password')} disabled={isLoading} />
-        <FormError error={errors.password} />
+      <div className="neumorphic-container">
+        <input id="password" type="password" required placeholder=" " {...register('password')} disabled={isLoading} className="neumorphic-input" />
+        <label htmlFor="password" className="neumorphic-label">Mot de passe</label>
       </div>
+      <FormError error={errors.password} />
 
-      <div className="space-y-2">
-        <Label htmlFor="confirmPassword">Confirmer le mot de passe</Label>
-        <Input id="confirmPassword" type="password" {...register('confirmPassword')} disabled={isLoading} />
-        <FormError error={errors.confirmPassword} />
+      <div className="neumorphic-container">
+        <input id="confirmPassword" type="password" required placeholder=" " {...register('confirmPassword')} disabled={isLoading} className="neumorphic-input" />
+        <label htmlFor="confirmPassword" className="neumorphic-label">Confirmer le mot de passe</label>
       </div>
+      <FormError error={errors.confirmPassword} />
 
-      <div className="space-y-2">
-        <Label>Je suis un...</Label>
-        <RadioGroup
-          value={role}
-          onValueChange={(value) => setValue('role', value as Role, { shouldValidate: true })}
-          className="flex gap-4"
-          disabled={isLoading}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value={Role.PARENT} id="role-parent" />
-            <Label htmlFor="role-parent">Parent</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value={Role.TEACHER} id="role-teacher" />
-            <Label htmlFor="role-teacher">Enseignant</Label>
-          </div>
-        </RadioGroup>
+      <div className="space-y-4">
+        <label className="text-sm text-white">Je suis un...</label>
+        <div className="flex justify-center gap-8 items-center">
+            <div className="text-center">
+                <label className="custom-radio-container">
+                    <input type="radio" value={Role.PARENT} {...register('role')} disabled={isLoading} />
+                    <div className="checkmark">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="ionicon" viewBox="0 0 512 512">
+                            <title>Checkmark</title>
+                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="32" d="M416 128L192 384l-96-96"></path>
+                        </svg>
+                    </div>
+                </label>
+                <span className="mt-2 text-white text-sm">Parent</span>
+            </div>
+            <div className="text-center">
+                <label className="custom-radio-container">
+                    <input type="radio" value={Role.TEACHER} {...register('role')} disabled={isLoading} />
+                     <div className="checkmark">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="ionicon" viewBox="0 0 512 512">
+                            <title>Checkmark</title>
+                            <path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="32" d="M416 128L192 384l-96-96"></path>
+                        </svg>
+                    </div>
+                </label>
+                <span className="mt-2 text-white text-sm">Enseignant</span>
+            </div>
+        </div>
         <FormError error={errors.role} />
       </div>
       
-      <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UserPlus className="mr-2 h-4 w-4" />}
-        S'inscrire
-      </Button>
+       <div className="btn">
+            <button type="submit" className="button" disabled={isLoading}>
+                <span>
+                    {isLoading ? 'Inscription...' : 'S\'inscrire'}
+                </span>
+            </button>
+      </div>
 
       <div className="text-center text-sm">
-        Vous avez déjà un compte ?{' '}
+        <span className="text-muted-foreground">Vous avez déjà un compte ? </span>
         <Link href="/login" className="text-primary hover:underline">
           Se connecter
         </Link>
