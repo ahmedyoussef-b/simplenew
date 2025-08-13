@@ -15,7 +15,12 @@ export interface AuthResponse {
   user: SafeUser;
 }
 
-export type LoginResponse = AuthResponse;
+export interface TwoFactorResponse {
+    message: string;
+    tempToken: string; // A temporary token to be used for the 2FA verification step
+}
+
+export type LoginResponse = AuthResponse | TwoFactorResponse;
 
 export interface LogoutResponse {
     message: string;
@@ -30,6 +35,20 @@ export interface SessionResponse {
 
 export interface SocialLoginRequest {
   idToken: string;
+}
+
+export interface ForgotPasswordRequest {
+    email: string;
+}
+
+export interface ResetPasswordRequest {
+    token: string;
+    password: string;
+}
+
+export interface Verify2FARequest {
+    tempToken: string;
+    code: string;
 }
 
 
@@ -53,6 +72,7 @@ export const authApi = createApi({
             if ('user' in data) { // Check if it's AuthResponse
                 dispatch(setUser(data.user));
             }
+            // If it's a TwoFactorResponse, we do nothing here. The component will handle redirection.
         } catch (error) {
             console.error("❌ [authApi] Login queryFulfilled failed.", error);
         }
@@ -79,6 +99,35 @@ export const authApi = createApi({
                 // Handle error
             }
         },
+    }),
+    forgotPassword: builder.mutation<{ message: string }, ForgotPasswordRequest>({
+        query: (body) => ({
+            url: 'forgot-password',
+            method: 'POST',
+            body,
+        }),
+    }),
+    resetPassword: builder.mutation<{ message: string }, ResetPasswordRequest>({
+        query: (body) => ({
+            url: 'reset-password',
+            method: 'POST',
+            body,
+        }),
+    }),
+    verify2FA: builder.mutation<AuthResponse, Verify2FARequest>({
+        query: (body) => ({
+            url: 'verify-2fa',
+            method: 'POST',
+            body,
+        }),
+        async onQueryStarted(args, { dispatch, queryFulfilled }) {
+            try {
+                const { data } = await queryFulfilled;
+                dispatch(setUser(data.user));
+            } catch (error) {
+                // Handle error
+            }
+        }
     }),
     getSession: builder.query<SessionResponse, void>({
       query: () => 'session',
@@ -130,6 +179,9 @@ export const {
   useLoginMutation,
   useRegisterMutation,
   useSocialLoginMutation,
+  useForgotPasswordMutation,
+  useResetPasswordMutation,
+  useVerify2FAMutation,
   useGetSessionQuery,
   useLogoutMutation,
   useUpdateProfileMutation,
