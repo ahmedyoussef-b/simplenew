@@ -1,49 +1,84 @@
 // src/components/EventCalendarContainer.tsx
+'use client'
 
-import prisma from "@/lib/prisma";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import Calendar from "react-calendar";
+import "react-calendar/dist/Calendar.css";
+import { cn } from "@/lib/utils";
+import { Skeleton } from "./ui/skeleton";
 import type { Event } from "@/types/index";
-import EventCalendar from "./EventCalendar";
 import Image from "next/image";
 import * as paths from "@/lib/image-paths";
 
-type EventCalendarContainerProps = {
+type ValuePiece = Date | null;
+type Value = ValuePiece | [ValuePiece, ValuePiece];
+
+interface EventCalendarContainerProps {
   date?: string | string[] | undefined;
-};
+  events: Event[];
+  eventDates: string[];
+}
 
-const EventCalendarContainer = async ({ date }: EventCalendarContainerProps) => {
+const EventCalendarContainer = ({ date, events = [], eventDates = [] }: EventCalendarContainerProps) => {
+  const [value, onChange] = useState<Value>(new Date());
+  const [isMounted, setIsMounted] = useState(false);
+  const router = useRouter();
+
   const selectedDateParam = Array.isArray(date) ? date[0] : date;
-  const selectedDate = selectedDateParam ? new Date(selectedDateParam) : new Date();
-
-  // 1. Fetch all event dates for highlighting
-  const allEvents = await prisma.event.findMany({
-    select: {
-      startTime: true,
-    },
-  });
-  const eventDates = allEvents.map(event => event.startTime.toISOString().split('T')[0]);
-  const uniqueEventDates = [...new Set(eventDates)];
-
-  // 2. Fetch events for the selected day
-  const startOfDay = new Date(selectedDate);
-  startOfDay.setUTCHours(0, 0, 0, 0); // Use UTCHours for consistency
-  const endOfDay = new Date(selectedDate);
-  endOfDay.setUTCHours(23, 59, 59, 999); // Use UTCHours for consistency
   
-  const eventsForDay: Event[] = await prisma.event.findMany({
-    where: {
-      startTime: {
-        gte: startOfDay,
-        lte: endOfDay,
-      },
-    },
-    orderBy: {
-        startTime: 'asc'
+  useEffect(() => {
+    setIsMounted(true);
+    if(selectedDateParam) {
+        const initialDate = new Date(selectedDateParam);
+        // Adjust for timezone offset to prevent day-off errors
+        initialDate.setMinutes(initialDate.getMinutes() + initialDate.getTimezoneOffset());
+        onChange(initialDate);
     }
+  }, []);
+
+  useEffect(() => {
+    if (isMounted && value instanceof Date) {
+      const newDateString = value.toISOString().split('T')[0];
+      if (newDateString !== selectedDateParam) {
+        router.push(`?date=${newDateString}`);
+      }
+    }
+  }, [value, isMounted, router, selectedDateParam]);
+
+  if (!isMounted) {
+    return (
+        <div className={cn("bg-card p-3 rounded-lg shadow-md")}>
+            <Skeleton className="h-[250px] w-full" />
+        </div>
+    );
+  }
+
+  const tileClassName = ({ date, view }: { date: Date; view: string }) => {
+    if (view === 'month') {
+      const dateString = date.toISOString().split('T')[0];
+      if (eventDates.includes(dateString)) {
+        return 'event-day'; // Custom class for highlighting
+      }
+    }
+    return null;
+  };
+  
+  const eventsForDay = events.filter(event => {
+      const eventDate = new Date(event.startTime);
+      const selectedValue = value instanceof Date ? value : value?.[0];
+      return selectedValue && eventDate.toDateString() === selectedValue.toDateString();
   });
 
   return (
     <div className="bg-muted p-4 rounded-md">
-      <EventCalendar eventDates={uniqueEventDates} />
+      <Calendar
+        onChange={onChange}
+        value={value}
+        className="!border-none !font-sans"
+        locale="fr-FR"
+        tileClassName={tileClassName}
+      />
       <div className="flex items-center justify-between mt-4">
         <h1 className="text-xl font-semibold">Événements du jour</h1>
         <Image src={paths.moreDarkIcon} alt="plus d'options" width={20} height={20} />

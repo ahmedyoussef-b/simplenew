@@ -1,60 +1,35 @@
-import prisma from "@/lib/prisma";
-import { getServerSession } from "@/lib/auth-utils";
-import { Role, type AnnouncementWithClass } from "@/types/index"; 
-import type { Prisma } from "@prisma/client";
+// src/components/Announcements.tsx
+'use client'
+
 import Link from 'next/link';
-import Image from "next/image";
-import { FileText } from "lucide-react";
+import Image from 'next/image';
+import { FileText } from 'lucide-react';
+import type { AnnouncementWithClass } from "@/types/index";
 
-const Announcements = async () => {
-  const session = await getServerSession();
-  const userRole = session?.role as Role | undefined; 
-  const currentUserId = session?.userId;
+interface AnnouncementsProps {
+  initialAnnouncements: AnnouncementWithClass[];
+}
 
-  const queryOptions: Prisma.AnnouncementFindManyArgs = {
-    orderBy: { date: "desc" },
-    include: { class: { select: { name: true } } } 
-  };
-
-  if (userRole && currentUserId && userRole !== Role.ADMIN) {
-    const roleConditions: Prisma.AnnouncementWhereInput = {};
-    if (userRole === Role.TEACHER) {
-      // A teacher sees announcements for classes they teach in.
-      roleConditions.class = { lessons: { some: { teacherId: currentUserId } } };
-    } else if (userRole === Role.STUDENT) {
-      roleConditions.class = { students: { some: { id: currentUserId } } };
-    } else if (userRole === Role.PARENT) {
-      roleConditions.class = { students: { some: { parentId: currentUserId } } };
-    }
-    
-    // All roles should see announcements for everyone (classId is null) OR announcements for their specific classes.
-    queryOptions.where = {
-        OR: [
-          { classId: null }, 
-          roleConditions
-        ].filter(condition => Object.keys(condition).length > 0) 
-    };
-  }
-
-  const data: AnnouncementWithClass[] = await prisma.announcement.findMany(queryOptions) as AnnouncementWithClass[];
-
-  if (!data || data.length === 0) {
+const Announcements: React.FC<AnnouncementsProps> = ({ initialAnnouncements }) => {
+  if (!initialAnnouncements || initialAnnouncements.length === 0) {
     return (
-      <div className="bg-muted p-4 rounded-md h-full flex flex-col items-center justify-center">
-        <h1 className="text-xl font-semibold mb-4 self-start">Annonces</h1>
-        <p className="text-sm text-gray-400">Pas d'annonces pour le moment.</p>
+      <div className="bg-muted p-4 rounded-md h-full flex flex-col">
+        <h1 className="text-xl font-semibold mb-4 self-start flex-shrink-0">Annonces</h1>
+        <div className="flex-grow flex items-center justify-center">
+          <p className="text-sm text-gray-400">Pas d'annonces pour le moment.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-muted p-4 rounded-md h-[600px] flex flex-col">
+    <div className="bg-muted p-4 rounded-md h-full flex flex-col">
       <div className="flex items-center justify-between flex-shrink-0">
         <h1 className="text-xl font-semibold">Annonces</h1>
       </div>
       <div className="flex-grow mt-4 pr-2 overflow-y-auto min-h-0">
         <div className="flex flex-col gap-4">
-          {data.map((announcement, index) => {
+          {initialAnnouncements.map((announcement, index) => {
             const cardColors = ["bg-lamaSkyLight", "bg-lamaPurpleLight", "bg-lamaYellowLight"];
             const cardColor = cardColors[index % cardColors.length];
 
