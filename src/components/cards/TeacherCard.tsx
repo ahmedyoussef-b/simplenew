@@ -35,11 +35,22 @@ const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, userRole, isLCP = fa
             </div>
             <h3 className="text-lg font-bold truncate w-full text-center">{fullName}</h3>
             <p className="text-sm text-gray-400 mb-2">Enseignant(e)</p>
+            
+            <div className="flex justify-around w-full my-3 text-center">
+                <div>
+                    <p className="font-bold text-lg">{teacher._count.subjects}</p>
+                    <p className="text-xs text-gray-400">Matières</p>
+                </div>
+                <div>
+                    <p className="font-bold text-lg">{teacher._count.classes}</p>
+                    <p className="text-xs text-gray-400">Classes</p>
+                </div>
+            </div>
 
             <hr className="w-full border-t border-gray-700 my-2" />
 
-            <div className="text-left w-full mt-2">
-                <p className="text-xs font-semibold text-gray-400 mb-1">Matières:</p>
+            <div className="text-center w-full mt-2 flex-grow">
+                <p className="text-xs font-semibold text-gray-400 mb-1">Matières principales :</p>
                 <div className="flex flex-wrap gap-1 justify-center">
                     {teacher.subjects.slice(0, 3).map(subject => (
                     <Badge key={subject.id} variant="secondary" className="text-xs bg-gray-600 text-white">{subject.name}</Badge>
