@@ -51,8 +51,8 @@ export function LoginForm() {
     console.log("➡️ [LoginForm] useEffect triggered. isSuccess:", isSuccess, "isError:", isError, "loginSuccessData:", loginSuccessData);
     if (isSuccess && loginSuccessData) {
         // More robust check for the 2FA response type
-        const twoFactorResponse = loginSuccessData as Partial<LoginResponse> & { twoFactorRequired?: boolean, twoFactorToken?: string, twoFactorCode?: string };
-        if (twoFactorResponse.twoFactorRequired && twoFactorResponse.twoFactorToken) {
+        const twoFactorResponse = loginSuccessData as Partial<LoginResponse> & { requires2FA?: boolean, tempToken?: string, twoFactorCode?: string };
+        if (twoFactorResponse.requires2FA && twoFactorResponse.tempToken) {
              console.log("✅ [LoginForm] 2FA required. Redirecting...");
 
              const description = twoFactorResponse.twoFactorCode
@@ -64,14 +64,15 @@ export function LoginForm() {
                 description: description,
                 duration: 10000, // Make it stay longer to copy the code
              });
-             console.log("➡️ 😁[LoginForm] 2FA required. Redirecting to /verify-2fa with token:", twoFactorResponse.twoFactorToken);
-             router.push(`/verify-2fa?token=${twoFactorResponse.twoFactorToken}`);
+             console.log("➡️ 😁[LoginForm] 2FA required. Redirecting to /verify-2fa with token:", twoFactorResponse.tempToken);
+             router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
         } else {
              console.log("✅ [LoginForm] Login successful, no 2FA. The main page effect will handle redirection.");
              toast({
                 title: "Connexion réussie",
                 description: "Vous êtes maintenant connecté. Redirection...",
             });
+            router.push('/');
         }
     }
     if (isError && loginErrorData) {
