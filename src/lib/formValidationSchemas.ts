@@ -228,12 +228,13 @@ export const profileUpdateSchema = z.object({
   username: z.string().min(3, "Le nom d'utilisateur doit faire au moins 3 caractères.").optional(),
   email: z.string().email("Adresse e-mail invalide.").optional(),
   password: z.string().min(8, "Le mot de passe doit faire au moins 8 caractères.").optional().or(z.literal('')), // Optional, but validated if present
-  phone: z.string().optional().nullable(),
+  phone: z.string().optional().or(z.literal('')).nullable(),
   address: z.string().optional().nullable(),
   img: z.string().url().optional().nullable(),
   twoFactorEnabled: z.boolean().optional(),
 });
 
+export type ProfileUpdateSchema = z.infer<typeof profileUpdateSchema>;
 export type AnnouncementSchema = z.infer<typeof announcementSchema>;
 export type AssignmentSchema = z.infer<typeof assignmentSchema>;
 export type AttendanceSchema = z.infer<typeof attendanceSchema>;

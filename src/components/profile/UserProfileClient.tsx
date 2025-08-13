@@ -1,15 +1,21 @@
-'use client';
+// src/components/profile/UserProfileClient.tsx
+'use client'
 import React from 'react';
-import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { User, ShieldCheck } from 'lucide-react';
 import ProfileForm from './ProfileForm';
 import { UserProfile } from './types';
 
-interface UserProfileClientProps {
-  userProfile: UserProfile;
-}
 
-const UserProfileClient: React.FC<UserProfileClientProps> = ({ userProfile }) => {
+export default function UserProfileClient({ userProfile }: { userProfile: UserProfile }) {
+
+  if (!userProfile) {
+    return (
+      <div className="p-4 md:p-6 text-center">
+        Profil non trouvé. Veuillez contacter l'administration.
+      </div>
+    );
+  }
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center space-x-4">
@@ -26,5 +32,3 @@ const UserProfileClient: React.FC<UserProfileClientProps> = ({ userProfile }) =>
     </div>
   );
 };
-
-export default UserProfileClient;

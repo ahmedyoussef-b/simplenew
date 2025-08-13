@@ -1,20 +1,25 @@
+// src/components/profile/useProfileForm.ts
 'use client';
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
 import { useUpdateProfileMutation } from "@/lib/redux/api/authApi";
-import { profileUpdateSchema } from "@/lib/formValidationSchemas";
-import { ProfileFormReturn, UserProfile } from "./types";
+import { profileUpdateSchema, type ProfileUpdateSchema } from "@/lib/formValidationSchemas";
+import { UserProfile } from "./types";
 
-const useProfileForm = (userProfile: UserProfile): ProfileFormReturn => {
+interface UseProfileFormProps {
+  userProfile: UserProfile;
+}
+
+export default function useProfileForm({ userProfile }: UseProfileFormProps) {
   const { toast } = useToast();
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   
-  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm({
+  const { register, handleSubmit, formState: { errors, dirtyFields }, setValue, watch } = useForm<ProfileUpdateSchema>({
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
-      name: userProfile.name,
-      surname: userProfile.surname,
+      name: userProfile.name ?? '',
+      surname: userProfile.surname ?? '',
       username: userProfile.user.username,
       email: userProfile.user.email,
       phone: userProfile.phone || '',
@@ -28,10 +33,23 @@ const useProfileForm = (userProfile: UserProfile): ProfileFormReturn => {
   const imgUrl = watch("img");
   const twoFactorEnabled = watch("twoFactorEnabled");
 
-  const onSubmit = async (data: any) => {
-    const payload: any = { ...data };
-    if (payload.password && payload.password.trim() === '') {
+  const onSubmit: SubmitHandler<ProfileUpdateSchema> = async (data) => {
+    // Construct a payload with only the fields that have been changed
+    const payload: Partial<ProfileUpdateSchema> = {};
+    for (const key in dirtyFields) {
+        if (key in data) {
+            (payload as any)[key] = (data as any)[key];
+        }
+    }
+    
+    // If password is not dirty, remove it from payload
+    if (!dirtyFields.password || (payload.password && payload.password.trim() === '')) {
       delete payload.password;
+    }
+
+    if (Object.keys(payload).length === 0) {
+        toast({ title: "Aucune modification", description: "Vous n'avez modifié aucun champ." });
+        return;
     }
 
     try {
@@ -60,5 +78,3 @@ const useProfileForm = (userProfile: UserProfile): ProfileFormReturn => {
     twoFactorEnabled,
   };
 };
-
-export default useProfileForm;

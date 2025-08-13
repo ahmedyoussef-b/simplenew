@@ -6,6 +6,37 @@ import { Role } from "@prisma/client";
 import UserProfileClient from "@/components/profile/UserProfileClient";
 import type { UserProfile } from "@/components/profile/types";
 
+async function getUserProfile(session: any): Promise<UserProfile | null> {
+    if (!session?.user?.id || !session.user.role) {
+        return null;
+    }
+
+    const includeUser = {
+        user: {
+            select: { id: true, email: true, username: true, role: true, img: true, twoFactorEnabled: true }
+        }
+    };
+
+    try {
+        switch (session.user.role) {
+            case Role.ADMIN:
+                return await prisma.admin.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
+            case Role.TEACHER:
+                return await prisma.teacher.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
+            case Role.STUDENT:
+                return await prisma.student.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
+            case Role.PARENT:
+                return await prisma.parent.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
+            default:
+                return null;
+        }
+    } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+        return null;
+    }
+}
+
+
 const ProfilePage = async () => {
   const session = await getServerSession();
 
@@ -14,35 +45,7 @@ const ProfilePage = async () => {
     return null;
   }
 
-  let userProfile: UserProfile | null = null;
-  const includeUser = {
-    user: {
-      select: { id: true, email: true, username: true, role: true, img: true, twoFactorEnabled: true }
-    }
-  };
-
-  try {
-    switch (session.user.role) {
-      case Role.ADMIN:
-        userProfile = await prisma.admin.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
-        break;
-      case Role.TEACHER:
-        userProfile = await prisma.teacher.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
-        break;
-      case Role.STUDENT:
-        userProfile = await prisma.student.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
-        break;
-      case Role.PARENT:
-        userProfile = await prisma.parent.findUnique({ where: { userId: session.user.id }, include: includeUser }) as UserProfile;
-        break;
-      default:
-        // Handle VISITOR or other roles if necessary
-        break;
-    }
-  } catch (error) {
-    console.error("Failed to fetch user profile:", error);
-    // Maybe redirect to an error page or show a message
-  }
+  const userProfile = await getUserProfile(session);
 
   if (!userProfile) {
     return (

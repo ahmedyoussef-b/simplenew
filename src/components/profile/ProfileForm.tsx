@@ -1,3 +1,4 @@
+// src/components/profile/ProfileForm.tsx
 'use client';
 import React from 'react';
 import { Button } from '@/components/ui/button';
@@ -18,7 +19,7 @@ const ProfileForm: React.FC<{ userProfile: UserProfile }> = ({ userProfile }) =>
     setValue,
     imgUrl,
     twoFactorEnabled
-  } = useProfileForm(userProfile);
+  } = useProfileForm({ userProfile });
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
