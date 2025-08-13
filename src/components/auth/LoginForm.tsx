@@ -60,7 +60,7 @@ export function LoginForm() {
              });
              router.push(`/verify-2fa?token=${twoFactorResponse.tempToken}`);
         } else {
-             console.log("✅ [LoginForm] Login successful, no 2FA. Redirecting to dashboard root.");
+             console.log("✅ [LoginForm] Login successful, no 2FA. Redirecting to dashboard dispatcher.");
              toast({
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
