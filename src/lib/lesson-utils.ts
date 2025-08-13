@@ -5,7 +5,15 @@ import { DayOfWeek } from './time-utils';
 export const mergeConsecutiveLessons = (lessons: PrismaLesson[], wizardData: WizardData): PrismaLesson[] => {
     if (!lessons || lessons.length === 0) return [];
     
-    const sortedLessons = [...lessons].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+    // Corrected sorting: Sort by day of the week first, then by start time.
+    const sortedLessons = [...lessons].sort((a, b) => {
+        if (a.day !== b.day) {
+            const dayOrder = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+            return dayOrder.indexOf(a.day) - dayOrder.indexOf(b.day);
+        }
+        return new Date(a.startTime).getTime() - new Date(b.startTime).getTime();
+    });
+
     const merged: PrismaLesson[] = [];
     let currentLesson: PrismaLesson | null = null;
     
