@@ -157,7 +157,7 @@ function buildScheduleGrid(
 
   const mergedLessons = mergeConsecutiveLessons(scheduleWithDates, wizardData);
   const grid: Record<string, { lesson: Lesson, rowSpan: number }> = {};
-  const localSpannedSlots = new Set();
+  const localSpannedSlots = new Set<string>();
 
   mergedLessons.forEach((lesson) => {
     const day = lesson.day;
