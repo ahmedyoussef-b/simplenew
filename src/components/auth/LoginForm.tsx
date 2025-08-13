@@ -51,7 +51,7 @@ export default function LoginForm() {
 
   return (
     <div className="space-y-6">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         
         <div className="neumorphic-container">
           <input
