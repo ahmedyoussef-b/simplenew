@@ -1,63 +1,136 @@
 // src/app/page.tsx
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAppSelector } from '@/hooks/redux-hooks';
-import { selectIsAuthenticated, selectIsAuthLoading } from '@/lib/redux/slices/authSlice';
-import { Spinner } from '@/components/ui/spinner';
-import AuthLayout from '@/components/layout/AuthLayout';
-import { LoginForm } from '@/components/auth/LoginForm';
-import SocialSignInButtons from '@/components/auth/SocialSignInButtons';
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { generateGreeting, type GreetingInput } from '@/ai/flows/greetingFlow';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, Sparkles, User, LogIn } from 'lucide-react';
 import Link from 'next/link';
+import { useAppSelector } from '@/hooks/redux-hooks';
+import { selectCurrentUser } from '@/lib/redux/slices/authSlice';
 
-export default function RootPage() {
-  const router = useRouter();
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
-  const isLoading = useAppSelector(selectIsAuthLoading);
+export default function AccueilZenPage() {
+  const [greeting, setGreeting] = useState('');
+  const [name, setName] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [isLoadingGreeting, setIsLoadingGreeting] = useState(true);
+  const { toast } = useToast();
+  const currentUser = useAppSelector(selectCurrentUser);
 
   useEffect(() => {
-    // If the session is loaded and the user is authenticated, redirect them.
-    if (!isLoading && isAuthenticated) {
-      console.log(`✅ [RootPage] User is authenticated, redirecting to /accueil`);
-      router.replace('/accueil');
+    const storedName = localStorage.getItem('accueilZenName');
+    if (storedName) {
+      setName(storedName);
+    } else if (currentUser?.name) {
+      setName(currentUser.name);
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [currentUser]);
 
-  // While checking the session, show a loading spinner
-  if (isLoading || isAuthenticated) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    const getBaseGreeting = (): string => {
+      const hour = new Date().getHours();
+      if (hour < 5) return 'Bonne nuit';
+      if (hour < 18) return 'Bonjour';
+      return 'Bonsoir';
+    };
 
-  // If the user is not authenticated, display the login page.
-  console.log("🛑 [RootPage] User is not authenticated, showing login form.");
+    const fetchGreeting = async () => {
+      setIsLoadingGreeting(true);
+      const baseGreeting = getBaseGreeting();
+      setGreeting(baseGreeting); 
+
+      if (name) {
+        try {
+          const personalizedGreeting = await generateGreeting({ name, baseGreeting });
+          setGreeting(personalizedGreeting);
+        } catch (error) {
+          console.error("Failed to fetch personalized greeting:", error);
+          setGreeting(`${baseGreeting}, ${name} !`);
+        }
+      }
+      setIsLoadingGreeting(false);
+    };
+
+    fetchGreeting();
+  }, [name]);
+
+  const handleNameSave = () => {
+    if (name.trim()) {
+      localStorage.setItem('accueilZenName', name.trim());
+      setIsEditingName(false);
+      toast({
+        title: 'Nom enregistré !',
+        description: `Nous nous souviendrons de vous, ${name.trim()}.`,
+      });
+    }
+  };
+
   return (
-       <AuthLayout
-      title="Connectez-vous à votre compte"
-      description="Entrez vos identifiants pour accéder à votre tableau de bord."
-    >
-      <LoginForm />
-      <div className="relative my-4">
-        <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t" />
-        </div>
-        <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
-            Ou continuez avec
-          </span>
+    <main className="flex min-h-screen w-full flex-col items-center justify-center bg-background text-foreground font-alegreya p-4">
+      <div className="absolute top-4 right-4">
+        {currentUser ? (
+             <Button asChild variant="outline">
+                <Link href={`/${currentUser.role.toLowerCase()}`}>
+                    <User className="mr-2 h-4 w-4" />
+                    Mon tableau de bord
+                </Link>
+            </Button>
+        ) : (
+            <Button asChild variant="outline">
+                <Link href="/login">
+                     <LogIn className="mr-2 h-4 w-4" />
+                    Se connecter
+                </Link>
+            </Button>
+        )}
+      </div>
+
+      <div className="text-center animate-fade-in-slow">
+        {isLoadingGreeting ? (
+          <div className="h-20 flex items-center justify-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          </div>
+        ) : (
+          <h1 className="font-belleza text-5xl md:text-7xl lg:text-8xl tracking-wider text-primary animate-subtle-pulse">
+            {greeting}
+          </h1>
+        )}
+
+        <div className="mt-8">
+          {isEditingName ? (
+            <Card className="max-w-sm mx-auto bg-card/50 backdrop-blur-sm border-primary/20">
+              <CardHeader>
+                <CardTitle className="font-alegreya">Comment devrions-nous vous appeler ?</CardTitle>
+                <CardDescription>Entrez votre nom pour une touche personnelle.</CardDescription>
+              </CardHeader>
+              <CardContent className="flex gap-2">
+                <Input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Entrez votre nom..."
+                  onKeyDown={(e) => e.key === 'Enter' && handleNameSave()}
+                  className="bg-background/80"
+                />
+                <Button onClick={handleNameSave}>Enregistrer</Button>
+              </CardContent>
+            </Card>
+          ) : (
+            !currentUser && (
+                <Button variant="ghost" onClick={() => setIsEditingName(true)} className="text-muted-foreground hover:text-primary">
+                    {name ? `Ce n'est pas ${name} ?` : 'Personnaliser le message'}
+                </Button>
+            )
+          )}
         </div>
       </div>
-      <SocialSignInButtons />
-      <p className="mt-4 text-center text-sm text-muted-foreground">
-        Pas encore de compte ?{' '}
-        <Link href="/register" className="font-medium text-primary hover:underline">
-          S'inscrire
-        </Link>
-      </p>
-    </AuthLayout>
+
+       <footer className="absolute bottom-4 text-xs text-muted-foreground/50">
+            Propulsé par <Sparkles className="inline-block h-3 w-3 text-accent" /> Genkit AI
+       </footer>
+    </main>
   );
 }

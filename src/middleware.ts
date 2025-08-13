@@ -2,65 +2,28 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { getServerSession } from './lib/auth-utils';
-import { routeAccessMap } from './lib/settings';
 import { Role } from './types';
 
-// This function can be marked `async` if using `await` inside
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   console.log(`🚦 [Middleware] Processing request for: ${pathname}`);
   const session = await getServerSession();
   const userRole = session?.user?.role as Role | undefined;
-  console.log(`[Middleware] Session role found: ${userRole}`);
 
   const isAuthPage = pathname.startsWith('/login') || pathname.startsWith('/register') || pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password');
-  
-  // 1. If user is authenticated
-  if (userRole) {
-    // And tries to access an auth page, redirect them to their dashboard's entry point
-    if (isAuthPage) {
-        const dashboardPath = `/${userRole.toLowerCase()}`;
-        console.log(`[Middleware] Authenticated user on auth page. Redirecting to ${dashboardPath}`);
-        return NextResponse.redirect(new URL(dashboardPath, req.url));
-    }
-    
-    // Check if the authenticated user has access to the requested protected route
-    const isAllowed = Object.entries(routeAccessMap).some(([route, allowedRoles]) => {
-      const regex = new RegExp(`^${route.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace('\\*', '.*')}$`);
-      if (regex.test(pathname)) {
-        return allowedRoles.includes(userRole);
-      }
-      return false;
-    });
-    
-    // Find if the path is protected at all
-    const isProtectedRoute = Object.keys(routeAccessMap).some(route => {
-        const regex = new RegExp(`^${route.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace('\\*', '.*')}$`);
-        return regex.test(pathname);
-    });
+  const isDashboardRoute = pathname.startsWith('/admin') || pathname.startsWith('/teacher') || pathname.startsWith('/student') || pathname.startsWith('/parent') || pathname.startsWith('/list') || pathname.startsWith('/dashboard');
 
-    if (isProtectedRoute && !isAllowed) {
-        const homePath = `/`;
-        console.log(`[Middleware] Role '${userRole}' does not have access to ${pathname}. Redirecting to ${homePath}`);
-        return NextResponse.redirect(new URL(homePath, req.url));
-    }
-  } 
-  // 2. If user is NOT authenticated
-  else {
-    // And is trying to access a page that is NOT the root or an auth page, redirect to root login
-    if (pathname !== '/' && !isAuthPage) {
-        const isProtectedRoute = Object.keys(routeAccessMap).some(route => {
-            const regex = new RegExp(`^${route.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&').replace('\\*', '.*')}$`);
-            return regex.test(pathname);
-        });
-        
-        if(isProtectedRoute){
-            console.log(`[Middleware] Unauthenticated user on protected page ${pathname}. Redirecting to / (Login Page)`);
-            return NextResponse.redirect(new URL('/', req.url));
-        }
-    }
+  // Allow unauthenticated users to access the root page (accueil) and auth pages
+  if (!userRole && isDashboardRoute) {
+    console.log(`[Middleware] Unauthenticated user on protected route ${pathname}. Redirecting to /login.`);
+    return NextResponse.redirect(new URL('/login', req.url));
   }
 
+  // If user is authenticated and tries to access an auth page, redirect to dashboard
+  if (userRole && isAuthPage) {
+    console.log(`[Middleware] Authenticated user on auth page. Redirecting to /dashboard.`);
+    return NextResponse.redirect(new URL('/dashboard', req.url));
+  }
 
   console.log(`[Middleware] No specific rule matched for user role '${userRole}' on path '${pathname}'. Allowing request.`);
   return NextResponse.next();
@@ -74,7 +37,8 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
+     * - / (the root which is now the public accueil page)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|$).*)',
   ],
 };
