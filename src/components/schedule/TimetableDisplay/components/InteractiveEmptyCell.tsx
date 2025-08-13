@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import type { Day, Lesson, Subject, WizardData } from '@/types';
 import { getAvailableRoomsForSlot } from './utils';
 import { findConflictingConstraint } from '@/lib/constraint-utils';
-import { formatTimeSimple } from './utils';
+import { formatTimeSimple, timeToMinutes } from './utils';
 
 interface InteractiveEmptyCellProps {
   day: Day;
@@ -37,6 +37,10 @@ const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
   hoveredSubjectId,
 }) => {
 
+  const isSaturdayAfternoon = useMemo(() => {
+    return day === 'SATURDAY' && timeToMinutes(timeSlot) >= 720; // 12:00 PM
+  }, [day, timeSlot]);
+
   const isTeacherConstrained = useMemo(() => {
     if (!hoveredSubjectId) return false;
 
@@ -60,7 +64,7 @@ const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
 
   }, [hoveredSubjectId, day, timeSlot, wizardData, selectedViewId, viewMode]);
 
-  const isDisabled = isDropDisabled || isTeacherConstrained;
+  const isDisabled = isDropDisabled || isTeacherConstrained || isSaturdayAfternoon;
   
   const { setNodeRef, isOver } = useDroppable({
     id: `empty-${day}-${timeSlot}`,

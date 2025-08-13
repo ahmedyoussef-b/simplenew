@@ -79,6 +79,11 @@ export function generateSchedule(wizardData: WizardData): { schedule: Lesson[], 
         for (const time of shuffledTimes) {
           const lessonStartMinutes = timeToMinutes(time);
 
+          // Hardcoded constraint: No courses on Saturday afternoon
+          if (dayEnum === 'SATURDAY' && lessonStartMinutes >= 720) { // 720 minutes = 12:00 PM
+            continue;
+          }
+
           // Check if class is busy
           const isClassBusy = schedule.some(l => {
               if (l.classId !== classInfo.id || l.day !== dayEnum) return false;

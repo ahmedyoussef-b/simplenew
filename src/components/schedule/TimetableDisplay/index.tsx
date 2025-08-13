@@ -81,14 +81,15 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
               </TableRow>
               </TableHeader>
               <TableBody>
-              {timeSlots.map((time) => (
+              {timeSlots.map((time, timeIndex) => (
                   <TableRow key={time}>
                   <TableCell className="font-medium bg-muted/50 border h-24">{time}</TableCell>
-                  {schoolDays.map(day => {
+                  {schoolDays.map((day, dayIndex) => {
                       const dayEnum = dayMapping[day as keyof typeof dayMapping];
                       if (!dayEnum) return null;
                       
                       const cellId = `${dayEnum}-${time}`;
+                      const uniqueKey = `${cellId}-${dayIndex}-${timeIndex}`;
 
                       if (spannedSlots.has(cellId)) {
                           return null;
@@ -98,7 +99,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                       
                       if (cellData) {
                           return (
-                          <TableCell key={cellId} rowSpan={cellData.rowSpan} className="p-0 border align-top relative">
+                          <TableCell key={uniqueKey} rowSpan={cellData.rowSpan} className="p-0 border align-top relative">
                               <LessonCell 
                                   lesson={cellData.lesson} 
                                   wizardData={wizardData} 
@@ -110,7 +111,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                           );
                       } else {
                           return (
-                              <TableCell key={cellId} className="p-0 border align-top">
+                              <TableCell key={uniqueKey} className="p-0 border align-top">
                                   <InteractiveEmptyCell
                                       day={dayEnum}
                                       timeSlot={time}
