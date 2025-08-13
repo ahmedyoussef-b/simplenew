@@ -3,7 +3,6 @@
 
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +17,8 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import type { LoginResponse } from "@/lib/redux/api/authApi";
 import FormError from "@/components/forms/FormError";
-import { loginSchema, type LoginSchema } from "@/lib/formValidationSchemas";
+import { loginSchema } from "@/lib/formValidationSchemas";
+import type { LoginSchema as LoginCredentials } from "@/types/schemas";
 
 
 interface ApiErrorData {
@@ -34,7 +34,7 @@ function isSerializedError(error: unknown): error is SerializedError {
 }
 
 export function LoginForm() {
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginSchema>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginCredentials>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -93,7 +93,7 @@ export function LoginForm() {
     }
   }, [isSuccess, isError, loginErrorData, loginSuccessData, toast, router]);
 
-  const onSubmit = async (data: LoginSchema) => {
+  const onSubmit = async (data: LoginCredentials) => {
     console.log("➡️ [LoginForm] Submitting login form with data:", data);
     await login(data);
   };
