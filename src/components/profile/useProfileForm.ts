@@ -5,7 +5,6 @@ import { useToast } from "@/hooks/use-toast";
 import { useUpdateProfileMutation } from "@/lib/redux/api/authApi";
 import { profileUpdateSchema } from "@/lib/formValidationSchemas";
 import { ProfileFormReturn, UserProfile } from "./types";
-import { useState } from "react";
 
 const useProfileForm = (userProfile: UserProfile): ProfileFormReturn => {
   const { toast } = useToast();
@@ -26,9 +25,7 @@ const useProfileForm = (userProfile: UserProfile): ProfileFormReturn => {
     },
   });
 
-  const [imgUrl, setImgUrl] = useState<string | null>(userProfile.user.img || null);
-  
-  // twoFactorEnabled state is no longer needed
+  const imgUrl = watch("img");
   const twoFactorEnabled = watch("twoFactorEnabled");
 
   const onSubmit = async (data: any) => {
@@ -36,9 +33,6 @@ const useProfileForm = (userProfile: UserProfile): ProfileFormReturn => {
     if (payload.password && payload.password.trim() === '') {
       delete payload.password;
     }
-
-    // Remove 2FA from payload
-    delete payload.twoFactorEnabled;
 
     try {
       await updateProfile(payload).unwrap();

@@ -6,6 +6,7 @@ import PersonalInfoCard from './PersonalInfoCard';
 import AuthInfoCard from './AuthInfoCard';
 import useProfileForm from './useProfileForm';
 import { UserProfile } from './types';
+import TwoFactorCard from './TwoFactorCard';
 
 const ProfileForm: React.FC<{ userProfile: UserProfile }> = ({ userProfile }) => {
   const {
@@ -16,6 +17,7 @@ const ProfileForm: React.FC<{ userProfile: UserProfile }> = ({ userProfile }) =>
     onSubmit,
     setValue,
     imgUrl,
+    twoFactorEnabled
   } = useProfileForm(userProfile);
 
   return (
@@ -34,6 +36,12 @@ const ProfileForm: React.FC<{ userProfile: UserProfile }> = ({ userProfile }) =>
         errors={errors}
         isLoading={isLoading}
         userProfile={userProfile}
+      />
+      
+      <TwoFactorCard 
+        twoFactorEnabled={twoFactorEnabled}
+        setValue={setValue}
+        isLoading={isLoading}
       />
 
       <div className="flex justify-end">
