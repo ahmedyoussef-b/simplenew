@@ -20,6 +20,7 @@ export default function RootPage() {
   useEffect(() => {
     // Si l'utilisateur est authentifié, le rediriger vers son tableau de bord.
     if (!isLoading && isAuthenticated) {
+      console.log("✅ [RootPage] User is authenticated, redirecting to /dashboard");
       router.replace('/dashboard');
     }
   }, [isAuthenticated, isLoading, router]);
@@ -34,6 +35,7 @@ export default function RootPage() {
   }
 
   // Si l'utilisateur n'est pas authentifié, afficher la page de connexion
+  console.log("🛑 [RootPage] User is not authenticated, showing login form.");
   return (
        <AuthLayout
       title="Connectez-vous à votre compte"

@@ -26,8 +26,8 @@ export default function DashboardRedirectPage() {
       router.replace(`/${rolePath}`);
 
     } else {
-      console.log(`🛑 [DashboardRedirect] User not authenticated. Redirecting to /login`);
-      router.replace('/login');
+      console.log(`🛑 [DashboardRedirect] User not authenticated. Redirecting to /`);
+      router.replace('/');
     }
   }, [user, isLoading, router]);
 

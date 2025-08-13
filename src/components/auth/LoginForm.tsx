@@ -65,8 +65,7 @@ export function LoginForm() {
                 title: "Connexion réussie",
                 description: "Vous allez être redirigé...",
             });
-             // The redirection is now handled by the RootPage's useEffect
-             router.push('/');
+             // The redirection is now handled by the RootPage's useEffect, which waits for the state to update.
         }
     }
     if (isError && loginErrorData) {
