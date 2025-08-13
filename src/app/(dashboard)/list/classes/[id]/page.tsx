@@ -48,7 +48,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
   }
 
   const session = await getServerSession();
-  const userRole = session?.role as AppRole | undefined;
+  const userRole = session?.user?.role as AppRole | undefined;
 
   const classData = await prisma.class.findUnique({
     where: {
@@ -74,7 +74,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
           Classe: {classData.name}
         </h1>
         {userRole === AppRole.ADMIN && (
-            <FormContainer table="class" type="update" data={classData} className={""} />
+            <FormContainer table="class" type="update" data={classData} />
         )}
       </div>
 
