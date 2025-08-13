@@ -74,10 +74,10 @@ export async function POST(req: NextRequest) {
             name: SESSION_COOKIE_NAME,
             value: finalToken,
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: true, // Required for sameSite: 'none'
+            sameSite: 'none', // Allow cross-domain cookie
             maxAge: 60 * 60 * 24, // 1 jour
             path: '/',
-            sameSite: 'lax',
         });
 
         return response;
