@@ -1,3 +1,4 @@
+
 // src/app/api/parents/[id]/route.ts
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";

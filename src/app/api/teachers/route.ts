@@ -1,3 +1,4 @@
+
 // src/app/api/teachers/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
@@ -13,12 +14,12 @@ const HASH_ROUNDS = 10;
 type TeacherWithPrismaRelations = Teacher & {
   user: User | null;
   subjects: Subject[];
-  lessons: { class: Class }[];
+  lessons: { class: Class | null }[];
 };
 
 export async function GET() {
   try {
-    const teachersFromDb = await prisma.teacher.findMany({
+    const teachersFromDb: TeacherWithPrismaRelations[] = await prisma.teacher.findMany({
       include: {
         user: true,
         subjects: true,
@@ -33,7 +34,7 @@ export async function GET() {
     });
 
     const teachers: TeacherWithDetails[] = teachersFromDb.map(t => {
-      const uniqueClasses = t.lessons.map(l => l.class);
+      const uniqueClasses = t.lessons.map(l => l.class).filter((c): c is Class => c !== null);
       return {
         ...t,
         classes: uniqueClasses,

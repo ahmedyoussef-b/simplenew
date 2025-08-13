@@ -1,3 +1,4 @@
+
 // src/app/(dashboard)/teacher/page.tsx
 import TimetableDisplay from "@/components/schedule/TimetableDisplay";
 import prisma from "@/lib/prisma";

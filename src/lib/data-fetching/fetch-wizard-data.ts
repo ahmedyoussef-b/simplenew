@@ -1,3 +1,4 @@
+
 // src/lib/data-fetching/fetch-wizard-data.ts
 import prisma from "@/lib/prisma";
 import type { WizardData, ClassWithGrade, TeacherWithDetails, Subject, Classroom, Grade, LessonRequirement, TeacherConstraint, SubjectRequirement, TeacherAssignment, SchoolData, Lesson } from '@/types';
@@ -31,7 +32,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       prisma.school.findFirst(),
       prisma.class.findMany({ include: { grade: true, _count: { select: { students: true, lessons: true } } } }),
       prisma.subject.findMany({orderBy: {name: 'asc'}}),
-      prisma.teacher.findMany({ include: { user: true, subjects: true, lessons: { select: { classId: true } } } }),
+      prisma.teacher.findMany({ include: { user: true, subjects: true, lessons: { select: { classId: true }, distinct: ['classId'] } } }),
       prisma.classroom.findMany({orderBy: {name: 'asc'}}),
       prisma.grade.findMany({orderBy: {level: 'asc'}}),
       prisma.lessonRequirement.findMany(),
@@ -45,11 +46,11 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       const classIds = new Set(t.lessons.map(l => l.classId));
       return {
         ...t,
+        classes: [], // This will be populated if needed, but count is the main thing
         _count: {
             subjects: t.subjects.length,
             classes: classIds.size,
         },
-        classes: [], // This will be populated if needed, but count is the main thing
       };
     });
 

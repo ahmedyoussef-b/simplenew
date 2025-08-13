@@ -1,3 +1,4 @@
+
 // src/app/[locale]/(dashboard)/list/students/[id]/page.tsx
 import Announcements from "@/components/Announcements";
 import { getServerSession } from "@/lib/auth-utils";
@@ -97,14 +98,22 @@ const SingleStudentPage = async ({
         include: { 
             user: true, 
             subjects: true, 
-            classes: true,
-            _count: { select: {  subjects: true } } 
+            lessons: { select: { classId: true }, distinct: ['classId'] }
         } 
     }),
     prisma.classroom.findMany(),
   ]);
 
   const studentClass = student.class as unknown as ClassWithGrade;
+
+  const teachersWithDetails: TeacherWithDetails[] = allTeachers.map(t => ({
+    ...t,
+    classes: [], // Not needed here, derived from lessons if required
+    _count: {
+      subjects: t.subjects.length,
+      classes: new Set(t.lessons.map(l => l.classId)).size
+    }
+  }));
 
   const wizardData: WizardData = {
     school: {
@@ -116,9 +125,8 @@ const SingleStudentPage = async ({
       scheduleDraftId: null,
       schoolConfig: {}
     },
-    classes: [studentClass],
     subjects: allSubjects,
-    teachers: allTeachers as TeacherWithDetails[],
+    teachers: teachersWithDetails,
     rooms: allClassrooms,
     grades: [],
     lessonRequirements: [],
@@ -126,7 +134,8 @@ const SingleStudentPage = async ({
     subjectRequirements: [],
     teacherAssignments: [],
     schedule: [],
-    scheduleDraftId: null
+    scheduleDraftId: null,
+    classes: []
   };
 
   return (

@@ -1,3 +1,4 @@
+
 // src/app/api/teachers/[id]/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     }
     
     // Extract unique classes from lessons
-    const uniqueClasses = teacherFromDb.lessons.map(l => l.class);
+    const uniqueClasses = teacherFromDb.lessons.map(l => l.class).filter((c): c is NonNullable<typeof c> => c !== null);
 
     const teacher: TeacherWithDetails = {
       ...teacherFromDb,
@@ -129,7 +130,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         select: { class: true },
         distinct: ['classId']
     });
-    const uniqueClasses = lessons.map(l => l.class);
+    const uniqueClasses = lessons.map(l => l.class).filter((c): c is NonNullable<typeof c> => c !== null);
 
     const responseData: TeacherWithDetails = {
       ...updatedTeacherWithRelations,

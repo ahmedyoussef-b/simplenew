@@ -1,3 +1,4 @@
+
 // src/app/(dashboard)/student/page.tsx
 
 import Announcements from "@/components/Announcements";
@@ -77,7 +78,7 @@ const StudentPage = async () => {
         include: { 
             user: true, 
             subjects: true, 
-            classes: true,
+            lessons: { select: { classId: true }, distinct: ['classId'] } 
         } 
     }),
     prisma.classroom.findMany(),
@@ -85,9 +86,10 @@ const StudentPage = async () => {
 
   const allTeachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
       ...t,
+      classes: [],
       _count: {
           subjects: t.subjects.length,
-          classes: t.classes.length,
+          classes: new Set(t.lessons.map(l => l.classId)).size,
       }
   }));
 
