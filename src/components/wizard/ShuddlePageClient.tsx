@@ -316,6 +316,10 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                         <RotateCw size={16} className="mr-2" />
                         Regénérer
                     </Button>
+                    <Button variant="outline" onClick={handleManualSave} disabled={saveStatus === 'loading'}>
+                        {saveStatus === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        {saveStatus === 'loading' ? 'Sauvegarde...' : 'Sauvegarder'}
+                    </Button>
                     <Button variant="outline" onClick={() => window.print()}>
                         <Printer size={16} className="mr-2" />
                         Imprimer
@@ -327,7 +331,11 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <ViewModeTabs
                         viewMode={viewMode}
-                        onViewModeChange={(value) => setViewMode(value as 'class' | 'teacher')}
+                        onViewModeChange={(value) => {
+                            setViewMode(value as 'class' | 'teacher');
+                            // Reset selectedViewId when changing mode to avoid invalid state
+                            setSelectedViewId('');
+                        }}
                         selectedClassId={viewMode === 'class' ? selectedViewId : ''}
                         onClassChange={setSelectedViewId}
                         selectedTeacherId={viewMode === 'teacher' ? selectedViewId : ''}
