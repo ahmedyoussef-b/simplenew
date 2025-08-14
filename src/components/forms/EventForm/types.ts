@@ -4,7 +4,6 @@ import type { Event, Class } from "@/types/index";
 import type { SubmitHandler, FieldErrors, UseFormRegister, UseFormHandleSubmit, UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 import type { Dispatch, SetStateAction } from "react";
-import type { UseMutation } from "@reduxjs/toolkit/query/react";
 import { MutationDefinition } from "@reduxjs/toolkit/query";
 
 export interface EventFormProps {
@@ -14,8 +13,8 @@ export interface EventFormProps {
 }
 
 export interface UseEventFormProps extends EventFormProps {
-    createEvent: UseMutation<MutationDefinition<EventSchema, any, "Announcement" | "Assignment" | "Attendance" | "Class" | "Event" | "Exam" | "Grade" | "Lesson" | "Parent" | "Result" | "Student" | "Subject" | "Teacher", Event>>;
-    updateEvent: UseMutation<MutationDefinition<EventSchema & { id: number }, any, "Announcement" | "Assignment" | "Attendance" | "Class" | "Event" | "Exam" | "Grade" | "Lesson" | "Parent" | "Result" | "Student" | "Subject" | "Teacher", Event>>;
+    createEvent: any;
+    updateEvent: any;
 }
 
 
