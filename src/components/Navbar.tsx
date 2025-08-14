@@ -31,7 +31,8 @@ const Navbar: React.FC<NavbarProps> = ({ user: initialUser }) => {
     const searchParams = useSearchParams();
     const [searchQuery, setSearchQuery] = useState(searchParams.get('search') || '');
   
-    const userToDisplay = currentUser || initialUser;
+    // Determine which user object to display. Prioritize the client-side Redux state once mounted.
+    const userToDisplay = mounted ? currentUser : initialUser;
     const rolePath = userToDisplay?.role.toLowerCase();
   
     useEffect(() => {

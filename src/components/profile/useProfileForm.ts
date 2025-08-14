@@ -6,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useUpdateProfileMutation } from "@/lib/redux/api/authApi";
 import { profileUpdateSchema, type ProfileUpdateSchema } from "@/lib/formValidationSchemas";
 import { UserProfile } from "./types";
+import { useEffect } from "react";
 
 interface UseProfileFormProps {
   userProfile: UserProfile;
@@ -15,7 +16,7 @@ export default function useProfileForm({ userProfile }: UseProfileFormProps) {
   const { toast } = useToast();
   const [updateProfile, { isLoading }] = useUpdateProfileMutation();
   
-  const { register, handleSubmit, formState: { errors, dirtyFields }, setValue, watch } = useForm<ProfileUpdateSchema>({
+  const { register, handleSubmit, formState: { errors }, setValue, watch } = useForm<ProfileUpdateSchema>({
     resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
       name: userProfile.name ?? '',
@@ -32,14 +33,13 @@ export default function useProfileForm({ userProfile }: UseProfileFormProps) {
 
   const imgUrl = watch("img");
   const twoFactorEnabled = watch("twoFactorEnabled");
-
+  
   const onSubmit: SubmitHandler<ProfileUpdateSchema> = async (data) => {
-    // Simplified payload logic: send all form data.
-    // The backend will handle updating only necessary fields.
+    // Send all form data to the server. The backend will handle what to update.
     const payload = { ...data };
     
-    // If password is not dirty or empty, remove it from payload to avoid accidental updates
-    if (!dirtyFields.password || (payload.password && payload.password.trim() === '')) {
+    // Do not send an empty password field
+    if (payload.password && payload.password.trim() === '') {
       delete payload.password;
     }
 
@@ -57,6 +57,18 @@ export default function useProfileForm({ userProfile }: UseProfileFormProps) {
       });
     }
   };
+  
+  // This useEffect ensures that if the img value in the form changes (e.g., from an upload),
+  // it is reflected in the imgUrl state used for the preview.
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      if (name === 'img') {
+        setValue('img', value.img, { shouldDirty: true });
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [watch, setValue]);
+
 
   return {
     register,
