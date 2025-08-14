@@ -34,22 +34,13 @@ export default function useProfileForm({ userProfile }: UseProfileFormProps) {
   const twoFactorEnabled = watch("twoFactorEnabled");
 
   const onSubmit: SubmitHandler<ProfileUpdateSchema> = async (data) => {
-    // Construct a payload with only the fields that have been changed
-    const payload: Partial<ProfileUpdateSchema> = {};
-    for (const key in dirtyFields) {
-        if (key in data) {
-            (payload as any)[key] = (data as any)[key];
-        }
-    }
+    // Simplified payload logic: send all form data.
+    // The backend will handle updating only necessary fields.
+    const payload = { ...data };
     
-    // If password is not dirty, remove it from payload
+    // If password is not dirty or empty, remove it from payload to avoid accidental updates
     if (!dirtyFields.password || (payload.password && payload.password.trim() === '')) {
       delete payload.password;
-    }
-
-    if (Object.keys(payload).length === 0) {
-        toast({ title: "Aucune modification", description: "Vous n'avez modifié aucun champ." });
-        return;
     }
 
     try {
