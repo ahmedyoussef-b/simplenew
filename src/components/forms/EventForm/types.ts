@@ -4,8 +4,8 @@ import type { Event, Class } from "@/types/index";
 import type { SubmitHandler, FieldErrors, UseFormRegister, UseFormHandleSubmit, UseFormReturn } from "react-hook-form";
 import type { z } from "zod";
 import type { Dispatch, SetStateAction } from "react";
-import type { MutationDefinition } from "@reduxjs/toolkit/query";
-import type { UseMutation } from "@reduxjs/toolkit/dist/query/react/buildHooks";
+import type { UseMutation } from "@reduxjs/toolkit/query/react";
+import { MutationDefinition } from "@reduxjs/toolkit/query";
 
 export interface EventFormProps {
   initialData?: Event | null;
