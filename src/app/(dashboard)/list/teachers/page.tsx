@@ -1,4 +1,3 @@
-
 // src/app/(dashboard)/list/teachers/page.tsx
 
 import { getServerSession } from "@/lib/auth-utils";
@@ -88,7 +87,12 @@ const TeachersPage = async ({ searchParams }: { searchParams: { q?: string, p?: 
                 <button className="p-2.5 hover:bg-muted rounded-md transition-colors" title="Trier">
                   <ArrowUpDown size={18} className="text-muted-foreground" />
                 </button>
-                {session.user.role === Role.ADMIN && <FormContainer table="teacher" type="create" />}
+                {session.user.role === Role.ADMIN && (
+                  <FormContainer
+                    table="teacher"
+                    type="create"
+                  />
+                )}
               </div>
           </div>
         </div>
