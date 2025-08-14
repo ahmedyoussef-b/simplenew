@@ -8,8 +8,7 @@ import "react-calendar/dist/Calendar.css";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "./ui/skeleton";
 import type { Event } from "@/types/index";
-import Image from "next/image";
-import * as paths from "@/lib/image-paths";
+import { MoreHorizontal } from "lucide-react";
 
 type ValuePiece = Date | null;
 type Value = ValuePiece | [ValuePiece, ValuePiece];
@@ -81,7 +80,7 @@ const EventCalendarContainer = ({ date, events = [], eventDates = [] }: EventCal
       />
       <div className="flex items-center justify-between mt-4">
         <h1 className="text-xl font-semibold">Événements du jour</h1>
-        <Image src={paths.moreDarkIcon} alt="plus d'options" width={20} height={20} />
+        <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
       </div>
       <div className="flex flex-col gap-4 mt-2">
         {eventsForDay.length > 0 ? (
