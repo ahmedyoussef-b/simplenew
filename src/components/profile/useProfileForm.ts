@@ -35,10 +35,8 @@ export default function useProfileForm({ userProfile }: UseProfileFormProps) {
   const twoFactorEnabled = watch("twoFactorEnabled");
   
   const onSubmit: SubmitHandler<ProfileUpdateSchema> = async (data) => {
-    // Send all form data to the server. The backend will handle what to update.
     const payload = { ...data };
     
-    // Do not send an empty password field
     if (payload.password && payload.password.trim() === '') {
       delete payload.password;
     }
@@ -57,18 +55,6 @@ export default function useProfileForm({ userProfile }: UseProfileFormProps) {
       });
     }
   };
-  
-  // This useEffect ensures that if the img value in the form changes (e.g., from an upload),
-  // it is reflected in the imgUrl state used for the preview.
-  useEffect(() => {
-    const subscription = watch((value, { name }) => {
-      if (name === 'img') {
-        setValue('img', value.img, { shouldDirty: true });
-      }
-    })
-    return () => subscription.unsubscribe()
-  }, [watch, setValue]);
-
 
   return {
     register,
