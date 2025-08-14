@@ -24,6 +24,7 @@ import {
 } from "../lib/redux/api/entityApi/";
 import { Plus, Pencil, Trash2, X as CloseIcon } from 'lucide-react';
 import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
 // LAZY LOADING FORMS
 const TeacherForm = dynamic(() => import("./forms/TeacherForm/TeacherForm"), { loading: () => <p>Chargement du formulaire...</p> });
@@ -82,13 +83,14 @@ const FormModal = ({
   id,
   relatedData,
 }: FormContainerProps & { relatedData?: any }) => {
-  const size = type === "create" ? "w-8 h-8" : "w-7 h-7";
-  const bgColor =
+  const sizeClass = type === "create" ? "w-8 h-8" : "w-7 h-7";
+  
+  const variantClass =
     type === "create"
-      ? "bg-accent"
+      ? "bg-primary text-primary-foreground hover:bg-primary/90"
       : type === "update"
-      ? "bg-blue-500"
-      : "bg-destructive";
+      ? "bg-blue-500 text-white hover:bg-blue-600"
+      : "bg-destructive text-destructive-foreground hover:bg-destructive/90";
 
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -200,13 +202,17 @@ const FormModal = ({
   return (
     <>
       <Button
-        variant="ghost"
+        variant="default"
         size="icon"
-        className={`${size} flex items-center justify-center rounded-full text-white hover:opacity-90 transition-opacity`}
+        className={cn(
+          "flex items-center justify-center rounded-full transition-opacity hover:opacity-90",
+          sizeClass,
+          variantClass
+        )}
         onClick={() => setOpen(true)}
         aria-label={`${type} ${table}`}
       >
-        <IconComponent className="h-4 w-4 text-inherit" />
+        <IconComponent className="h-4 w-4" />
       </Button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
