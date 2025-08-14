@@ -283,6 +283,13 @@ export interface CloudinaryUploadWidgetResults {
   info: CloudinaryUploadWidgetInfo | string | { public_id: string };
 }
 
+export interface CloudinaryResult {
+  secure_url: string;
+  resource_type: string;
+  original_filename: string;
+  format: string;
+}
+
 
 // --- Other Utility Types ---
 export type RelatedGrade = Pick<Grade, 'id' | 'level'>;

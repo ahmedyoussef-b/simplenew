@@ -1,6 +1,6 @@
 // src/components/chatroom/session/ChatPanel.tsx
 'use client';
-
+import { CldUploadEventCallback, CloudinaryUploadWidgetResults } from "next-cloudinary";
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,7 +12,6 @@ import { sendMessage } from '@/lib/redux/slices/sessionSlice';
 import type { ChatroomMessage, UploadedFile } from '@/lib/redux/slices/session/types';
 import type { SafeUser } from '@/types';
 import { CldUploadWidget } from "next-cloudinary";
-import NextImage from "next/image"; // To avoid conflict with lucide-react Image icon
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 
@@ -20,16 +19,6 @@ import { useToast } from "@/hooks/use-toast";
 interface ChatPanelProps {
   user: SafeUser | null;
   isHost: boolean;
-}
-
-interface CloudinaryResult {
-  event?: string;
-  info?: {
-    secure_url: string;
-    resource_type: string;
-    original_filename: string;
-    format: string;
-  };
 }
 
 export default function ChatPanel({ user, isHost }: ChatPanelProps) {
@@ -75,15 +64,18 @@ export default function ChatPanel({ user, isHost }: ChatPanelProps) {
     }
   };
 
-  const handleUploadSuccess = (result: CloudinaryResult) => {
-    if (result.event === "success" && typeof result.info === 'object' && 'secure_url' in result.info) {
+  const handleUploadSuccess: CldUploadEventCallback = (result) => {
+    if (result.event === "success") {
       const info = result.info;
-      setAttachedFile({
-        url: info.secure_url,
-        type: info.resource_type,
-        name: info.original_filename,
-        format: info.format,
-      });
+      if (typeof info === 'object' && info !== null && 'secure_url' in info && 'resource_type' in info && 'original_filename' in info && 'format' in info) {
+        setAttachedFile({
+          url: info.secure_url,
+          type: info.resource_type,
+          name: info.original_filename,
+          format: info.format,
+        });
+      }
+
       toast({ title: "Fichier prêt", description: `${info.original_filename} est prêt à être envoyé.` });
     }
   };
@@ -99,9 +91,11 @@ export default function ChatPanel({ user, isHost }: ChatPanelProps) {
           {content.file && (
             <div className="mt-2">
               {content.file.type === 'image' ? (
-                <Link href={content.file.url} target="_blank" rel="noopener noreferrer" className="block w-48 relative aspect-video">
-                  <NextImage src={content.file.url} alt={content.file.name} fill className="rounded-md object-cover" />
-                </Link>
+                // Using a simple img tag for now to avoid hydration issues with next/image in certain contexts
+                // Consider using a component that wraps next/image with error handling or a dynamic import if needed
+                <a href={content.file.url} target="_blank" rel="noopener noreferrer">
+                  <img src={content.file.url} alt={content.file.name} className="rounded-md object-cover max-w-full h-auto w-48" />
+                </a>
               ) : (
                 <Link href={content.file.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 bg-muted/50 rounded-md hover:bg-muted">
                   <FileText className="h-5 w-5 text-primary" />

@@ -27,7 +27,7 @@ async function getSidebarData() {
 
 const AdminSidebar = async ({ searchParams }: AdminSidebarProps) => {
     const { announcements, events } = await getSidebarData();
-    const eventDates = events.map(event => new Date(event.startTime).toISOString().split('T')[0]);
+    const eventDates = events.map((event: { startTime: Date }) => new Date(event.startTime).toISOString().split('T')[0]);
     const uniqueEventDates = [...new Set(eventDates)] as string[];
     
     return (
