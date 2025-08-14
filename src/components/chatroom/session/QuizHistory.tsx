@@ -1,5 +1,5 @@
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Quiz } from '@/types';
+import { Quiz } from '@/lib/redux/slices/session/types';
 import { Users } from 'lucide-react';
 
 interface QuizHistoryProps {

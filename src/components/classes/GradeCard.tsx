@@ -45,7 +45,7 @@ const GradeCard: React.FC<GradeCardProps> = ({ grade, userRole }) => {
             </Link>
             {userRole === AppRole.ADMIN && (
                 <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <FormContainer table="grade" type="delete" id={grade.id} className={''} />
+                    <FormContainer table="grade" type="delete" id={grade.id} />
                 </div>
             )}
         </Card>

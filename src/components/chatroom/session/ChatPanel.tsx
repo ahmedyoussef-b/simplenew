@@ -23,7 +23,7 @@ interface ChatPanelProps {
 }
 
 interface CloudinaryResult {
-  event?: "success";
+  event?: string;
   info?: {
     secure_url: string;
     resource_type: string;

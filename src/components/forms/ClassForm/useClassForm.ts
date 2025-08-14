@@ -17,7 +17,7 @@ const useClassForm = ({
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<ClassSchema>({
+  } = useForm<ClassSchema>({ // Add <ClassSchema> here
     resolver: zodResolver(classSchema),
     defaultValues: data ? { 
       name: data.name,

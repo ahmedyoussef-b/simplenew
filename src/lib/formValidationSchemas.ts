@@ -208,10 +208,17 @@ export const resultSchema = z.object({
     score: z.coerce.number().min(0, "Le score doit être non négatif").max(100, "Le score ne peut pas dépasser 100"),
     studentId: z.string({ required_error: "L'étudiant est requis." }),
     examId: z.coerce.number().optional().nullable(), // Allow null
-    assignmentId: z.coerce.number().optional().nullable(), // Allow null
-}).refine(data => data.examId || data.assignmentId, {
-    message: "L'identifiant de l'examen ou du devoir doit être fourni.",
-    path: ["examId"],
+ assignmentId: z.coerce.number().optional().nullable(), // Allow null
+ assessmentType: z.enum(["exam", "assignment"], { required_error: "Le type d'évaluation est requis." }),
+}).refine(data => {
+ if (data.assessmentType === "exam") {
+ return data.examId != null;
+ } else { // assessmentType === "assignment"
+ return data.assignmentId != null;
+ }
+}, {
+ message: "L'identifiant de l'examen ou du devoir doit être fourni en fonction du type d'évaluation.",
+ path: ["examId", "assignmentId"],
 });
 
 export const attendanceSchema = z.object({
