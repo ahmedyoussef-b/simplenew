@@ -57,6 +57,7 @@ export interface Verify2FARequest {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/auth/' }),
+  tagTypes: ['Session'], // Added a tag for session data
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginSchema>({
       query: (credentials) => ({
@@ -131,6 +132,7 @@ export const authApi = createApi({
     }),
     getSession: builder.query<SessionResponse, void>({
       query: () => 'session',
+      providesTags: ['Session'], // Provide the 'Session' tag
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
         console.log("▶️ [authApi] onQueryStarted for getSession query.");
         try {
@@ -152,24 +154,10 @@ export const authApi = createApi({
         url: 'logout',
         method: 'POST',
       }),
+      invalidatesTags: ['Session'], // Invalidate session on logout
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
         await queryFulfilled;
         dispatch(logoutAction());
-      },
-    }),
-    updateProfile: builder.mutation<AuthResponse, Partial<ProfileUpdateSchema>>({
-      query: (body) => ({
-        url: '/api/profile', // Note: This endpoint is outside the /api/auth base
-        method: 'PUT',
-        body,
-      }),
-       async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        try {
-          const { data } = await queryFulfilled;
-          dispatch(setUser(data.user));
-        } catch (error) {
-          // Handle error if profile update fails
-        }
       },
     }),
   }),
@@ -184,5 +172,4 @@ export const {
   useVerify2FAMutation,
   useGetSessionQuery,
   useLogoutMutation,
-  useUpdateProfileMutation,
 } = authApi;

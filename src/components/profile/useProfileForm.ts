@@ -3,7 +3,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useToast } from "@/hooks/use-toast";
-import { useUpdateProfileMutation } from "@/lib/redux/api/authApi";
+import { useUpdateProfileMutation } from "@/lib/redux/api/entityApi"; // Import from entityApi
 import { profileUpdateSchema, type ProfileUpdateSchema } from "@/lib/formValidationSchemas";
 import { UserProfile } from "./types";
 import { useEffect } from "react";
@@ -35,9 +35,11 @@ export default function useProfileForm({ userProfile }: UseProfileFormProps) {
   const twoFactorEnabled = watch("twoFactorEnabled");
   
   const onSubmit: SubmitHandler<ProfileUpdateSchema> = async (data) => {
-    const payload = { ...data };
+    // Create a payload with all form data.
+    const payload: Partial<ProfileUpdateSchema> = { ...data };
     
-    if (payload.password && payload.password.trim() === '') {
+    // If the password is empty, remove it from the payload to avoid sending it.
+    if (!payload.password || payload.password.trim() === '') {
       delete payload.password;
     }
 
