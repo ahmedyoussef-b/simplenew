@@ -5,7 +5,7 @@ import React from 'react';
 import { cn } from "@/lib/utils";
 
 /**
- * A component to display a user's avatar, falling back to a generated one.
+ * A component to display a user's avatar, falling back to a generated one from DiceBear.
  * @param {{
  *  seed?: string;
  *  imageUrl?: string | null;
@@ -21,13 +21,12 @@ const DynamicAvatar = ({
   className = '', 
   isLCP = false 
 }) => {
-  const [error, setError] = React.useState(false);
-
-  // If a valid imageUrl is provided and hasn't failed, use it.
-  // Otherwise, construct the fallback URL using our API route.
-  const finalImageUrl = imageUrl && !error 
+  
+  // If a valid imageUrl is provided, use it.
+  // Otherwise, construct the fallback URL to DiceBear's avataaars API.
+  const finalImageUrl = imageUrl 
     ? imageUrl 
-    : `/api/avatar?seed=${seed}`;
+    : `https://api.dicebear.com/8.x/avataaars/svg?seed=${seed}`;
 
   return (
     <Image
@@ -37,13 +36,6 @@ const DynamicAvatar = ({
       sizes="(max-width: 768px) 50vw, 33vw"
       className={cn('object-cover', className)}
       priority={isLCP}
-      onError={() => {
-        // If the provided imageUrl fails, we set an error state
-        // to trigger a re-render with the fallback API URL.
-        if (imageUrl) { // Only set error if it was a custom URL that failed
-          setError(true);
-        }
-      }}
     />
   );
 }
