@@ -10,6 +10,7 @@ import { Role as AppRole, TeacherWithDetails } from '@/types';
 import { useState } from 'react';
 import MessageModal from '../messaging/MessageModal';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface TeacherCardProps {
   teacher: TeacherWithDetails;
