@@ -1,7 +1,6 @@
 // src/lib/redux/features/auth/authSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { SafeUser } from '@/types';
-import type { RootState } from '../../store'; // Import RootState type
 
 export interface AuthState {
   user: SafeUser | null;

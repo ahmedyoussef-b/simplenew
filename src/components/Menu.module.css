@@ -83,7 +83,6 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  text-fill-color: transparent;
   z-index: 3;
   position: relative;
   font-size: 0.75rem; /* 12px */

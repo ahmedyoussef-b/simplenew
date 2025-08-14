@@ -43,7 +43,12 @@ export async function POST(req: NextRequest) {
         }
         console.log("✅ Utilisateur trouvé.");
 
-        const isPasswordValid = await bcrypt.compare(password, user.password);
+        if (user.password === null) {
+            console.log("🚫 Mot de passe utilisateur non défini.");
+            return NextResponse.json({ message: "Invalid credentials" }, { status: 400 });
+        }
+
+        const isPasswordValid = await bcrypt.compare(password, user.password as string);
 
         if (!isPasswordValid) {
             console.log("🔑 Mot de passe invalide.");
