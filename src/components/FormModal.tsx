@@ -2,13 +2,11 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import type { Dispatch, SetStateAction } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
 import type { FormContainerProps } from "./FormContainer";
-import * as paths from "@/lib/image-paths";
 import {
   useDeleteSubjectMutation,
   useDeleteClassMutation,
@@ -24,6 +22,8 @@ import {
   useDeleteAttendanceMutation,
   useDeleteGradeMutation,
 } from "../lib/redux/api/entityApi/";
+import { Plus, Pencil, Trash2, X as CloseIcon } from 'lucide-react';
+import { Button } from "./ui/button";
 
 // LAZY LOADING FORMS
 const TeacherForm = dynamic(() => import("./forms/TeacherForm/TeacherForm"), { loading: () => <p>Chargement du formulaire...</p> });
@@ -66,7 +66,7 @@ const forms: {
   assignment: (setOpen, type, data, relatedData) => (
     <AssignmentForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />
   ),
-  event: (setOpen, type, data, relatedData) => <EventForm initialData={data} availableClasses={relatedData?.classes || []} onSubmit={() => {setOpen(false)}} />,
+  event: (setOpen, type, data, relatedData) => <EventForm initialData={data} availableClasses={relatedData?.classes || []} setOpen={setOpen} />,
   announcement: (setOpen, type, data, relatedData) => <AnnouncementForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />,
   grade: (setOpen, type, data, relatedData) => <GradeForm type={type} data={data} setOpen={setOpen} />, 
   parent: (setOpen, type, data, relatedData) => <ParentForm type={type} initialData={data} setOpen={setOpen} />,
@@ -164,20 +164,20 @@ const FormModal = ({
             Êtes-vous sûr de vouloir supprimer cet élément ({table}) ? Cette action est irréversible.
           </p>
           <div className="flex gap-4 mt-4">
-            <button
+            <Button
+              variant="outline"
               onClick={() => setOpen(false)}
-              className="px-4 py-2 rounded-md border bg-secondary hover:bg-secondary/80"
               disabled={isAnyDeleteLoading}
             >
               Annuler
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleDelete}
-              className="px-4 py-2 rounded-md bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              variant="destructive"
               disabled={isAnyDeleteLoading}
             >
               {isAnyDeleteLoading ? "Suppression..." : "Supprimer"}
-            </button>
+            </Button>
           </div>
           {anyDeleteError && (
              <span className="text-destructive text-sm mt-2 text-center">
@@ -195,28 +195,32 @@ const FormModal = ({
     return <p>Formulaire non trouvé pour &quot;{table}&quot;</p>;
   };
 
-  const iconSrc = type === 'create' ? paths.createIcon : (type === 'update' ? paths.updateIcon : paths.deleteIcon);
+  const IconComponent = type === 'create' ? Plus : (type === 'update' ? Pencil : Trash2);
 
   return (
     <>
-      <button
-        className={`${size} flex items-center justify-center rounded-full ${bgColor} text-white hover:opacity-90 transition-opacity`}
+      <Button
+        variant="ghost"
+        size="icon"
+        className={`${size} flex items-center justify-center rounded-full text-white hover:opacity-90 transition-opacity`}
         onClick={() => setOpen(true)}
         aria-label={`${type} ${table}`}
       >
-        <Image src={iconSrc} alt={`${type} icon`} width={type === "create" ? 18 : 16} height={type === "create" ? 18 : 16} />
-      </button>
+        <IconComponent className="h-4 w-4 text-inherit" />
+      </Button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-card p-6 rounded-lg shadow-xl relative w-[90%] md:w-[70%] lg:w-[60%] xl:w-[50%] 2xl:w-[40%] max-h-[90vh] overflow-y-auto">
             <RenderedForm />
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               className="absolute top-3 right-3 p-1 rounded-full hover:bg-muted"
               onClick={() => setOpen(false)}
               aria-label="Fermer le modal"
             >
-              <Image src={paths.closeIcon} alt="Fermer" width={14} height={14} />
-            </button>
+              <CloseIcon className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       )}
