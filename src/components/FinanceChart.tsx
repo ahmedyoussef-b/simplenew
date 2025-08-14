@@ -1,6 +1,6 @@
 
 "use client";
-import Image from "next/image";
+import { MoreHorizontal } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -12,7 +12,6 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { useEffect } from "react";
-import * as paths from "@/lib/image-paths";
 
 const data = [
   {
@@ -83,10 +82,10 @@ const FinanceChart = () => {
   }, []);
 
   return (
-    <div className="bg-muted rounded-xl w-full h-full p-4">
+    <div className="bg-muted p-4 rounded-xl w-full h-full">
       <div className="flex justify-between items-center">
         <h1 className="text-lg font-semibold text-foreground">Finances</h1>
-        <Image src="https://placehold.co/20x20.png" alt="plus d'options" width={20} height={20} data-ai-hint="more options" />
+        <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
       </div>
       <ResponsiveContainer width="100%" height="90%">
         <LineChart

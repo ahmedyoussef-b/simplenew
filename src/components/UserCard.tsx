@@ -1,7 +1,6 @@
 import prisma from "@/lib/prisma";
 import type { Role } from "@/types/index"; 
-import Image from "next/image";
-import * as paths from "@/lib/image-paths";
+import { MoreHorizontal } from 'lucide-react';
 
 const UserCard = async ({
   type,
@@ -55,7 +54,7 @@ const UserCard = async ({
         <span className="text-[10px] bg-white/70 px-2 py-1 rounded-full text-gray-700 font-semibold">
           2024/25 {/* This could be dynamic */}
         </span>
-        <Image src={paths.moreIcon} alt="more options" width={20} height={20} />
+        <MoreHorizontal className="w-5 h-5 text-white/70" />
       </div>
       <h1 className="text-3xl font-semibold my-4 text-white text-center">{count}</h1>
       <h2 className="text-sm font-medium text-gray-100">{typeDisplay}</h2>

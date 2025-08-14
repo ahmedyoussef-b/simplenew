@@ -3,8 +3,7 @@ import FormContainer from "@/components/FormContainer";
 import DynamicAvatar from "@/components/DynamicAvatar";
 import { Role } from "@prisma/client";
 import type { StudentWithDetails } from "@/types/index";
-import Image from "next/image";
-import * as paths from "@/lib/image-paths";
+import { Droplets, Calendar as CalendarIcon, Mail, Phone } from 'lucide-react';
 
 interface StudentProfileCardProps {
   student: StudentWithDetails;
@@ -46,21 +45,21 @@ export default function StudentProfileCard({ student, userRole }: StudentProfile
         </p>
         <div className="flex items-center justify-between gap-2 flex-wrap text-xs font-medium">
           <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-            <Image src={paths.bloodIcon} alt="groupe sanguin" width={14} height={14} />
+            <Droplets className="w-3.5 h-3.5" />
             <span>{student.bloodType}</span>
           </div>
           <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-            <Image src={paths.dateIcon} alt="anniversaire" width={14} height={14} />
+            <CalendarIcon className="w-3.5 h-3.5" />
             <span>
               {new Intl.DateTimeFormat("fr-FR").format(new Date(student.birthday))}
             </span>
           </div>
           <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-            <Image src={paths.mailIcon} alt="email" width={14} height={14} />
+            <Mail className="w-3.5 h-3.5" />
             <span>{student.user?.email || "-"}</span>
           </div>
           <div className="w-full md:w-1/3 lg:w-full 2xl:w-1/3 flex items-center gap-2">
-            <Image src={paths.phoneIcon} alt="téléphone" width={14} height={14} />
+            <Phone className="w-3.5 h-3.5" />
             <span>{student.phone || "-"}</span>
           </div>
         </div>
