@@ -1,35 +1,47 @@
 
 "use client";
 
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import * as paths from "@/lib/image-paths";
+import { Search } from 'lucide-react';
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useDebounce } from 'use-debounce';
 
 const TableSearch = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const [text, setText] = useState(searchParams.get('search') || '');
+  const [query] = useDebounce(text, 500);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  useEffect(() => {
+    // Only push router if the query has actually changed from what's in the URL
+    if (query !== (searchParams.get('search') || '')) {
+      const params = new URLSearchParams(searchParams.toString());
+      if (query) {
+        params.set('search', query);
+      } else {
+        params.delete('search');
+      }
+      // Reset to first page on search
+      params.delete('page');
+      router.push(`${pathname}?${params.toString()}`);
+    }
+  }, [query, pathname, router, searchParams]);
 
-    const value = (e.currentTarget[0] as HTMLInputElement).value;
-
-    const params = new URLSearchParams(window.location.search);
-    params.set("search", value);
-    router.push(`${window.location.pathname}?${params}`);
-  };
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="w-full md:w-auto flex items-center gap-2 text-xs rounded-full ring-[1.5px] ring-gray-300 px-2"
+    <div
+      className="w-full md:w-auto flex items-center gap-2 text-sm rounded-full ring-1 ring-border px-3 bg-card"
     >
-      <Image src={paths.searchIcon} alt="" width={14} height={14} />
+      <Search className="text-muted-foreground" size={16} />
       <input
         type="text"
         placeholder="Rechercher..."
-        className="w-[200px] p-2 bg-transparent outline-none"
+        value={text}
+        onChange={(e) => setText(e.target.value)}
+        className="w-[200px] p-2 bg-transparent outline-none placeholder:text-muted-foreground"
       />
-    </form>
+    </div>
   );
 };
 
