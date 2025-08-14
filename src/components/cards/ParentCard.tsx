@@ -32,7 +32,7 @@ const ParentCard: React.FC<ParentCardProps> = ({ parent, userRole, isLCP = false
     <>
       <Card className="flex flex-col overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
         <CardHeader className="p-0 relative h-20 bg-gradient-to-r from-primary/20 to-accent/20">
-           <div className="absolute top-5 left-1/2 -translate-x-1/2 transform">
+           <div className="absolute top-full -translate-y-1/2 left-1/2 -translate-x-1/2 transform">
                 <div className="relative h-24 w-24 rounded-full overflow-hidden border-4 border-background bg-background shadow-lg">
                     <DynamicAvatar 
                         imageUrl={parent.img || parent.user?.img || undefined}
