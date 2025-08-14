@@ -30,8 +30,9 @@ const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, userRole, isLCP = fa
         <div className="cover">
           <div className="relative h-28 w-28 rounded-full overflow-hidden border-2 border-primary/20">
             <DynamicAvatar 
-              imageUrl={teacher.img || teacher.user?.img}
-              seed={teacher.id || teacher.user?.email || Math.random().toString(36).substring(7)}
+              imageUrl={teacher.img || teacher.user?.img || undefined}
+              seed={teacher.id || teacher.user?.email}
+              alt={`Avatar de ${fullName}`}
               isLCP={isLCP}
             />
           </div>

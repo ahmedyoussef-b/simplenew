@@ -33,8 +33,9 @@ const ParentCard: React.FC<ParentCardProps> = ({ parent, userRole, isLCP = false
         <div className="cover">
           <div className="relative h-28 w-28 rounded-full overflow-hidden border-2 border-primary/20">
             <DynamicAvatar 
-              imageUrl={parent.img || parent.user?.img}
-              seed={parent.id || parent.user?.email || Math.random().toString(36).substring(7)}
+              imageUrl={parent.img || parent.user?.img || undefined}
+              seed={parent.id || parent.user?.email}
+              alt={`Avatar de ${fullName}`}
               isLCP={isLCP}
             />
           </div>
