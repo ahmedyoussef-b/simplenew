@@ -1,11 +1,11 @@
 
 .button41 {
-  padding: 12px 26px;
+  padding: 10px 20px;
   border: 0;
-  font-size: 16px;
+  font-size: 14px;
   transition: all 150ms ease-in-out;
 
-  border-radius: 14px;
+  border-radius: 12px;
   font-weight: 600;
 
   color: hsl(var(--foreground));
