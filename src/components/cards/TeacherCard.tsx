@@ -9,6 +9,7 @@ import DynamicAvatar from '@/components/DynamicAvatar';
 import { Role as AppRole, TeacherWithDetails } from '@/types';
 import { useState } from 'react';
 import MessageModal from '../messaging/MessageModal';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 
 interface TeacherCardProps {
   teacher: TeacherWithDetails;
@@ -25,61 +26,56 @@ const TeacherCard: React.FC<TeacherCardProps> = ({ teacher, userRole, isLCP = fa
 
   return (
     <>
-      <div className="book">
-        {/* Front Cover */}
-        <div className="cover">
-          <div className="relative h-28 w-28 rounded-full overflow-hidden border-2 border-primary/20">
-            <DynamicAvatar 
-              imageUrl={teacher.img || teacher.user?.img || undefined}
-              seed={teacher.user?.email || teacher.id}
-              alt={`Avatar de ${fullName}`}
-              isLCP={isLCP}
-            />
-          </div>
-          <h3 className="text-xl font-bold text-primary mt-3 truncate w-full">{fullName}</h3>
-          <p className="text-sm text-muted-foreground">Enseignant(e)</p>
-        </div>
-
-        {/* Inside the book */}
-        <div className="flex flex-col h-full w-full justify-between items-center text-center">
-            {/* Details */}
-            <div className="w-full">
-                <h4 className="font-bold text-md truncate">{fullName}</h4>
-                <p className="text-xs text-muted-foreground truncate mb-2">{email}</p>
-                <hr className="border-t border-border my-2" />
-
-                <div className="text-left mt-2">
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">Matières:</p>
-                    <div className="flex flex-wrap gap-1 justify-center">
-                        {teacher.subjects.slice(0, 3).map(subject => (
-                        <Badge key={subject.id} variant="secondary" className="text-xs">{subject.name}</Badge>
-                        ))}
-                        {teacher.subjects.length > 3 && (
-                        <Badge variant="outline" className="text-xs">+{ teacher.subjects.length - 3 }</Badge>
-                        )}
-                    </div>
+      <Card className="flex flex-col overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <CardHeader className="p-0 relative h-24 bg-gradient-to-r from-primary/20 to-accent/20">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                <div className="relative h-24 w-24 rounded-full overflow-hidden border-4 border-background bg-background shadow-lg">
+                    <DynamicAvatar 
+                        imageUrl={teacher.img || teacher.user?.img || undefined}
+                        seed={teacher.user?.email || teacher.id}
+                        alt={`Avatar de ${fullName}`}
+                        isLCP={isLCP}
+                    />
                 </div>
             </div>
-
-            {/* Actions */}
-            <div className="w-full mt-auto pt-2 border-t border-border/50 flex justify-center space-x-2">
-                <Link href={viewLink} passHref>
-                    <button className="p-2 hover:bg-accent rounded-full transition-colors text-muted-foreground hover:text-accent-foreground" title="Voir les détails">
-                    <Eye size={18} />
-                    </button>
-                </Link>
-                {canMessage && teacher.user?.id && (
-                    <button onClick={() => setIsMessageModalOpen(true)} className="p-2 hover:bg-accent rounded-full transition-colors text-blue-500 hover:text-accent-foreground" title="Envoyer un message">
-                        <MessageSquare size={18} />
-                    </button>
-                )}
-                {userRole === AppRole.ADMIN && (
-                    <FormContainer table="teacher" type="delete" id={teacher.id} />
-                )}
+        </CardHeader>
+        <CardContent className="flex flex-col flex-grow items-center text-center p-4 pt-14">
+            <h3 className="text-lg font-bold text-foreground truncate w-full">{fullName}</h3>
+            <p className="text-sm text-muted-foreground">Enseignant(e)</p>
+            <p className="text-xs text-muted-foreground truncate w-full mt-1">{email}</p>
+            
+            <div className="mt-4 w-full border-t pt-3">
+                <p className="text-xs font-semibold text-muted-foreground mb-2">Matières Principales:</p>
+                <div className="flex flex-wrap gap-1 justify-center">
+                    {teacher.subjects.slice(0, 3).map(subject => (
+                    <Badge key={subject.id} variant="secondary" className="text-xs">{subject.name}</Badge>
+                    ))}
+                    {teacher.subjects.length > 3 && (
+                    <Badge variant="outline" className="text-xs">+{ teacher.subjects.length - 3 }</Badge>
+                    )}
+                     {teacher.subjects.length === 0 && (
+                    <p className="text-xs text-muted-foreground italic">Aucune matière</p>
+                    )}
+                </div>
             </div>
-        </div>
-      </div>
-      {canMessage && teacher.user?.id && (
+        </CardContent>
+        <CardFooter className="bg-muted/50 p-2 flex justify-center space-x-1">
+             <Link href={viewLink} passHref>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent-foreground" title="Voir les détails">
+                    <Eye size={18} />
+                </Button>
+            </Link>
+            {canMessage && teacher.user?.id && (
+                <Button variant="ghost" size="icon" onClick={() => setIsMessageModalOpen(true)} className="text-blue-500 hover:text-accent-foreground" title="Envoyer un message">
+                    <MessageSquare size={18} />
+                </Button>
+            )}
+            {userRole === AppRole.ADMIN && (
+                <FormContainer table="teacher" type="delete" id={teacher.id} />
+            )}
+        </CardFooter>
+      </Card>
+       {canMessage && teacher.user?.id && (
         <MessageModal 
           isOpen={isMessageModalOpen}
           onClose={() => setIsMessageModalOpen(false)}

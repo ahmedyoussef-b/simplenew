@@ -7,6 +7,7 @@ import FormContainer from '@/components/FormContainer';
 import { Badge } from '@/components/ui/badge';
 import DynamicAvatar from '@/components/DynamicAvatar';
 import {Role, StudentWithClassAndUser } from '@/types';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 
 interface StudentCardProps {
   student: StudentWithClassAndUser;
@@ -20,48 +21,40 @@ const StudentCard: React.FC<StudentCardProps> = ({ student, userRole, isLCP = fa
   const viewLink = `/list/students/${student.id}`;
 
   return (
-    <div className="book">
-      {/* Front Cover */}
-      <div className="cover">
-        <div className="relative h-28 w-28 rounded-full overflow-hidden border-2 border-primary/20">
-          <DynamicAvatar 
-            imageUrl={student.img || student.user?.img || undefined}
-            seed={student.id || student.user?.email}
-            alt={`Avatar de ${fullName}`}
-            isLCP={isLCP}
-          />
-        </div>
-        <h3 className="text-xl font-bold text-primary mt-3 truncate w-full">{fullName}</h3>
-        <p className="text-sm text-muted-foreground">Élève</p>
-      </div>
-
-      {/* Inside the book */}
-      <div className="flex flex-col h-full w-full justify-between items-center text-center">
-          {/* Details */}
-          <div className="w-full">
-              <h4 className="font-bold text-md truncate">{fullName}</h4>
-              <p className="text-xs text-muted-foreground truncate mb-2">{email}</p>
-              <hr className="border-t border-border my-2" />
-
-              <div className="mt-2">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">Classe:</p>
+    <Card className="flex flex-col overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <CardHeader className="p-0 relative h-24 bg-gradient-to-r from-primary/20 to-accent/20">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transform">
+                <div className="relative h-24 w-24 rounded-full overflow-hidden border-4 border-background bg-background shadow-lg">
+                    <DynamicAvatar 
+                        imageUrl={student.img || student.user?.img || undefined}
+                        seed={student.id || student.user?.email}
+                        alt={`Avatar de ${fullName}`}
+                        isLCP={isLCP}
+                    />
+                </div>
+            </div>
+        </CardHeader>
+        <CardContent className="flex flex-col flex-grow items-center text-center p-4 pt-14">
+            <h3 className="text-lg font-bold text-foreground truncate w-full">{fullName}</h3>
+            <p className="text-sm text-muted-foreground">Élève</p>
+             <p className="text-xs text-muted-foreground truncate w-full mt-1">{email}</p>
+            
+            <div className="mt-4 w-full border-t pt-3">
+                 <p className="text-xs font-semibold text-muted-foreground mb-2">Classe:</p>
                   <Badge variant="default" className="text-sm">{student.class?.name || 'N/A'}</Badge>
-              </div>
-          </div>
-
-          {/* Actions */}
-          <div className="w-full mt-auto pt-2 border-t border-border/50 flex justify-center space-x-2">
-              <Link href={viewLink} passHref>
-                  <button className="p-2 hover:bg-accent rounded-full transition-colors text-muted-foreground hover:text-accent-foreground" title="Voir les détails">
-                  <Eye size={18} />
-                  </button>
-              </Link>
-              {userRole === Role.ADMIN && (
-                  <FormContainer table="student" type="delete" id={student.id} />
-              )}
-          </div>
-      </div>
-    </div>
+            </div>
+        </CardContent>
+        <CardFooter className="bg-muted/50 p-2 flex justify-center space-x-1">
+             <Link href={viewLink} passHref>
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent-foreground" title="Voir les détails">
+                    <Eye size={18} />
+                </Button>
+            </Link>
+            {userRole === Role.ADMIN && (
+                <FormContainer table="student" type="delete" id={student.id} />
+            )}
+        </CardFooter>
+      </Card>
   );
 };
 
