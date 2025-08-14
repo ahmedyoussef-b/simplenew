@@ -11,7 +11,7 @@ import { toast } from '@/hooks/use-toast';
 import { Loader2, KeyRound } from 'lucide-react';
 import Link from 'next/link';
 import { useResetPasswordMutation } from '@/lib/redux/api/authApi';
-import { useSearchParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import FormError from '@/components/forms/FormError';
 
 const resetPasswordSchema = z
@@ -26,11 +26,13 @@ const resetPasswordSchema = z
 
 type ResetPasswordFormValues = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordForm() {
+interface ResetPasswordFormProps {
+    token: string;
+}
+
+export default function ResetPasswordForm({ token }: ResetPasswordFormProps) {
   const [resetPassword, { isLoading, isSuccess }] = useResetPasswordMutation();
-  const searchParams = useSearchParams();
   const router = useRouter();
-  const token = searchParams.get('token');
 
   const {
     register,
@@ -41,15 +43,6 @@ export default function ResetPasswordForm() {
   });
 
   const onSubmit = async (data: ResetPasswordFormValues) => {
-    if (!token) {
-      toast({
-        variant: 'destructive',
-        title: 'Jeton manquant',
-        description: 'Le jeton de réinitialisation est manquant ou invalide.',
-      });
-      return;
-    }
-
     try {
       await resetPassword({ token, password: data.password }).unwrap();
       toast({
@@ -66,15 +59,6 @@ export default function ResetPasswordForm() {
     }
   };
   
-  if (!token) {
-    return (
-      <div className="text-center text-destructive">
-        <p>Jeton de réinitialisation invalide ou expiré.</p>
-        <Button variant="link" asChild><Link href="/forgot-password">Demander un nouveau lien</Link></Button>
-      </div>
-    );
-  }
-
   if (isSuccess) {
     return (
       <div className="text-center">

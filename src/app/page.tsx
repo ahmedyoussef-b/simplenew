@@ -1,8 +1,8 @@
 // src/app/page.tsx
 import { getServerSession } from '@/lib/auth-utils';
 import { redirect } from 'next/navigation';
-import AccueilPage from './accueil/page';
-
+import AccueilZenPage from '../app/(dashboard)/accueil/page';
+ 
 export default async function RootPage() {
   const session = await getServerSession();
 
@@ -13,5 +13,5 @@ export default async function RootPage() {
   }
 
   // If the user is not logged in, show the public landing page.
-  return <AccueilPage />;
+  return <AccueilZenPage />;
 }

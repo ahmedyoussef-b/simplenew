@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, ShieldCheck } from 'lucide-react';
 import { useVerify2FAMutation } from '@/lib/redux/api/authApi';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import FormError from '@/components/forms/FormError';
 
 const verify2FASchema = z.object({
@@ -20,13 +20,14 @@ const verify2FASchema = z.object({
 
 type Verify2FAFormValues = z.infer<typeof verify2FASchema>;
 
-export default function Verify2FAForm() {
+interface Verify2FAFormProps {
+    tempToken: string;
+}
+
+export default function Verify2FAForm({ tempToken }: Verify2FAFormProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { toast } = useToast();
   const [verify2FA, { isLoading }] = useVerify2FAMutation();
-
-  const tempToken = searchParams.get('token');
 
   const {
     register,
@@ -37,15 +38,6 @@ export default function Verify2FAForm() {
   });
 
   const onSubmit: SubmitHandler<Verify2FAFormValues> = async (data) => {
-    if (!tempToken) {
-      toast({
-        variant: 'destructive',
-        title: 'Erreur de session',
-        description: 'Le jeton de session temporaire est manquant. Veuillez vous reconnecter.',
-      });
-      router.push('/login');
-      return;
-    }
     try {
       await verify2FA({ tempToken, code: data.code }).unwrap();
       // On success, the onQueryStarted in authApi will set the user state and cookie.
@@ -63,15 +55,6 @@ export default function Verify2FAForm() {
       });
     }
   };
-  
-  if (!tempToken) {
-      return (
-           <div className="text-center text-destructive">
-                <p>Jeton de session invalide. Veuillez vous reconnecter.</p>
-                <Button variant="link" onClick={() => router.push('/login')}>Retour à la connexion</Button>
-           </div>
-      )
-  }
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
