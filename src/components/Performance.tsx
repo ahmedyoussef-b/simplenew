@@ -1,8 +1,7 @@
 
 "use client";
-import Image from "next/image";
+import { MoreHorizontal } from "lucide-react";
 import { PieChart, Pie, Sector, Cell, ResponsiveContainer } from "recharts";
-import * as paths from "@/lib/image-paths";
 
 const data = [
   { name: "Group A", value: 92, fill: "#C3EBFA" },
@@ -16,7 +15,7 @@ const Performance = ({ title }: { title: string }) => {
       <div className="flex items-center justify-between">
         {/* Utiliser le titre de la prop */}
         <h1 className="text-xl font-semibold">{title}</h1>
-        <Image src={paths.moreDarkIcon} alt="" width={16} height={16} />
+        <MoreHorizontal className="w-5 h-5 text-muted-foreground" />
       </div>
       <ResponsiveContainer width="100%" height="100%">
         <PieChart>
