@@ -30,8 +30,8 @@ const SingleTeacherPage = async ({
 
   if (!session) redirect(`/login`);
 
-  if (userRole !== Role.ADMIN && userRole !== Role.TEACHER) {
-    redirect(`/${userRole?.toLowerCase() || 'login'}`);
+  if (userRole !== Role.ADMIN && userRole !== Role.TEACHER && session?.user.id !== id) {
+     redirect(`/${userRole?.toLowerCase() || 'login'}`);
   }
 
   const teacherFromDb = await prisma.teacher.findUnique({
