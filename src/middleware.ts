@@ -46,12 +46,11 @@ export function middleware(req: NextRequest) {
   console.log(`[Middleware] Session role found: ${userRole}`);
   
   const loginUrl = new URL('/login', req.url);
-  const homeUrl = new URL('/', req.url);
 
   // --- Route Protection Logic ---
   
   // If user is not authenticated and tries to access a protected route
-  if (!userRole && pathname !== '/login' && pathname !== '/register' && pathname !== '/accueil' && pathname !== '/') {
+  if (!userRole && !['/login', '/register', '/accueil', '/'].includes(pathname)) {
       const isProtectedRoute = Object.entries(routeAccessMap).some(([route, roles]) => 
           new RegExp(`^${route.replace(':path*', '.*')}$`).test(pathname) && !roles.includes(Role.VISITOR)
       );
@@ -65,7 +64,7 @@ export function middleware(req: NextRequest) {
   // If user is authenticated, check their role against the route map
   if (userRole) {
     // Redirect logged-in users from auth pages to their dashboard
-    if (['/login', '/register', '/'].includes(pathname)) {
+    if (['/login', '/register', '/accueil', '/'].includes(pathname)) {
         console.log(`[Middleware] User is already logged in. Redirecting from ${pathname} to /dashboard.`);
         return NextResponse.redirect(new URL('/dashboard', req.url));
     }
