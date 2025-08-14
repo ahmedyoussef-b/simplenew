@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import DynamicAvatar from '@/components/DynamicAvatar';
 import {Role, StudentWithClassAndUser } from '@/types';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface StudentCardProps {
   student: StudentWithClassAndUser;
