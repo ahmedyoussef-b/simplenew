@@ -3,11 +3,14 @@ import React from 'react';
 import { Card, CardHeader, CardContent, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Phone, Home } from 'lucide-react';
-import ImageUpload from './ImageUpload';
+import { Phone, Home, UploadCloud } from 'lucide-react';
 import DynamicAvatar from '@/components/DynamicAvatar';
-import { UserProfile } from './types';
+import { UserProfile, CloudinaryUploadWidgetResults, CloudinaryUploadWidgetInfo } from './types';
 import FormError from '@/components/forms/FormError';
+import { CldUploadWidget } from 'next-cloudinary';
+import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
+
 
 interface PersonalInfoCardProps {
   register: any;
@@ -26,6 +29,16 @@ const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
   imgUrl,
   userProfile,
 }) => {
+  const { toast } = useToast();
+
+  const handleUploadSuccess = (result: CloudinaryUploadWidgetResults) => {
+    if (result.event === "success" && typeof result.info === 'object' && result.info !== null && 'secure_url' in result.info) {
+      const info = result.info as CloudinaryUploadWidgetInfo;
+      setValue("img", info.secure_url, { shouldValidate: true, shouldDirty: true });
+       toast({ title: "Photo mise à jour", description: "Cliquez sur 'Sauvegarder les modifications' pour enregistrer." });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -34,17 +47,32 @@ const PersonalInfoCard: React.FC<PersonalInfoCardProps> = ({
       </CardHeader>
       <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-1 flex flex-col items-center gap-4">
-          <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-primary/20">
-            <DynamicAvatar 
-              imageUrl={imgUrl}
-              seed={userProfile.user.id}
-              isLCP={true}
-            />
-          </div>
-          <ImageUpload 
-            setValue={setValue}
-            isLoading={isLoading}
-          />
+          <CldUploadWidget
+            uploadPreset={process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET || "ml_default"}
+            onSuccess={handleUploadSuccess}
+            onError={(error) => toast({ variant: "destructive", title: "Échec du téléversement", description: "Veuillez vérifier votre configuration Cloudinary."})}
+          >
+            {({ open }) => (
+              <button
+                type="button"
+                onClick={() => open()}
+                disabled={isLoading}
+                className="relative group cursor-pointer"
+              >
+                <div className="relative w-32 h-32 rounded-full overflow-hidden border-2 border-primary/20">
+                  <DynamicAvatar 
+                    imageUrl={imgUrl}
+                    seed={userProfile.user.id}
+                    isLCP={true}
+                  />
+                   <div className="absolute inset-0 bg-black/50 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <UploadCloud className="h-8 w-8 text-white" />
+                      <span className="text-xs text-white mt-1">Changer</span>
+                  </div>
+                </div>
+              </button>
+            )}
+          </CldUploadWidget>
            <FormError error={errors.img} />
         </div>
         <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
