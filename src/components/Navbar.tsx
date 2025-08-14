@@ -154,15 +154,16 @@ const Navbar: React.FC<NavbarProps> = ({ user: initialUser }) => {
                               {userToDisplay.role.toLowerCase()}
                           </span>
                       </div>
-                      <div className="relative h-10 w-10">
+                       <Link href="/profile" className="relative h-10 w-10 cursor-pointer">
                           <Image
-                              src={userToDisplay.img ? userToDisplay.img : `https://api.dicebear.com/8.x/avataaars/svg?seed=${userToDisplay.id}`}
+                              src={userToDisplay.img ? userToDisplay.img : `https://placehold.co/128x128.png`}
                               alt="Photo de profil"
                               fill
                               sizes="40px"
                               className="rounded-full object-cover"
+                              data-ai-hint="forest sun"
                           />
-                      </div>
+                      </Link>
                       <AppHeaderLogoutButton /> 
                   </>
               ) : (
