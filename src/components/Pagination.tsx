@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { ITEM_PER_PAGE } from "@/lib/constants";
@@ -14,6 +14,7 @@ const range = (start: number, end: number) => {
 
 const Pagination = ({ page, count }: { page: number; count: number }) => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const totalPages = Math.ceil(count / ITEM_PER_PAGE);
   const siblingCount = 1;
 
@@ -29,7 +30,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
     const rightSiblingIndex = Math.min(page + siblingCount, totalPageCount);
 
     const shouldShowLeftDots = leftSiblingIndex > 2;
-    const shouldShowRightDots = rightSiblingIndex < totalPageCount - 1;
+    const shouldShowRightDots = rightSiblingIndex < totalPageCount - 2;
 
     const firstPageIndex = 1;
     const lastPageIndex = totalPageCount;
@@ -42,7 +43,10 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
 
     if (shouldShowLeftDots && !shouldShowRightDots) {
       let rightItemCount = 3 + 2 * siblingCount;
-      let rightRange = range(totalPageCount - rightItemCount + 1, totalPageCount);
+      let rightRange = range(
+        totalPageCount - rightItemCount + 1,
+        totalPageCount
+      );
       return [firstPageIndex, DOTS, ...rightRange];
     }
 
@@ -50,17 +54,13 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
       let middleRange = range(leftSiblingIndex, rightSiblingIndex);
       return [firstPageIndex, DOTS, ...middleRange, DOTS, lastPageIndex];
     }
-    
-    // Fallback for cases where one of the above conditions is not met perfectly
-    // (e.g., when close to edges).
-    return range(1, totalPages);
   }, [totalPages, page, siblingCount]);
 
   const changePage = (newPage: number) => {
     if (newPage < 1 || newPage > totalPages) return;
-    const params = new URLSearchParams(window.location.search);
+    const params = new URLSearchParams(searchParams.toString());
     params.set("page", newPage.toString());
-    router.push(`${window.location.pathname}?${params}`);
+    router.push(`?${params.toString()}`);
   };
 
   if (totalPages <= 1) {
@@ -79,7 +79,7 @@ const Pagination = ({ page, count }: { page: number; count: number }) => {
       </Button>
 
       <div className="flex items-center gap-1">
-        {paginationRange.map((pageNumber, index) => {
+        {paginationRange?.map((pageNumber, index) => {
           if (pageNumber === DOTS) {
             return (
               <span key={`${DOTS}-${index}`} className="px-2 py-1">
