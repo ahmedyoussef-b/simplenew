@@ -4,13 +4,16 @@
 import { useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useLoginMutation } from '@/lib/redux/api/authApi';
 import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import FormError from '@/components/forms/FormError';
-import { loginSchema, type LoginSchema as LoginFormValues } from '@/lib/formValidationSchemas';
+import { loginSchema } from '@/lib/formValidationSchemas';
+
+type LoginFormValues = z.infer<typeof loginSchema>;
 import SocialSignInButtons from './SocialSignInButtons';
 
 

@@ -37,6 +37,7 @@ export const subjectSchema = z.object({
 export const classSchema = z.object({
   id: z.coerce.number().optional(),
   name: z.string().min(1, { message: "Le nom de la classe est requis !" }),
+  abbreviation: z.string().min(1, { message: "L'abréviation de la classe est requise !" }),
   capacity: z.coerce.number().min(1, { message: "La capacité est requise !" }),
   gradeLevel: z.coerce.number().min(1, { message: "Le niveau est requis !" }),
 });

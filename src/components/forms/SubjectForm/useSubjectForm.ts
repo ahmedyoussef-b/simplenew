@@ -6,8 +6,7 @@ import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/use-toast";
-import type { SubjectSchema } from "@/types/index";
-import { subjectSchema } from "@/lib/formValidationSchemas";
+import { SubjectSchema, subjectSchema } from "@/lib/formValidationSchemas";
 import type { UseSubjectFormProps, SubjectFormReturn } from "./types";
 
 const useSubjectForm = ({

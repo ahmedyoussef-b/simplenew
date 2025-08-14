@@ -2,10 +2,9 @@
 import React from "react";
 import InputField from "@/components/InputField";
 import ImageUpload from "./ImageUpload";
-import { UserSex } from "@/types/index";
-import { UseFormRegister, FieldErrors, UseFormSetValue } from "react-hook-form";
+import { StudentFormValues, UserSex } from "@/types/index";
+import { UseFormRegister, FieldErrors, UseFormSetValue, SubmitHandler } from "react-hook-form";
 import { StudentSchema } from "@/lib/formValidationSchemas";
-import { UpdateStudentData } from "./types";
 
 interface FormFieldsProps {
   register: UseFormRegister<StudentSchema>;
@@ -19,7 +18,7 @@ interface FormFieldsProps {
     parents?: { id: string; name: string; surname: string }[];
   };
   type: "create" | "update";
-  data?: UpdateStudentData; // Added data prop here
+  data?: StudentFormValues; // Added data prop here
 }
 
 const FormFields = ({

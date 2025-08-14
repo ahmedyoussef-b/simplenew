@@ -127,7 +127,7 @@ export interface BreakoutTimer {
 export interface UploadedFile {
     url: string;
     type: string;
-    name: string;
+    name?: string;
     format: string;
 }
 
