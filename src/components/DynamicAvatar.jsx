@@ -5,7 +5,7 @@ import React from 'react';
 import { cn } from "@/lib/utils";
 
 /**
- * A component to display a user's avatar, falling back to a generated one from DiceBear.
+ * A component to display a user's avatar, falling back to a placeholder image.
  * @param {{
  *  seed?: string;
  *  imageUrl?: string | null;
@@ -22,11 +22,8 @@ const DynamicAvatar = ({
   isLCP = false 
 }) => {
   
-  // If a valid imageUrl is provided, use it.
-  // Otherwise, construct the fallback URL to DiceBear's avataaars API.
-  const finalImageUrl = imageUrl 
-    ? imageUrl 
-    : `https://api.dicebear.com/8.x/avataaars/svg?seed=${seed}`;
+  const finalImageUrl = imageUrl || `https://placehold.co/128x128.png`;
+  const hint = imageUrl ? {} : { 'data-ai-hint': 'forest sun' };
 
   return (
     <Image
@@ -36,6 +33,7 @@ const DynamicAvatar = ({
       sizes="(max-width: 768px) 50vw, 33vw"
       className={cn('object-cover', className)}
       priority={isLCP}
+      {...hint}
     />
   );
 }
