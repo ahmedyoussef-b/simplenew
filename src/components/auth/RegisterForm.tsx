@@ -51,6 +51,12 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+       <div className="neumorphic-container">
+        <input id="name" type="text" required placeholder=" " {...register('name')} disabled={isLoading} className="neumorphic-input" />
+        <label htmlFor="name" className="neumorphic-label">Nom et Prénom</label>
+      </div>
+      <FormError error={errors.name} />
+
       <div className="neumorphic-container">
         <input id="email" type="email" required placeholder=" " {...register('email')} disabled={isLoading} className="neumorphic-input" />
         <label htmlFor="email" className="neumorphic-label">Adresse e-mail</label>

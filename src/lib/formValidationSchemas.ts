@@ -9,7 +9,7 @@ export const loginSchema = z.object({
 export const registerSchema = z
   .object({
     email: z.string().email({ message: 'Adresse e-mail invalide.' }),
-    name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }).optional(),
+    name: z.string().min(2, { message: 'Le nom doit contenir au moins 2 caractères.' }),
     password: z
       .string()
       .min(8, { message: 'Le mot de passe doit contenir au moins 8 caractères.' }),
@@ -248,3 +248,4 @@ export type ResultSchema = z.infer<typeof resultSchema>;
 export type StudentSchema = z.infer<typeof studentSchema>;
 export type SubjectSchema = z.infer<typeof subjectSchema>;
 export type TeacherSchema = z.infer<typeof teacherSchema>;
+export type RegisterSchema = z.infer<typeof registerSchema>;
