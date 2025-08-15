@@ -10,7 +10,7 @@ import {
     useUpdateLessonMutation,
     useDeleteLessonMutation 
 } from '@/lib/redux/api/entityApi';
-import { addLesson, removeLesson } from '@/lib/redux/features/schedule/scheduleSlice';
+import { addLesson, removeLesson, updateLesson as updateLocalLesson } from '@/lib/redux/features/schedule/scheduleSlice';
 
 export const useScheduleActions = (
   wizardData: WizardData,
@@ -34,13 +34,16 @@ export const useScheduleActions = (
     }
     
     let classInfo: Class | undefined;
-    let teacherInfo: Teacher | undefined;
+    let teacherInfo: TeacherWithDetails | undefined;
     
     if (viewMode === 'class') {
       const classIdNum = parseInt(selectedViewId, 10);
       classInfo = classes.find(c => c.id === classIdNum);
       if (classInfo) {
-        const assignment = teacherAssignments.find(a => a.subjectId === subjectInfo.id && a.classIds.includes(classIdNum));
+        // Find the specific assignment for this class and subject
+        const assignment = teacherAssignments.find(a => 
+          a.subjectId === subjectInfo.id && a.classIds.includes(classIdNum)
+        );
         teacherInfo = teachers.find(t => t.id === assignment?.teacherId);
       }
     } else { 
@@ -139,15 +142,29 @@ export const useScheduleActions = (
     };
 
     try {
+      // Optimistically add to state with a temporary ID
+      const tempId = -Date.now();
+      dispatch(addLesson({ ...newLessonPayload, id: tempId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }));
+
       const createdLesson = await createLesson(newLessonPayload).unwrap();
-      dispatch(addLesson(createdLesson)); // Add the returned lesson with its DB ID
+      // Replace temporary lesson with the real one from the server
+      dispatch(updateLocalLesson({ tempId, updatedLesson: createdLesson }));
       toast({ title: "Cours ajouté", description: `"${subjectInfo.name}" a été ajouté à l'emploi du temps.` });
     } catch (error: any) {
        toast({ variant: "destructive", title: "Erreur", description: error.data?.message || "Impossible d'ajouter le cours." });
+       // Optional: Revert the optimistic update if API call fails
+       // dispatch(removeLesson(tempId));
     }
   }, [wizardData, fullSchedule, selectedViewId, viewMode, createLesson, toast, dispatch]);
 
   const handleDeleteLesson = useCallback(async (lessonId: number) => {
+    // If the ID is negative, it's a temporary lesson that only exists in local state
+    if (lessonId < 0) {
+        dispatch(removeLesson(lessonId));
+        toast({ title: "Cours supprimé", description: "Le cours non sauvegardé a été retiré." });
+        return;
+    }
+      
     try {
       await deleteLesson(lessonId).unwrap();
       dispatch(removeLesson(lessonId)); // Immediately update the UI

@@ -63,8 +63,7 @@ export const TimetableLessonCell: React.FC<TimetableLessonCellProps> = ({ lesson
   return (
     <div
       className={cn(
-        "h-full p-1.5 rounded-lg flex flex-col justify-between text-xs transition-shadow hover:shadow-lg relative group",
-        getSubjectColorClass(subject.id)
+        "h-full p-1.5 rounded-lg flex flex-col justify-between text-xs transition-shadow hover:shadow-lg relative group"
       )}
     >
       <div className="flex flex-col flex-grow">
@@ -105,7 +104,7 @@ export const TimetableLessonCell: React.FC<TimetableLessonCellProps> = ({ lesson
             <Button
               variant="destructive"
               size="icon"
-              className="h-6 w-6"
+              className="h-7 w-7"
               onClick={(e) => { e.stopPropagation(); onDelete(lesson.id); }}
             >
               <Trash2 size={14} />
