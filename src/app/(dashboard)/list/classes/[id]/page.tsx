@@ -13,11 +13,13 @@ import FormContainer from "@/components/FormContainer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import DynamicAvatar from "@/components/DynamicAvatar";
 import { Prisma } from "@prisma/client";
+import { fetchAllDataForWizard } from '@/lib/data-fetching/fetch-wizard-data';
 
-const BigCalendarContainer = dynamic(() => import('@/components/BigCalendarContainer'), {
+const TimetableDisplay = dynamic(() => import('@/components/schedule/TimetableDisplay'), {
   ssr: false,
   loading: () => <Skeleton className="h-full w-full" />,
 });
+
 
 // Define arguments for the prisma query to ensure type safety and reusability
 const classWithDetailsArgs = Prisma.validator<Prisma.ClassFindUniqueArgs>()({
@@ -50,12 +52,16 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
   const session = await getServerSession();
   const userRole = session?.user?.role as AppRole | undefined;
 
-  const classData = await prisma.class.findUnique({
-    where: {
-      id: id,
-    },
-    include: classWithDetailsArgs.include,
-  });
+  const [classData, wizardData] = await Promise.all([
+    prisma.class.findUnique({
+      where: {
+        id: id,
+      },
+      include: classWithDetailsArgs.include,
+    }),
+    fetchAllDataForWizard(),
+  ]);
+
 
   if (!classData) {
     notFound();
@@ -140,7 +146,11 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
                     </CardDescription>
                 </CardHeader>
                 <CardContent className="flex-grow">
-                    <BigCalendarContainer type="classId" id={classData.id} />
+                    <TimetableDisplay
+                        wizardData={wizardData}
+                        viewMode="class"
+                        selectedViewId={classData.id.toString()}
+                    />
                 </CardContent>
             </Card>
         </div>
