@@ -12,6 +12,7 @@ import {
   deleteDraft,
   selectAllDrafts,
   selectActiveDraft,
+  saveOrUpdateDraft,
 } from '@/lib/redux/features/scheduleDraftSlice';
 import useWizardData from '@/hooks/useWizardData';
 
@@ -21,7 +22,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PlusCircle, Loader2, CheckCircle, Trash2 } from 'lucide-react';
+import { PlusCircle, Loader2, CheckCircle, Trash2, Save } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -103,92 +104,111 @@ export default function ScenarioManager() {
       setDeletingId(null);
     }
   };
+  
+  const handleSave = async () => {
+    if (!activeDraft) return;
+    setLoading(true);
+    try {
+      await dispatch(saveOrUpdateDraft({ wizardData, activeDraft })).unwrap();
+      toast({ title: 'Scénario sauvegardé', description: `Vos modifications pour "${activeDraft.name}" ont été sauvegardées.`});
+    } catch (error: any) {
+       toast({ variant: 'destructive', title: 'Erreur de sauvegarde', description: error.message });
+    } finally {
+      setLoading(false);
+    }
+  };
 
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline"><PlusCircle className="mr-2 h-4 w-4"/>Gérer les Scénarios</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-3xl">
-        <DialogHeader>
-          <DialogTitle>Gérer les Scénarios d'Emploi du Temps</DialogTitle>
-          <DialogDescription>
-            Créez, chargez ou supprimez différents scénarios pour expérimenter avec votre emploi du temps.
-          </DialogDescription>
-        </DialogHeader>
+    <div className="flex items-center gap-2">
+      <Button variant="outline" onClick={handleSave} disabled={loading || !activeDraft}>
+          <Save className="mr-2 h-4 w-4" />
+          Sauvegarder
+      </Button>
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogTrigger asChild>
+          <Button><PlusCircle className="mr-2 h-4 w-4"/>Gérer les Scénarios</Button>
+        </DialogTrigger>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Gérer les Scénarios d'Emploi du Temps</DialogTitle>
+            <DialogDescription>
+              Créez, chargez ou supprimez différents scénarios pour expérimenter avec votre emploi du temps.
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
-          <div className="space-y-4">
-            <h4 className="font-semibold">Nouveau Scénario</h4>
-            <div className="space-y-2">
-              <Label htmlFor="scenario-name">Nom</Label>
-              <Input 
-                id="scenario-name" 
-                value={newScenarioName} 
-                onChange={(e) => setNewScenarioName(e.target.value)} 
-                placeholder="Ex: Plan A - Semestre 1"
-                disabled={loading}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+            <div className="space-y-4">
+              <h4 className="font-semibold">Nouveau Scénario</h4>
+              <div className="space-y-2">
+                <Label htmlFor="scenario-name">Nom</Label>
+                <Input 
+                  id="scenario-name" 
+                  value={newScenarioName} 
+                  onChange={(e) => setNewScenarioName(e.target.value)} 
+                  placeholder="Ex: Plan A - Semestre 1"
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="scenario-desc">Description (Optionnel)</Label>
+                <Input 
+                  id="scenario-desc" 
+                  value={newScenarioDesc} 
+                  onChange={(e) => setNewScenarioDesc(e.target.value)}
+                  placeholder="Avec contraintes pour les examens..."
+                  disabled={loading}
+                />
+              </div>
+              <Button onClick={handleCreate} disabled={loading || !newScenarioName.trim()} className="w-full">
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Créer et Activer
+              </Button>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="scenario-desc">Description (Optionnel)</Label>
-              <Input 
-                id="scenario-desc" 
-                value={newScenarioDesc} 
-                onChange={(e) => setNewScenarioDesc(e.target.value)}
-                placeholder="Avec contraintes pour les examens..."
-                disabled={loading}
-              />
+            
+            <div className="space-y-4">
+              <h4 className="font-semibold">Scénarios Existants</h4>
+              <ScrollArea className="h-64 border rounded-lg p-2">
+                {drafts.length > 0 ? drafts.map(draft => (
+                  <div key={draft.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
+                      <div>
+                        <p className="font-medium flex items-center gap-2">
+                          {draft.name}
+                          {draft.isActive && <CheckCircle className="h-4 w-4 text-green-500" title="Actif" />}
+                        </p>
+                        <p className="text-xs text-muted-foreground">{draft.description}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <Button size="sm" variant="outline" onClick={() => handleLoad(draft.id)} disabled={draft.isActive || loading}>
+                            Charger
+                        </Button>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" disabled={loading || deletingId === draft.id}>
+                                {deletingId === draft.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4" />}
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Cette action supprimera définitivement le scénario "{draft.name}".
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Annuler</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(draft.id)} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                  </div>
+                )) : <p className="text-sm text-center text-muted-foreground py-10">Aucun scénario sauvegardé.</p>}
+              </ScrollArea>
             </div>
-            <Button onClick={handleCreate} disabled={loading || !newScenarioName.trim()} className="w-full">
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Créer et Activer
-            </Button>
           </div>
-          
-          <div className="space-y-4">
-            <h4 className="font-semibold">Scénarios Existants</h4>
-            <ScrollArea className="h-64 border rounded-lg p-2">
-               {drafts.length > 0 ? drafts.map(draft => (
-                 <div key={draft.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
-                    <div>
-                      <p className="font-medium flex items-center gap-2">
-                        {draft.name}
-                        {draft.isActive && <CheckCircle className="h-4 w-4 text-green-500" title="Actif" />}
-                      </p>
-                      <p className="text-xs text-muted-foreground">{draft.description}</p>
-                    </div>
-                    <div className="flex gap-1">
-                       <Button size="sm" variant="outline" onClick={() => handleLoad(draft.id)} disabled={draft.isActive || loading}>
-                          Charger
-                       </Button>
-                       <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive" disabled={loading || deletingId === draft.id}>
-                              {deletingId === draft.id ? <Loader2 className="h-4 w-4 animate-spin"/> : <Trash2 className="h-4 w-4" />}
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Cette action supprimera définitivement le scénario "{draft.name}".
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(draft.id)} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                       </AlertDialog>
-                    </div>
-                 </div>
-               )) : <p className="text-sm text-center text-muted-foreground py-10">Aucun scénario sauvegardé.</p>}
-            </ScrollArea>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

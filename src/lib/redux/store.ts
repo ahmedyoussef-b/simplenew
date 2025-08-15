@@ -19,6 +19,7 @@ import teacherAssignmentsReducer from './features/teacherAssignmentsSlice';
 import schoolConfigReducer from './features/schoolConfigSlice';
 import attendanceReducer from './features/attendance/attendanceSlice';
 import { entityApi } from './api/entityApi/index';
+import scheduleDraftReducer from './features/scheduleDraftSlice';
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -39,6 +40,7 @@ const rootReducer = combineReducers({
   teacherAssignments: teacherAssignmentsReducer,
   schoolConfig: schoolConfigReducer,
   attendance: attendanceReducer,
+  scheduleDraft: scheduleDraftReducer,
 });
 
 export const store = configureStore({

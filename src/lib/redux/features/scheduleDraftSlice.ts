@@ -2,12 +2,29 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import type { Prisma } from '@prisma/client';
 import type { WizardData, Lesson, ScheduleDraft } from '@/types';
+import { setAllClasses } from './classes/classesSlice';
+import { setAllClassrooms } from './classrooms/classroomsSlice';
+import { setAllGrades } from './grades/gradesSlice';
+import { setAllSubjects } from './subjects/subjectsSlice';
+import { setAllTeachers } from './teachers/teachersSlice';
+import { setSchoolConfig } from './schoolConfigSlice';
+import { setAllRequirements } from './lessonRequirements/lessonRequirementsSlice';
+import { setAllTeacherConstraints } from './teacherConstraintsSlice';
+import { setAllSubjectRequirements } from './subjectRequirementsSlice';
+import { setAllTeacherAssignments } from './teacherAssignmentsSlice';
+import { setInitialSchedule } from './schedule/scheduleSlice';
 
 // Type for the raw response from the API, where dates are strings
-type ApiScheduleDraft = Omit<ScheduleDraft, 'createdAt' | 'updatedAt'> & {
+type ApiScheduleDraft = Omit<ScheduleDraft, 'createdAt' | 'updatedAt' | 'lessons' | 'schoolConfig' | 'classes' | 'subjects' | 'teachers' | 'classrooms' | 'grades'> & {
     createdAt: string;
     updatedAt: string;
     lessons: Lesson[];
+    schoolConfig: string;
+    classes: string;
+    subjects: string;
+    teachers: string;
+    classrooms: string;
+    grades: string;
 };
 
 
@@ -39,12 +56,12 @@ const toSerializableDraft = (draft: ApiScheduleDraft): ScheduleDraft  => ({
     schoolId: draft.schoolId,
     createdAt: new Date(draft.createdAt).toISOString(),
     updatedAt: new Date(draft.updatedAt).toISOString(),
-    schoolConfig: draft.schoolConfig,
-    classes: draft.classes,
-    subjects: draft.subjects,
-    teachers: draft.teachers,
-    classrooms: draft.classrooms,
-    grades: draft.grades,
+    schoolConfig: JSON.parse(draft.schoolConfig || '{}'),
+    classes: JSON.parse(draft.classes || '[]'),
+    subjects: JSON.parse(draft.subjects || '[]'),
+    teachers: JSON.parse(draft.teachers || '[]'),
+    classrooms: JSON.parse(draft.classrooms || '[]'),
+    grades: JSON.parse(draft.grades || '[]'),
 });
 
 // Helper function to build the payload for saving
@@ -93,27 +110,32 @@ export const fetchScheduleDraft = createAsyncThunk<
             
             if (activeDraft) {
                 console.log("✅ [Thunk] fetchScheduleDraft: Brouillon actif trouvé en BDD:", activeDraft.name);
-                return toSerializableDraft(activeDraft);
+                const serializableDraft = toSerializableDraft(activeDraft);
+                // Hydrate all other slices with the data from the active draft
+                dispatch(setSchoolConfig(serializableDraft.schoolConfig));
+                dispatch(setAllClasses(serializableDraft.classes));
+                dispatch(setAllSubjects(serializableDraft.subjects));
+                dispatch(setAllTeachers(serializableDraft.teachers));
+                dispatch(setAllClassrooms(serializableDraft.classrooms));
+                dispatch(setAllGrades(serializableDraft.grades));
+                dispatch(setInitialSchedule(activeDraft.lessons || [])); // Assuming lessons are part of the draft
+                return serializableDraft;
+
             } else {
-                console.log("✨ [Thunk] fetchScheduleDraft: Aucun brouillon actif trouvé, création d'un nouveau scénario en mémoire.");
-                const now = new Date().toISOString();
-                const newInMemoryDraft: ScheduleDraft = {
-                    id: `temp_${Date.now()}`,
-                    userId: 'temp_user',
-                    name: 'Nouveau Scénario',
-                    description: 'Scénario de base généré à partir des données de la base de données.',
-                    isActive: true,
-                    createdAt: now,
-                    updatedAt: now,
-                    schoolId: initialWizardData.school.id as number | null,
-                    schoolConfig: JSON.stringify(initialWizardData.school),
-                    classes: JSON.stringify(initialWizardData.classes),
-                    subjects: JSON.stringify(initialWizardData.subjects),
-                    teachers: JSON.stringify(initialWizardData.teachers),
-                    classrooms: JSON.stringify(initialWizardData.rooms),
-                    grades: JSON.stringify(initialWizardData.grades),
-                };
-                return newInMemoryDraft;
+                 console.log("📦 [Thunk] fetchScheduleDraft: Aucun brouillon actif, hydratation à partir des données initiales.");
+                // Hydrate with initial server data if no active draft is found
+                dispatch(setSchoolConfig(initialWizardData.school));
+                dispatch(setAllClasses(initialWizardData.classes));
+                dispatch(setAllSubjects(initialWizardData.subjects));
+                dispatch(setAllTeachers(initialWizardData.teachers));
+                dispatch(setAllClassrooms(initialWizardData.rooms));
+                dispatch(setAllGrades(initialWizardData.grades));
+                dispatch(setAllRequirements(initialWizardData.lessonRequirements));
+                dispatch(setAllTeacherConstraints(initialWizardData.teacherConstraints));
+                dispatch(setAllSubjectRequirements(initialWizardData.subjectRequirements));
+                dispatch(setAllTeacherAssignments(initialWizardData.teacherAssignments));
+                dispatch(setInitialSchedule(initialWizardData.schedule || []));
+                return null;
             }
         } catch (error) {
             console.error("❌ [Thunk] fetchScheduleDraft: Erreur catastrophique.", error);

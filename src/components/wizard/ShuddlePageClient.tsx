@@ -20,20 +20,11 @@ import useWizardSteps from '@/hooks/useWizardSteps';
 import { setInitialSchedule, saveSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
 import { generateSchedule } from '@/lib/schedule-generation';
 import { useToast } from '@/hooks/use-toast';
-import { loadState, saveState } from '@/lib/redux/storage';
+import { fetchScheduleDraft } from '@/lib/redux/features/scheduleDraftSlice';
 
 import { useGetClassesQuery, useGetSubjectsQuery, useGetTeachersQuery, useGetRoomsQuery, useGetGradesQuery } from '@/lib/redux/api/entityApi';
 import type { WizardData, Lesson, ValidationResult, Day, Subject } from '@/types';
-import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
-import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
-import { setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
-import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
-import { setAllGrades } from '@/lib/redux/features/grades/gradesSlice';
-import { setAllRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
-import { setAllTeacherConstraints } from '@/lib/redux/features/teacherConstraintsSlice';
-import { setAllSubjectRequirements } from '@/lib/redux/features/subjectRequirementsSlice';
-import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
-import { setSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
+import ScenarioManager from '@/components/wizard/ScenarioManager';
 
 
 interface ShuddlePageClientProps {
@@ -69,10 +60,9 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     console.log("🚀 [ShuddlePageClient] Le composant client du planificateur est en cours de rendu.");
     const dispatch = useAppDispatch();
     const { toast } = useToast();
-    const [mode, setMode] = useState<'wizard' | 'view'>('wizard'); 
+    const [mode, setMode] = useState<'wizard' | 'view'>('wizard');
     const scheduleItems = useAppSelector(state => state.schedule.items);
-    const [isSaving, setIsSaving] = useState(false);
-
+    
     // RTK Query hooks for data fetching
     const { data: classesData, isLoading: isLoadingClasses } = useGetClassesQuery(undefined);
     const { data: subjectsData, isLoading: isLoadingSubjects } = useGetSubjectsQuery(undefined);
@@ -93,39 +83,10 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     const isDataLoading = isLoadingClasses || isLoadingSubjects || isLoadingTeachers || isLoadingRooms || isLoadingGrades;
     
-    // Hydrate store from initial server data
+    // Hydrate store from active draft or initial data
     useEffect(() => {
-        console.log("💧 [ShuddlePageClient] Hydratation du store Redux avec les données initiales du serveur.");
-        if (initialData) {
-            const persistedState = loadState();
-            if (persistedState && persistedState.schedule?.items?.length > 0) {
-                console.log("💾 [ShuddlePageClient] État trouvé dans le localStorage, restauration.");
-                dispatch(setAllClasses(persistedState.classes.items));
-                dispatch(setAllSubjects(persistedState.subjects.items));
-                dispatch(setAllTeachers(persistedState.teachers.items));
-                dispatch(setAllClassrooms(persistedState.classrooms.items));
-                dispatch(setAllGrades(persistedState.grades.items));
-                dispatch(setAllRequirements(persistedState.lessonRequirements.items));
-                dispatch(setAllTeacherConstraints(persistedState.teacherConstraints.items));
-                dispatch(setAllSubjectRequirements(persistedState.subjectRequirements.items));
-                dispatch(setAllTeacherAssignments(persistedState.teacherAssignments.items));
-                dispatch(setSchoolConfig(persistedState.schoolConfig));
-                dispatch(setInitialSchedule(persistedState.schedule.items));
-            } else {
-                console.log("📦 [ShuddlePageClient] Aucune donnée locale, utilisation des données initiales du serveur.");
-                dispatch(setAllClasses(initialData.classes));
-                dispatch(setAllSubjects(initialData.subjects));
-                dispatch(setAllTeachers(initialData.teachers));
-                dispatch(setAllClassrooms(initialData.rooms));
-                dispatch(setAllGrades(initialData.grades));
-                dispatch(setAllRequirements(initialData.lessonRequirements));
-                dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-                dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-                dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-                dispatch(setSchoolConfig(initialData.school));
-                dispatch(setInitialSchedule(initialData.schedule || []));
-            }
-        }
+        console.log("💧 [ShuddlePageClient] Déclenchement de la récupération du brouillon actif.");
+        dispatch(fetchScheduleDraft({ initialWizardData: initialData }));
     }, [dispatch, initialData]);
     
     
@@ -212,26 +173,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         }
     };
     
-    const handleSaveSchedule = useCallback(async () => {
-        setIsSaving(true);
-        toast({ title: "Sauvegarde en cours...", description: "Vos modifications sont en cours d'enregistrement dans la base de données." });
-        try {
-            await dispatch(saveSchedule(scheduleItems)).unwrap();
-            toast({
-                title: "Emploi du temps sauvegardé !",
-                description: "Toutes vos modifications ont été enregistrées avec succès."
-            });
-        } catch (error: any) {
-             toast({
-                variant: 'destructive',
-                title: "Échec de la sauvegarde",
-                description: error.message || "Une erreur est survenue lors de la sauvegarde."
-            });
-        } finally {
-            setIsSaving(false);
-        }
-    }, [dispatch, scheduleItems, toast]);
-
 
     const renderStepContent = () => {
         const StepComponent = steps[currentStep].component;
@@ -268,6 +209,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                        Scénario: <span className="text-primary">{wizardData.school.name}</span>
                     </h2>
                      <div className="flex items-center gap-2">
+                        <ScenarioManager />
                         <Button variant="outline" onClick={() => setMode('view')}>
                             <Calendar size={16} className="mr-2"/>
                             Voir l'emploi du temps
@@ -319,10 +261,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                         <Printer size={16} className="mr-2" />
                         Imprimer
                     </Button>
-                     <Button onClick={handleSaveSchedule} disabled={isSaving}>
-                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        Sauvegarder et Terminer
-                    </Button>
+                    <ScenarioManager />
                  </div>
             </div>
             

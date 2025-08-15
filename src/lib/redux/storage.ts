@@ -1,23 +1,7 @@
 // src/lib/redux/storage.ts
 
-export const loadState = () => {
-    try {
-      const serializedState = localStorage.getItem('schedulerState');
-      if (serializedState === null) {
-        return undefined;
-      }
-      return JSON.parse(serializedState);
-    } catch (err) {
-      console.error("Could not load state from localStorage", err);
-      return undefined;
-    }
-  };
-  
-  export const saveState = (state: any) => {
-    try {
-      const serializedState = JSON.stringify(state);
-      localStorage.setItem('schedulerState', serializedState);
-    } catch (err) {
-      console.error("Could not save state to localStorage", err);
-    }
-  };
+// This file is obsolete. The application now fetches data directly from the server
+// and uses a database-backed draft system, making localStorage persistence redundant.
+// This file can be safely removed.
+export const loadState = () => undefined;
+export const saveState = () => {};
