@@ -26,13 +26,12 @@ interface ClassesPageProps {
     grades: GradeWithClassCount[];
     classes: ClassWithDetails[];
     userRole?: AppRole;
+    initialGradeIdParam: string | null;
 }
 
-const ClassesPageContent: React.FC<ClassesPageProps> = ({ grades, classes, userRole }) => {
+const ClassesPageContent: React.FC<ClassesPageProps> = ({ grades, classes, userRole, initialGradeIdParam }) => {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialGradeId = searchParams?.get('viewGradeId');
-  const [selectedGradeId, setSelectedGradeId] = useState<number | null>(initialGradeId ? Number(initialGradeId) : null);
+  const [selectedGradeId, setSelectedGradeId] = useState<number | null>(initialGradeIdParam ? Number(initialGradeIdParam) : null);
 
   const selectedGrade = selectedGradeId ? grades.find(g => g.id === selectedGradeId) : null;
   const classesInGrade = selectedGradeId ? classes.filter(c => c.gradeId === selectedGradeId) : [];
@@ -126,33 +125,40 @@ const ClassesPageContent: React.FC<ClassesPageProps> = ({ grades, classes, userR
 };
 
 
-// This is the new Server Component wrapper that fetches data
-const ServerClassesPage = async ({
+// This is the Server Component that fetches data. It does NOT have 'use client'.
+export default async function ServerClassesPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
-}) => {
+}) {
     const { getServerSession } = await import('@/lib/auth-utils');
     const prisma = (await import('@/lib/prisma')).default;
 
     const session: { user: SafeUser } | null = await getServerSession();
     const userRole = session?.user?.role as AppRole | undefined;
 
-    const grades: GradeWithClassCount[] = await prisma.grade.findMany({
+    const gradesData: GradeWithClassCount[] = await prisma.grade.findMany({
         include: {
         _count: { select: { classes: true } },
         },
         orderBy: { level: 'asc' },
-    }) as GradeWithClassCount[];
+    });
 
-    const classes: ClassWithDetails[] = await prisma.class.findMany({
+    const classesData: ClassWithDetails[] = await prisma.class.findMany({
       include: {
         _count: { select: { students: true } },
+        grade: true, // Also fetch grade info to pass to the client
       },
       orderBy: { name: 'asc' },
-    }) as ClassWithDetails[];
+    });
 
-    return <ClassesPageContent grades={grades} classes={classes} userRole={userRole} />;
+    const initialGradeIdParam = typeof searchParams?.viewGradeId === 'string' ? searchParams.viewGradeId : null;
+
+    // The data is fetched here on the server and passed as props to the client component.
+    return <ClassesPageContent 
+        grades={gradesData} 
+        classes={classesData} 
+        userRole={userRole}
+        initialGradeIdParam={initialGradeIdParam}
+    />;
 }
-
-export default ServerClassesPage;
