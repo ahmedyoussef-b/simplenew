@@ -1,14 +1,13 @@
-
-// src/ap/(dashboard)/parent/page.tsx
+// src/app/(dashboard)/parent/page.tsx
 import prisma from "@/lib/prisma";
 import { getServerSession } from "@/lib/auth-utils";
 import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
-import type { WizardData, ClassWithGrade, TeacherWithDetails } from '@/types';
+import type { WizardData } from '@/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
-import Announcements from "@/components/Announcements";
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchAllDataForWizard } from '@/lib/data-fetching/fetch-wizard-data';
 
 const TimetableDisplay = dynamic(() => import('@/components/schedule/TimetableDisplay'), {
   ssr: false,
@@ -45,16 +44,8 @@ const ParentPage = async () => {
   }
   
   const children = await prisma.student.findMany({
-    where: {
-      parentId: parent.id,
-    },
-    include: {
-      class: {
-        include: {
-          grade: true,
-        },
-      },
-    },
+    where: { parentId: parent.id },
+    select: { classId: true }
   });
   
   console.log(`👨‍👩‍👧 [ParentPage] Profil parent trouvé pour ${parent.name}. ${children.length} enfant(s) associé(s).`);
@@ -72,77 +63,8 @@ const ParentPage = async () => {
   const childrenClassIds = [...new Set(children.map(child => child.classId).filter(id => id !== null))] as number[];
   console.log(`👨‍👩‍👧 [ParentPage] Récupération des données de l'emploi du temps pour les IDs de classe : ${childrenClassIds.join(', ')}.`);
   
-  const [lessons, allSubjects, allTeachersFromDb, allClassrooms] = await Promise.all([
-    prisma.lesson.findMany({
-      where: {
-        classId: {
-          in: childrenClassIds,
-        },
-      },
-      select: {
-        id: true,
-        name: true,
-        day: true,
-        startTime: true,
-        endTime: true,
-        subjectId: true,
-        classId: true,
-        scheduleDraftId: true,
-        teacherId: true,
-        classroomId: true,
-        createdAt: true,
-        updatedAt: true,
-        subject: { select: { name: true } },
-        class: { select: { name: true } },
-      },
-    }),
-    prisma.subject.findMany(),
-    prisma.teacher.findMany({ 
-        include: { 
-            user: true, 
-            subjects: true, 
-            lessons: { select: { classId: true }, distinct: ['classId'] }
-        } 
-    }),
-    prisma.classroom.findMany(),
-  ]);
-
-  const teachersWithCount: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
-    ...t,
-    classes: [], // This is not needed for the count logic
-    _count: {
-        subjects: t.subjects.length,
-        classes: new Set(t.lessons.map(l => l.classId)).size,
-    }
-  }));
-
-  
-  const childrenClasses = children.map(c => c.class).filter((c): c is ClassWithGrade => !!(c as any)?.grade);
-  const uniqueChildrenClasses = Array.from(new Map(childrenClasses.map(item => [item['id'], item])).values());
-
-
-  const wizardData: WizardData = {
-    school: {
-      name: "Emplois du temps de mes enfants",
-      startTime: '08:00',
-      endTime: '18:00',
-      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-      sessionDuration: 60,
-      scheduleDraftId: null,
-      schoolConfig: {}
-    },
-    classes: uniqueChildrenClasses,
-    subjects: allSubjects,
-    teachers: teachersWithCount,
-    rooms: allClassrooms,
-    grades: [],
-    lessonRequirements: [],
-    teacherConstraints: [],
-    subjectRequirements: [],
-    teacherAssignments: [],
-    schedule: lessons,
-    scheduleDraftId: null
-  };
+  // Fetch the full wizard data, which includes the active schedule
+  const wizardData = await fetchAllDataForWizard();
   
   console.log("👨‍👩‍👧 [ParentPage] Rendu de l'emploi du temps combiné pour les enfants.");
   return (

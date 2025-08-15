@@ -1,4 +1,3 @@
-
 // src/app/(dashboard)/list/teachers/[id]/page.tsx
 import prisma from "@/lib/prisma";
 import { getServerSession } from "@/lib/auth-utils";
@@ -33,7 +32,7 @@ const SingleTeacherPage = async ({
      redirect(`/${userRole?.toLowerCase() || 'login'}`);
   }
   
-  // Use the centralized data fetching logic
+  // Use the centralized data fetching logic. This includes the active draft's schedule.
   const wizardData = await fetchAllDataForWizard();
 
   const teacher = wizardData.teachers.find(t => t.id === id);
@@ -51,6 +50,7 @@ const SingleTeacherPage = async ({
         </div>
         <div className="mt-4 bg-white rounded-md p-4 h-auto">
           <h1 className="text-xl font-semibold mb-4">{`Horaire de ${teacher.name} ${teacher.surname}`}</h1>
+          {/* TimetableDisplay will now use the schedule from the fetched WizardData (active draft) */}
           <TimetableDisplay wizardData={wizardData} viewMode="teacher" selectedViewId={id} />
         </div>
       </div>
