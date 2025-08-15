@@ -32,6 +32,18 @@ export const classroomsSlice = createSlice({
         state.status = 'succeeded';
       }
     )
+    .addMatcher(
+      entityApi.endpoints.createRoom.matchFulfilled,
+      (state, { payload }) => {
+        state.items.push(payload as Classroom);
+      }
+    )
+    .addMatcher(
+      entityApi.endpoints.deleteRoom.matchFulfilled,
+      (state, { payload, meta }) => {
+        state.items = state.items.filter(item => item.id !== meta.arg.originalArgs);
+      }
+    )
   },
   selectors: {
     selectAllSalles: (state) => state.items,

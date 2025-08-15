@@ -30,13 +30,20 @@ export const teachersSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-    builder.addMatcher(
-      entityApi.endpoints.getTeachers.matchFulfilled,
-      (state, { payload }) => {
-        state.items = payload as TeacherWithDetails[];
-        state.status = 'succeeded';
-      }
-    )
+    builder
+      .addMatcher(
+        entityApi.endpoints.getTeachers.matchFulfilled,
+        (state, { payload }) => {
+          state.items = payload as TeacherWithDetails[];
+          state.status = 'succeeded';
+        }
+      )
+      .addMatcher(
+        entityApi.endpoints.deleteTeacher.matchFulfilled,
+        (state, { meta }) => {
+          state.items = state.items.filter(item => item.id !== meta.arg.originalArgs);
+        }
+      );
   },
   selectors: {
     selectAllProfesseurs: (state) => state.items,

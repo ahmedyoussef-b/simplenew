@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
+import { useAppSelector } from '@/hooks/redux-hooks';
 import { MapPin, Plus, Trash2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -10,16 +10,19 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Loader2 } from 'lucide-react';
-import { localAddClassroom, localDeleteClassroom, selectAllSalles } from '@/lib/redux/features/classrooms/classroomsSlice';
+import { useCreateRoomMutation, useDeleteRoomMutation } from '@/lib/redux/api/entityApi';
+import { selectAllSalles } from '@/lib/redux/features/classrooms/classroomsSlice';
 import { useToast } from '@/hooks/use-toast';
 
 interface ClassroomsFormProps {}
 
 const ClassroomsForm: React.FC<ClassroomsFormProps> = () => {
   const data = useAppSelector(selectAllSalles);
-  const dispatch = useAppDispatch();
   const { toast } = useToast();
   
+  const [createRoom, { isLoading: isAdding }] = useCreateRoomMutation();
+  const [deleteRoom, { isLoading: isDeleting }] = useDeleteRoomMutation();
+
   const [newRoom, setNewRoom] = useState({
     name: '',
     abbreviation: '',
@@ -27,34 +30,46 @@ const ClassroomsForm: React.FC<ClassroomsFormProps> = () => {
     building: 'A'
   });
   
-  const [isAdding, setIsAdding] = useState(false);
-
-  const handleAddRoom = () => {
+  const handleAddRoom = async () => {
     if (!newRoom.name || !newRoom.capacity) return;
     
-    setIsAdding(true);
-    dispatch(localAddClassroom({
-      id: -Date.now(),
-      ...newRoom,
-      building: newRoom.building || null,
-      abbreviation: newRoom.abbreviation || null,
-    }));
-    
-    toast({
-      title: 'Salle ajoutée (Brouillon)',
-      description: `La salle "${newRoom.name}" a été ajoutée à votre configuration.`
-    });
-    
-    setNewRoom({ name: '', abbreviation: '', capacity: 30, building: 'A' });
-    setIsAdding(false);
+    try {
+        await createRoom({
+            ...newRoom,
+            building: newRoom.building || undefined,
+            abbreviation: newRoom.abbreviation || undefined,
+        }).unwrap();
+
+        toast({
+          title: 'Salle ajoutée',
+          description: `La salle "${newRoom.name}" a été sauvegardée dans la base de données.`
+        });
+        
+        setNewRoom({ name: '', abbreviation: '', capacity: 30, building: 'A' });
+
+    } catch (error: any) {
+         toast({
+            variant: "destructive",
+            title: 'Erreur',
+            description: error.data?.message || "Impossible de créer la salle."
+        });
+    }
   };
 
-  const handleDeleteRoom = (id: number) => {
-    dispatch(localDeleteClassroom(id));
-    toast({
-      title: 'Salle supprimée (Brouillon)',
-      description: `La salle a été supprimée de votre configuration.`
-    });
+  const handleDeleteRoom = async (id: number) => {
+    try {
+      await deleteRoom(id).unwrap();
+      toast({
+        title: 'Salle supprimée',
+        description: `La salle a été supprimée de la base de données.`
+      });
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: 'Erreur de suppression',
+            description: error.data?.message || "Impossible de supprimer la salle."
+        });
+    }
   };
 
   const totalCapacity = data.reduce((sum, room) => sum + room.capacity, 0);
@@ -153,6 +168,7 @@ const ClassroomsForm: React.FC<ClassroomsFormProps> = () => {
                     size="sm"
                     onClick={() => handleDeleteRoom(room.id)}
                     className="text-destructive hover:text-destructive/90"
+                    disabled={isDeleting}
                   >
                     <Trash2 size={14} />
                   </Button>

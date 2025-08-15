@@ -30,7 +30,6 @@ import {
     removeAssignmentsForTeacher,
 } from '@/lib/redux/features/teacherAssignmentsSlice';
 import {
-  localDeleteTeacher,
   selectAllProfesseurs,
 } from '@/lib/redux/features/teachers/teachersSlice';
 import { selectAllClasses } from '@/lib/redux/features/classes/classesSlice';
@@ -39,6 +38,7 @@ import { selectLessonRequirements } from '@/lib/redux/features/lessonRequirement
 import type { TeacherWithDetails, Subject } from '@/types';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useDeleteTeacherMutation } from '@/lib/redux/api/entityApi';
 
 
 const TEACHER_HOURS_QUOTA = 25; // Weekly hours quota
@@ -51,6 +51,8 @@ const TeachersForm: React.FC = () => {
     const subjects = useAppSelector(selectAllMatieres);
     const teacherAssignments = useAppSelector(selectTeacherAssignments);
     const lessonRequirements = useAppSelector(selectLessonRequirements);
+
+    const [deleteTeacher] = useDeleteTeacherMutation();
 
     const teacherWorkloads = useMemo(() => {
         const workloads: Record<string, number> = {};
@@ -74,13 +76,21 @@ const TeachersForm: React.FC = () => {
         dispatch(toggleClassAssignment({ teacherId, subjectId, classId }));
     };
 
-    const handleDeleteTeacher = (teacher: TeacherWithDetails) => {
-      dispatch(removeAssignmentsForTeacher(teacher.id));
-      dispatch(localDeleteTeacher(teacher.id));
-      toast({
-        title: "Enseignant supprimé (Brouillon)",
-        description: `L'enseignant ${teacher.name} ${teacher.surname} a été retiré de votre configuration.`
-      })
+    const handleDeleteTeacher = async (teacher: TeacherWithDetails) => {
+      try {
+        await deleteTeacher(teacher.id).unwrap();
+        dispatch(removeAssignmentsForTeacher(teacher.id));
+        toast({
+          title: "Enseignant supprimé",
+          description: `L'enseignant ${teacher.name} ${teacher.surname} a été supprimé de la base de données.`
+        })
+      } catch (error: any) {
+        toast({
+          variant: "destructive",
+          title: "Erreur de suppression",
+          description: error.data?.message || "Impossible de supprimer l'enseignant."
+        })
+      }
     };
 
     const isClassAssignedToOtherTeacher = (classId: number, subjectId: number, currentTeacherId: string): boolean => {
