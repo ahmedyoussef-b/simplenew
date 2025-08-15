@@ -1,6 +1,7 @@
 import { type Lesson as PrismaLesson } from '@prisma/client';
 import { WizardData, Day } from '@/types';
 import { DayOfWeek } from './time-utils';
+import { formatTimeSimple } from './time-utils';
 
 export const mergeConsecutiveLessons = (lessons: PrismaLesson[], wizardData: WizardData): PrismaLesson[] => {
     if (!lessons || lessons.length === 0) return [];
@@ -32,7 +33,7 @@ export const mergeConsecutiveLessons = (lessons: PrismaLesson[], wizardData: Wiz
             currentLesson.classId === lesson.classId &&
             currentLesson.teacherId === lesson.teacherId &&
             currentLesson.classroomId === lesson.classroomId &&
-            currentEndTime.getTime() === nextStartTime.getTime()
+            formatTimeSimple(currentEndTime) === formatTimeSimple(nextStartTime)
         ) {
             currentLesson.endTime = lesson.endTime;
         } else {

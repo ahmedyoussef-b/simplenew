@@ -84,6 +84,18 @@ export function generateSchedule(wizardData: WizardData): { schedule: Lesson[], 
             continue;
           }
 
+          const existingLessonOnDay = schedule.find(l => 
+            l.classId === classInfo.id && l.subjectId === subjectInfo.id && l.day === dayEnum
+          );
+
+          if (existingLessonOnDay) {
+            const existingEndMinutes = timeToMinutes(formatTimeSimple(existingLessonOnDay.endTime));
+            if (lessonStartMinutes !== existingEndMinutes) {
+              // A lesson for this subject already exists today, but this slot is not consecutive. Skip it.
+              continue;
+            }
+          }
+
           // Check if class is busy
           const isClassBusy = schedule.some(l => {
               if (l.classId !== classInfo.id || l.day !== dayEnum) return false;
