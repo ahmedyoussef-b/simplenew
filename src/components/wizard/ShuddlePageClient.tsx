@@ -87,8 +87,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     useEffect(() => {
         // Always hydrate the store with the fresh data from the server on initial load.
         // This ensures that the wizard reflects the current state of the database.
-        // The persisted state from localStorage will only be used if the page is reloaded
-        // without a server fetch (e.g., hard refresh).
         console.log("💾 [ShuddlePageClient] Hydratation du store avec les données initiales du serveur.");
         dispatch(setSchoolConfig(initialData.school));
         dispatch(setAllClasses(initialData.classes));
@@ -153,6 +151,13 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
             setValidationResults(validateData());
         }
     }, [wizardData, currentStep, steps.length, validateData]);
+    
+    const handleSave = () => {
+        toast({
+            title: "Sauvegarde manuelle",
+            description: "La sauvegarde est maintenant automatique via le stockage local. Ce bouton est conservé pour la démonstration."
+        });
+    }
 
     const handleGenerate = async () => {
         console.log("⚙️ [ShuddlePageClient] Lancement de la génération de l'emploi du temps.");
@@ -268,6 +273,10 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                      <Button onClick={handleGenerate}>
                         <RotateCw size={16} className="mr-2" />
                         Regénérer
+                    </Button>
+                     <Button variant="secondary" onClick={handleSave}>
+                        <Save size={16} className="mr-2" />
+                        Sauvegarder
                     </Button>
                     <Button variant="outline" onClick={() => window.print()}>
                         <Printer size={16} className="mr-2" />
