@@ -12,6 +12,7 @@ import { ArrowLeft, Layers3 } from "lucide-react";
 import GradeCard from "@/components/classes/GradeCard";
 import ClassCard from "@/components/classes/ClassCard";
 import { cn } from '@/lib/utils';
+import { getServerSession } from '@/lib/auth-utils';
 
 type GradeWithClassCount = Grade & {
   _count: { classes: number };
