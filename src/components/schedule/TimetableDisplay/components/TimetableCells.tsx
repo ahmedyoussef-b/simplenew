@@ -5,14 +5,13 @@ import React, { useState } from 'react';
 import { useAppDispatch } from '@/hooks/redux-hooks';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Trash2, Building, Plus, BookOpen, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { Lesson, Subject, WizardData, Day } from '@/types';
 import { getSubjectColorClass, getAvailableRoomsForSlot } from './utils';
-import { formatTimeSimple } from '../../../../lib/time-utils';
+import { formatTimeSimple } from '@/lib/time-utils';
 import { updateLessonRoom } from '@/lib/redux/features/schedule/scheduleSlice';
 
 
@@ -188,9 +187,6 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
                     disabled={remainingHours <= 0}
                 >
                     <span>{subject.name}</span>
-                    <Badge variant={remainingHours > 0 ? 'default' : 'outline'}>
-                        {remainingHours}h
-                    </Badge>
                 </Button>
               ))}
               {(!possibleSubjects || possibleSubjects.length === 0) && (

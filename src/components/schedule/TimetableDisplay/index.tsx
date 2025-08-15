@@ -71,9 +71,10 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
 
   // Memoize possible subjects calculation
   const possibleSubjectsByClass = useMemo(() => {
-    if (!fullSchedule) return [];
+    if (viewMode !== 'class' || !selectedViewId) return [];
+    
     const classIdNum = parseInt(selectedViewId, 10);
-    if (viewMode !== 'class' || !classIdNum) return [];
+    if (!classIdNum || !wizardData.lessonRequirements) return [];
 
     const scheduledHoursBySubject = fullSchedule
       .filter(l => l.classId === classIdNum)
@@ -94,7 +95,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
         subject,
         remainingHours: requiredHours - scheduledHours,
       };
-    }).filter(s => s.remainingHours > 0);
+    });
 
   }, [fullSchedule, wizardData, selectedViewId, viewMode]);
 
@@ -143,7 +144,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                                   <InteractiveEmptyCell
                                       day={dayEnum}
                                       timeSlot={time}
-                                      possibleSubjects={viewMode === 'class' ? possibleSubjectsByClass : []}
+                                      possibleSubjects={possibleSubjectsByClass}
                                       onAddLesson={handlePlaceLesson}
                                       wizardData={wizardData}
                                       fullSchedule={fullSchedule || []}

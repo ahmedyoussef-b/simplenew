@@ -1,14 +1,13 @@
 
 // src/app/(dashboard)/student/page.tsx
 
-import Announcements from "@/components/Announcements";
 import { getServerSession } from "@/lib/auth-utils";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import StudentWeeklyAttendanceChart from "@/components/attendance/StudentWeeklyAttendanceChart";
 
 import type { Lesson, WizardData, ClassWithGrade, TeacherWithDetails, Subject, Classroom } from '@/types';

@@ -1,7 +1,7 @@
 // src/components/schedule/ScheduleEditor/hooks/useScheduleActions.ts
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/redux-hooks';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from "@/hooks/use-toast";
 import type { Day, Lesson, Subject, WizardData, Class, Teacher } from '@/types';
 import { findConflictingConstraint } from '@/lib/constraint-utils';
 import { formatTimeSimple, timeToMinutes } from '../utils/scheduleUtils';
@@ -10,6 +10,7 @@ import {
     useUpdateLessonMutation,
     useDeleteLessonMutation 
 } from '@/lib/redux/api/entityApi';
+import { removeLesson } from '@/lib/redux/features/schedule/scheduleSlice';
 
 export const useScheduleActions = (
   wizardData: WizardData,
@@ -80,7 +81,7 @@ export const useScheduleActions = (
       toast({ variant: "destructive", title: "Enseignant occupé", description: `${teacherInfo.name} ${teacherInfo.surname} a déjà un cours sur ce créneau.` });
       return;
     }
-    if (findConflictingConstraint(teacherInfo.id, day, time, lessonEndTimeStr, teacherConstraints)) {
+    if (findConflictingConstraint(teacherInfo.id, day, time, lessonEndTimeStr, teacherConstraints || [])) {
       toast({ variant: "destructive", title: "Enseignant indisponible", description: `${teacherInfo.name} ${teacherInfo.surname} a une contrainte sur ce créneau.` });
       return;
     }
@@ -128,11 +129,11 @@ export const useScheduleActions = (
     const availableRoom = potentialRooms[0] || null;
 
     const newLessonPayload = {
-      name: `${subject.name} - ${classInfo.name}`,
+      name: `${subjectInfo.name} - ${classInfo.name}`,
       day: day,
       startTime: formatTimeSimple(lessonStartTimeDate),
       endTime: formatTimeSimple(lessonEndTimeDate),
-      subjectId: subject.id,
+      subjectId: subjectInfo.id,
       classId: classInfo.id,
       teacherId: teacherInfo.id,
       classroomId: availableRoom ? availableRoom.id : null,
@@ -140,7 +141,7 @@ export const useScheduleActions = (
 
     try {
       await createLesson(newLessonPayload).unwrap();
-      toast({ title: "Cours ajouté", description: `"${subject.name}" a été ajouté à l'emploi du temps.` });
+      toast({ title: "Cours ajouté", description: `"${subjectInfo.name}" a été ajouté à l'emploi du temps.` });
     } catch (error: any) {
        toast({ variant: "destructive", title: "Erreur", description: error.data?.message || "Impossible d'ajouter le cours." });
     }
@@ -149,11 +150,12 @@ export const useScheduleActions = (
   const handleDeleteLesson = useCallback(async (lessonId: number) => {
     try {
       await deleteLesson(lessonId).unwrap();
+      dispatch(removeLesson(lessonId)); // Dispatch local removal for immediate UI update
       toast({ title: "Cours supprimé", description: "Le cours a été retiré de l'emploi du temps." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erreur", description: error.data?.message || "Impossible de supprimer le cours." });
     }
-  }, [deleteLesson, toast]);
+  }, [deleteLesson, dispatch, toast]);
 
   const handleUpdateLessonSlot = useCallback(async (lessonId: number, newDay: Day, newTime: string) => {
     const lessonToUpdate = schedule.find(l => l.id === lessonId);
