@@ -29,7 +29,7 @@ import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
 import { setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
 import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
 import { setAllGrades } from '@/lib/redux/features/grades/gradesSlice';
-import { setAllLessonRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
+import { setAllRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
 import { setAllTeacherConstraints } from '@/lib/redux/features/teacherConstraintsSlice';
 import { setAllSubjectRequirements } from '@/lib/redux/features/subjectRequirementsSlice';
 import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
@@ -96,33 +96,35 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     // Hydrate store from initial server data
     useEffect(() => {
         console.log("💧 [ShuddlePageClient] Hydratation du store Redux avec les données initiales du serveur.");
-        const persistedState = loadState();
-        if(persistedState) {
-            console.log("💾 [ShuddlePageClient] État trouvé dans le localStorage, restauration.");
-            dispatch(setAllClasses(persistedState.classes.items));
-            dispatch(setAllSubjects(persistedState.subjects.items));
-            dispatch(setAllTeachers(persistedState.teachers.items));
-            dispatch(setAllClassrooms(persistedState.classrooms.items));
-            dispatch(setAllGrades(persistedState.grades.items));
-            dispatch(setAllLessonRequirements(persistedState.lessonRequirements.items));
-            dispatch(setAllTeacherConstraints(persistedState.teacherConstraints.items));
-            dispatch(setAllSubjectRequirements(persistedState.subjectRequirements.items));
-            dispatch(setAllTeacherAssignments(persistedState.teacherAssignments.items));
-            dispatch(setSchoolConfig(persistedState.schoolConfig));
-            dispatch(setInitialSchedule(persistedState.schedule.items));
-        } else if (initialData) {
-             console.log("📦 [ShuddlePageClient] Aucune donnée locale, utilisation des données initiales du serveur.");
-            dispatch(setAllClasses(initialData.classes));
-            dispatch(setAllSubjects(initialData.subjects));
-            dispatch(setAllTeachers(initialData.teachers));
-            dispatch(setAllClassrooms(initialData.rooms));
-            dispatch(setAllGrades(initialData.grades));
-            dispatch(setAllLessonRequirements(initialData.lessonRequirements));
-            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-            dispatch(setSchoolConfig(initialData.school));
-            dispatch(setInitialSchedule(initialData.schedule || []));
+        if (initialData) {
+            const persistedState = loadState();
+            if (persistedState && persistedState.schedule?.items?.length > 0) {
+                console.log("💾 [ShuddlePageClient] État trouvé dans le localStorage, restauration.");
+                dispatch(setAllClasses(persistedState.classes.items));
+                dispatch(setAllSubjects(persistedState.subjects.items));
+                dispatch(setAllTeachers(persistedState.teachers.items));
+                dispatch(setAllClassrooms(persistedState.classrooms.items));
+                dispatch(setAllGrades(persistedState.grades.items));
+                dispatch(setAllRequirements(persistedState.lessonRequirements.items));
+                dispatch(setAllTeacherConstraints(persistedState.teacherConstraints.items));
+                dispatch(setAllSubjectRequirements(persistedState.subjectRequirements.items));
+                dispatch(setAllTeacherAssignments(persistedState.teacherAssignments.items));
+                dispatch(setSchoolConfig(persistedState.schoolConfig));
+                dispatch(setInitialSchedule(persistedState.schedule.items));
+            } else {
+                console.log("📦 [ShuddlePageClient] Aucune donnée locale, utilisation des données initiales du serveur.");
+                dispatch(setAllClasses(initialData.classes));
+                dispatch(setAllSubjects(initialData.subjects));
+                dispatch(setAllTeachers(initialData.teachers));
+                dispatch(setAllClassrooms(initialData.rooms));
+                dispatch(setAllGrades(initialData.grades));
+                dispatch(setAllRequirements(initialData.lessonRequirements));
+                dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+                dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+                dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+                dispatch(setSchoolConfig(initialData.school));
+                dispatch(setInitialSchedule(initialData.schedule || []));
+            }
         }
     }, [dispatch, initialData]);
     
