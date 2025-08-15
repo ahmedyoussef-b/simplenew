@@ -1,5 +1,6 @@
 // src/components/classes/GradeCard.tsx
-import Link from 'next/link';
+'use client'; // Convert to client component to handle onClick
+
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import FormContainer from '@/components/FormContainer';
@@ -13,12 +14,16 @@ type GradeWithClassCount = Grade & {
 interface GradeCardProps {
     grade: GradeWithClassCount;
     userRole?: AppRole;
+    onSelect: () => void; // New prop for handling click
 }
 
-const GradeCard: React.FC<GradeCardProps> = ({ grade, userRole }) => {
+const GradeCard: React.FC<GradeCardProps> = ({ grade, userRole, onSelect }) => {
     return (
-        <Card className="hover:shadow-xl transition-all duration-300 bg-card hover:-translate-y-1 group flex flex-col justify-between">
-            <Link href={`/list/classes?viewGradeId=${grade.id}`} passHref className="flex flex-col flex-grow p-4">
+        <Card 
+            className="hover:shadow-xl transition-all duration-300 bg-card hover:-translate-y-1 group flex flex-col justify-between cursor-pointer"
+            onClick={onSelect}
+        >
+            <div className="flex flex-col flex-grow p-4">
                 <CardHeader className="p-0">
                     <div className="flex items-center justify-between">
                         <CardTitle className="text-xl text-primary font-bold">
@@ -38,13 +43,16 @@ const GradeCard: React.FC<GradeCardProps> = ({ grade, userRole }) => {
                     </div>
                 </CardContent>
                 <CardFooter className="p-0">
-                    <Button variant="secondary" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                    <div className="w-full text-sm text-primary group-hover:underline flex items-center justify-center">
                         Voir les Classes <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
+                    </div>
                 </CardFooter>
-            </Link>
+            </div>
             {userRole === AppRole.ADMIN && (
-                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div 
+                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                    onClick={(e) => e.stopPropagation()} // Prevent card click when deleting
+                >
                     <FormContainer table="grade" type="delete" id={grade.id} />
                 </div>
             )}
