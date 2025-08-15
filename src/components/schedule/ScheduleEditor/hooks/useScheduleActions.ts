@@ -1,7 +1,7 @@
 // src/components/schedule/ScheduleEditor/hooks/useScheduleActions.ts
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/redux-hooks';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import type { Day, Lesson, Subject, WizardData, Class, Teacher } from '@/types';
 import { findConflictingConstraint } from '@/lib/constraint-utils';
 import { formatTimeSimple, timeToMinutes } from '../utils/scheduleUtils';
