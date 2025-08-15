@@ -86,35 +86,18 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     // --- Hydration Logic ---
     useEffect(() => {
-        console.log("💾 [ShuddlePageClient] Hydratation du store avec les données...");
-        const persistedState = loadState();
-        if (persistedState && persistedState.schoolConfig && persistedState.schoolConfig.name !== 'Collège Riadh 5') {
-            console.log("💾 [ShuddlePageClient] ...depuis localStorage.");
-            dispatch(setSchoolConfig(persistedState.schoolConfig));
-            dispatch(setAllClasses(persistedState.classes.items));
-            dispatch(setAllSubjects(persistedState.subjects.items));
-            dispatch(setAllTeachers(persistedState.teachers.items));
-            dispatch(setAllClassrooms(persistedState.classrooms.items));
-            dispatch(setAllGrades(persistedState.grades.items));
-            dispatch(setAllRequirements(persistedState.lessonRequirements.items));
-            dispatch(setAllTeacherConstraints(persistedState.teacherConstraints.items));
-            dispatch(setAllSubjectRequirements(persistedState.subjectRequirements.items));
-            dispatch(setAllTeacherAssignments(persistedState.teacherAssignments.items));
-            dispatch(setInitialSchedule(persistedState.schedule.items));
-        } else {
-            console.log("💾 [ShuddlePageClient] ...depuis les données initiales du serveur.");
-            dispatch(setSchoolConfig(initialData.school));
-            dispatch(setAllClasses(initialData.classes));
-            dispatch(setAllSubjects(initialData.subjects));
-            dispatch(setAllTeachers(initialData.teachers));
-            dispatch(setAllClassrooms(initialData.rooms));
-            dispatch(setAllGrades(initialData.grades));
-            dispatch(setAllRequirements(initialData.lessonRequirements));
-            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-            dispatch(setInitialSchedule(initialData.schedule));
-        }
+        console.log("💾 [ShuddlePageClient] Hydratation du store avec les données initiales du serveur.");
+        dispatch(setSchoolConfig(initialData.school));
+        dispatch(setAllClasses(initialData.classes));
+        dispatch(setAllSubjects(initialData.subjects));
+        dispatch(setAllTeachers(initialData.teachers));
+        dispatch(setAllClassrooms(initialData.rooms));
+        dispatch(setAllGrades(initialData.grades));
+        dispatch(setAllRequirements(initialData.lessonRequirements));
+        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+        dispatch(setInitialSchedule(initialData.schedule));
     }, [dispatch, initialData]);
     // --- End Hydration Logic ---
 
