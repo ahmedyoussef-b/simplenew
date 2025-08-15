@@ -4,7 +4,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
 import { cn } from '@/lib/utils';
-import { Loader2, ChevronLeft, ChevronRight, Sparkles, Info, CheckCircle, AlertTriangle, Calendar, Clock, Wand2, Download, Save, CloudOff, Edit, RotateCw, Printer, BookOpen, MapPin, Puzzle, School, User as UserIcon } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Sparkles, Info, CheckCircle, AlertTriangle, Calendar, Clock, Wand2, Download, Save, CloudOff, Edit, RotateCw, Printer, BookOpen, MapPin, Puzzle, School, User as UserIcon, Users } from 'lucide-react';
 
 
 // Components
@@ -113,27 +113,41 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     // HYDRATION EFFECT
     useEffect(() => {
-        console.log("💧 [ShuddlePageClient] Initializing Redux store with server data.");
-        
-        // Always hydrate with fresh data from the server.
-        const completeClasses: ClassWithGrade[] = initialData.classes.map(c => ({
-          ...c,
-          grade: initialData.grades.find(g => g.id === c.gradeId)!,
-          _count: c._count || { students: 0, lessons: 0 }
-        }));
-
-        dispatch(setSchoolConfig(initialData.school));
-        dispatch(setAllClasses(completeClasses));
-        dispatch(setAllSubjects(initialData.subjects));
-        dispatch(setAllTeachers(initialData.teachers));
-        dispatch(setAllClassrooms(initialData.rooms));
-        dispatch(setAllGrades(initialData.grades));
-        dispatch(setAllRequirements(initialData.lessonRequirements));
-        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-        dispatch(setInitialSchedule(initialData.schedule || []));
-        
+        const storedState = localStorage.getItem('scheduleWizardState');
+        if (storedState) {
+            console.log("📦 [ShuddlePageClient] Données locales trouvées. Hydratation à partir du localStorage.");
+            const persistedData = JSON.parse(storedState);
+            dispatch(setSchoolConfig(persistedData.schoolConfig));
+            dispatch(setAllClasses(persistedData.classes.items));
+            dispatch(setAllSubjects(persistedData.subjects.items));
+            dispatch(setAllTeachers(persistedData.teachers.items));
+            dispatch(setAllClassrooms(persistedData.classrooms.items));
+            dispatch(setAllGrades(persistedData.grades.items));
+            dispatch(setAllRequirements(persistedData.lessonRequirements.items));
+            dispatch(setAllTeacherConstraints(persistedData.teacherConstraints.items));
+            dispatch(setAllSubjectRequirements(persistedData.subjectRequirements.items));
+            dispatch(setAllTeacherAssignments(persistedData.teacherAssignments.items));
+            dispatch(setInitialSchedule(persistedData.schedule.items));
+        } else {
+            console.log("💧 [ShuddlePageClient] Aucune donnée locale. Hydratation à partir des données initiales du serveur.");
+            const completeClasses: ClassWithGrade[] = initialData.classes.map(c => ({
+              ...c,
+              grade: initialData.grades.find(g => g.id === c.gradeId)!,
+              _count: c._count || { students: 0, lessons: 0 }
+            }));
+            
+            dispatch(setSchoolConfig(initialData.school));
+            dispatch(setAllClasses(completeClasses));
+            dispatch(setAllSubjects(initialData.subjects));
+            dispatch(setAllTeachers(initialData.teachers));
+            dispatch(setAllClassrooms(initialData.rooms));
+            dispatch(setAllGrades(initialData.grades));
+            dispatch(setAllRequirements(initialData.lessonRequirements));
+            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+            dispatch(setInitialSchedule(initialData.schedule || []));
+        }
     }, [dispatch, initialData]);
     
     
@@ -262,6 +276,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                        Configuration de l'emploi du temps
                     </h2>
                      <div className="flex items-center gap-2">
+                        <ScenarioManager />
                         <Button variant="outline" onClick={() => setMode('view')}>
                             <Calendar size={16} className="mr-2"/>
                             Voir l'emploi du temps
