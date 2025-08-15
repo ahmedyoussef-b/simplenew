@@ -129,8 +129,8 @@ export const useScheduleActions = (
     const newLessonPayload: Omit<Lesson, 'id' | 'createdAt' | 'updatedAt'> = {
       name: `${subjectInfo.name} - ${classInfo.name}`,
       day: day,
-      startTime: formatTimeSimple(lessonStartTimeDate),
-      endTime: formatTimeSimple(lessonEndTimeDate),
+      startTime: lessonStartTimeDate.toISOString(),
+      endTime: lessonEndTimeDate.toISOString(),
       subjectId: subjectInfo.id,
       classId: classInfo.id,
       teacherId: teacherInfo.id,
