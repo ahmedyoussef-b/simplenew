@@ -1,4 +1,3 @@
-
 // src/lib/data-fetching/fetch-wizard-data.ts
 import prisma from "@/lib/prisma";
 import type { WizardData, ClassWithGrade, TeacherWithDetails, Subject, Classroom, Grade, LessonRequirement, TeacherConstraint, SubjectRequirement, TeacherAssignment, SchoolData, Lesson } from '@/types';

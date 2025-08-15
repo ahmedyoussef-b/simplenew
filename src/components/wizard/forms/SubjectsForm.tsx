@@ -29,12 +29,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { localAddSubject, localDeleteSubject, localUpdateSubject, selectAllMatieres } from '@/lib/redux/features/subjects/subjectsSlice';
+import { useCreateSubjectMutation, useUpdateSubjectMutation, useDeleteSubjectMutation } from '@/lib/redux/api/entityApi';
 import { setRequirement, selectLessonRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
 import { selectAllClasses } from '@/lib/redux/features/classes/classesSlice';
 import { selectTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
 import { useToast } from '@/hooks/use-toast';
 import { Subject } from '@/types';
+import { selectAllMatieres } from '@/lib/redux/features/subjects/subjectsSlice';
+
 
 interface SubjectsFormProps {}
 
@@ -46,12 +48,18 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
   const teacherAssignments = useAppSelector(selectTeacherAssignments);
 
   const { toast } = useToast();
+  
+  // RTK Query Mutations
+  const [createSubject, { isLoading: isCreating }] = useCreateSubjectMutation();
+  const [updateSubject, { isLoading: isUpdating }] = useUpdateSubjectMutation();
+  const [deleteSubject, { isLoading: isDeleting }] = useDeleteSubjectMutation();
+
+
   const [newSubject, setNewSubject] = useState({
     name: '',
     weeklyHours: 2,
     coefficient: 1
   });
-  const [isAdding, setIsAdding] = useState(false);
   
   const [isAlertOpen, setIsAlertOpen] = useState(false);
   const [subjectToDelete, setSubjectToDelete] = useState<Subject | null>(null);
@@ -60,7 +68,7 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
   const [editingSubject, setEditingSubject] = useState<Subject | null>(null);
   const [editValues, setEditValues] = useState({ weeklyHours: 2, coefficient: 1 });
 
-  const handleAddSubject = () => {
+  const handleAddSubject = async () => {
     if (!newSubject.name || !newSubject.weeklyHours || !newSubject.coefficient) return;
     
     const subjectExists = subjects.some(s => 
@@ -71,26 +79,31 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
       toast({
         variant: "destructive",
         title: "Matière existante",
-        description: `La matière "${newSubject.name}" existe déjà dans le catalogue.`
+        description: `La matière "${newSubject.name}" existe déjà.`
       });
       return;
     }
 
-    setIsAdding(true);
-          dispatch(localAddSubject({
-            id: -Date.now(),
-            ...newSubject,
-            requiresRoom: false
-          }));
+    try {
+      await createSubject({
+        ...newSubject,
+        requiresRoom: false, // default value
+        teachers: [],
+      }).unwrap();
 
+      toast({
+        title: 'Matière ajoutée',
+        description: `La matière "${newSubject.name}" a été ajoutée.`
+      });
 
-    toast({
-      title: 'Matière ajoutée (Brouillon)',
-      description: `La matière "${newSubject.name}" a été ajoutée.`
-    });
-
-    setNewSubject({ name: '', weeklyHours: 2, coefficient: 1 });
-    setIsAdding(false);
+      setNewSubject({ name: '', weeklyHours: 2, coefficient: 1 });
+    } catch (error: any) {
+        toast({
+            variant: "destructive",
+            title: "Erreur",
+            description: error.data?.message || "Impossible d'ajouter la matière."
+        });
+    }
   };
 
   const promptDeleteSubject = (subject: Subject) => {
@@ -100,14 +113,22 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
     setIsAlertOpen(true);
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (!subjectToDelete) return;
 
-    dispatch(localDeleteSubject(subjectToDelete.id));
-    toast({ 
-      title: "Matière supprimée (Brouillon)", 
-      description: `La matière "${subjectToDelete.name}" a été retirée de votre configuration.` 
-    });
+    try {
+      await deleteSubject(subjectToDelete.id).unwrap();
+      toast({ 
+        title: "Matière supprimée", 
+        description: `La matière "${subjectToDelete.name}" a été supprimée.` 
+      });
+    } catch (error: any) {
+       toast({ 
+        variant: "destructive",
+        title: "Erreur de suppression",
+        description: error.data?.message || "Impossible de supprimer la matière."
+      });
+    }
     
     setIsAlertOpen(false);
     setSubjectToDelete(null);
@@ -122,17 +143,30 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
     });
   };
 
-  const handleUpdateSubject = () => {
+  const handleUpdateSubject = async () => {
     if (!editingSubject) return;
-    dispatch(localUpdateSubject({
-        id: editingSubject.id,
-        ...editValues
-    }));
-    toast({ title: 'Matière mise à jour', description: `Les valeurs par défaut pour "${editingSubject.name}" ont été modifiées.` });
-    setEditingSubject(null);
+    
+    try {
+      await updateSubject({
+          id: editingSubject.id,
+          ...editValues
+      }).unwrap();
+
+      toast({ title: 'Matière mise à jour', description: `Les valeurs par défaut pour "${editingSubject.name}" ont été modifiées.` });
+      setEditingSubject(null);
+    } catch (error: any) {
+       toast({ 
+        variant: "destructive",
+        title: "Erreur de mise à jour",
+        description: error.data?.message || "Impossible de mettre à jour la matière."
+      });
+    }
   };
 
   const handleHoursChange = (classId: number, subjectId: number, hours: number) => {
+    // This now needs to call an API to persist the change.
+    // For now, we'll keep the local dispatch as a placeholder for UI reactivity.
+    // In a full implementation, you'd use a useUpdateLessonRequirementMutation hook.
     dispatch(setRequirement({
       classId, subjectId, hours,
       scheduleDraftId: null
@@ -153,7 +187,8 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
         const sourceRequirementHours = getRequirement(sourceClassId, subject.id);
         
         targetClasses.forEach(targetClass => {
-            return dispatch(setRequirement({
+            // Again, this should be an API call in a fully persistent model.
+            dispatch(setRequirement({
               classId: targetClass.id,
               subjectId: subject.id,
               hours: sourceRequirementHours,
@@ -179,6 +214,8 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
       return !lessonRequirements.some(r => r.classId === classId && r.subjectId === subjectId);
   };
 
+  const isLoading = isCreating || isUpdating || isDeleting;
+
   return (
     <>
       <div className="space-y-6">
@@ -200,7 +237,7 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
                   })} 
                   placeholder="Ex: Mathématiques" 
                   className="mt-1" 
-                  disabled={isAdding} 
+                  disabled={isLoading} 
                 />
               </div>
               
@@ -216,7 +253,7 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
                   min="1" 
                   max="10" 
                   className="mt-1" 
-                  disabled={isAdding} 
+                  disabled={isLoading} 
                 />
               </div>
               
@@ -232,18 +269,18 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
                   min="1" 
                   max="10" 
                   className="mt-1" 
-                  disabled={isAdding}
+                  disabled={isLoading}
                 />
               </div>
             </div>
             
             <Button 
               onClick={handleAddSubject} 
-              disabled={!newSubject.name || !newSubject.weeklyHours || !newSubject.coefficient || isAdding} 
+              disabled={!newSubject.name || !newSubject.weeklyHours || !newSubject.coefficient || isLoading} 
               className="w-full"
             >
-              {isAdding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {isAdding ? 'Ajout en cours...' : 'Ajouter au catalogue'}
+              {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {isCreating ? 'Ajout en cours...' : 'Ajouter au catalogue'}
             </Button>
           </div>
           
@@ -384,7 +421,10 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
             </div>
             <DialogFooter>
                 <Button variant="outline" onClick={() => setEditingSubject(null)}>Annuler</Button>
-                <Button onClick={handleUpdateSubject}>Enregistrer</Button>
+                <Button onClick={handleUpdateSubject} disabled={isUpdating}>
+                    {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Enregistrer
+                </Button>
             </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -413,7 +453,9 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
             <AlertDialogAction
               onClick={handleConfirmDelete}
               className={deleteImpact > 0 ? "bg-destructive hover:bg-destructive/90" : ""}
+              disabled={isDeleting}
             >
+              {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Confirmer la suppression
             </AlertDialogAction>
           </AlertDialogFooter>

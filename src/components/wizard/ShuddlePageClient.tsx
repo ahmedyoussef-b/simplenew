@@ -18,10 +18,8 @@ import ViewModeTabs from '../schedule/TimetableDisplay/components/ViewModeTabs';
 import useWizardData from '@/hooks/useWizardData';
 import useWizardSteps from '@/hooks/useWizardSteps';
 import { addLesson, removeLesson, setInitialSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
-import { fetchScheduleDraft, selectActiveDraft, selectDraftStatus, saveOrUpdateDraft, selectSaveStatus } from '@/lib/redux/features/scheduleDraftSlice';
 import { generateSchedule } from '@/lib/schedule-generation';
 import { useToast } from '@/hooks/use-toast';
-import { loadState } from '@/lib/redux/storage';
 
 import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
 import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
@@ -34,7 +32,7 @@ import { setAllSubjectRequirements } from '@/lib/redux/features/subjectRequireme
 import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
 import { setSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
 import type { WizardData, Lesson, ValidationResult, Day, Subject } from '@/types';
-import { generateTimeSlots } from '@/lib/time-utils';
+import { entityApi } from '@/lib/redux/api/entityApi';
 
 
 interface ShuddlePageClientProps {
@@ -86,34 +84,18 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     // --- Hydration Logic ---
     useEffect(() => {
-        const persistedState = loadState();
-        if (persistedState && persistedState.schoolConfig) {
-            console.log("💾 [ShuddlePageClient] Données locales trouvées. Hydratation du store avec le localStorage.");
-            dispatch(setSchoolConfig(persistedState.schoolConfig));
-            dispatch(setAllClasses(persistedState.classes.items));
-            dispatch(setAllSubjects(persistedState.subjects.items));
-            dispatch(setAllTeachers(persistedState.teachers.items));
-            dispatch(setAllClassrooms(persistedState.classrooms.items));
-            dispatch(setAllGrades(persistedState.grades.items));
-            dispatch(setAllRequirements(persistedState.lessonRequirements.items));
-            dispatch(setAllTeacherConstraints(persistedState.teacherConstraints.items));
-            dispatch(setAllSubjectRequirements(persistedState.subjectRequirements.items));
-            dispatch(setAllTeacherAssignments(persistedState.teacherAssignments.items));
-            dispatch(setInitialSchedule(persistedState.schedule.items));
-        } else {
-            console.log("💾 [ShuddlePageClient] Aucune donnée locale. Hydratation avec les données initiales du serveur.");
-            dispatch(setSchoolConfig(initialData.school));
-            dispatch(setAllClasses(initialData.classes));
-            dispatch(setAllSubjects(initialData.subjects));
-            dispatch(setAllTeachers(initialData.teachers));
-            dispatch(setAllClassrooms(initialData.rooms));
-            dispatch(setAllGrades(initialData.grades));
-            dispatch(setAllRequirements(initialData.lessonRequirements));
-            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-            dispatch(setInitialSchedule(initialData.schedule));
-        }
+        console.log("💾 [ShuddlePageClient] Hydratation du store avec les données initiales du serveur.");
+        dispatch(setSchoolConfig(initialData.school));
+        dispatch(setAllClasses(initialData.classes));
+        dispatch(setAllSubjects(initialData.subjects));
+        dispatch(setAllTeachers(initialData.teachers));
+        dispatch(setAllClassrooms(initialData.rooms));
+        dispatch(setAllGrades(initialData.grades));
+        dispatch(setAllRequirements(initialData.lessonRequirements));
+        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+        dispatch(setInitialSchedule(initialData.schedule));
     }, [dispatch, initialData]);
     // --- End Hydration Logic ---
 
@@ -166,13 +148,18 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
             setValidationResults(validateData());
         }
     }, [wizardData, currentStep, steps.length, validateData]);
-    
-    const handleSave = () => {
-        toast({
-            title: "Sauvegarde manuelle",
-            description: "La sauvegarde est maintenant automatique via le stockage local. Ce bouton est conservé pour la démonstration."
-        });
+
+    const handleSave = async () => {
+        toast({ title: "Sauvegarde en cours...", description: "Les données sont en train d'être synchronisées."});
+        const schedulePayload = { lessons: wizardData.schedule };
+        try {
+            await dispatch(entityApi.endpoints.createLesson.initiate(schedulePayload as any) as any).unwrap(); // This needs proper typing
+            toast({ title: "Sauvegarde réussie!", description: "L'emploi du temps a été sauvegardé en base de données."});
+        } catch (error) {
+            toast({ variant: 'destructive', title: "Erreur de sauvegarde", description: "Impossible de sauvegarder l'emploi du temps."});
+        }
     }
+    
 
     const handleGenerate = async () => {
         console.log("⚙️ [ShuddlePageClient] Lancement de la génération de l'emploi du temps.");

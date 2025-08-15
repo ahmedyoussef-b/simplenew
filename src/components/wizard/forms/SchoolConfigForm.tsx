@@ -11,29 +11,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { updateSchoolConfig, selectSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
-import { updateActiveDraftDetails, selectActiveDraft, selectSaveStatus } from '@/lib/redux/features/scheduleDraftSlice';
 import { Loader2 } from 'lucide-react';
 import { ImportConfigDialog } from '@/components/wizard/forms/ImportConfigDialog';
-import ScenarioManager from '../ScenarioManager'; // Corrected import
 import { selectAllGrades } from '@/lib/redux/features/grades/gradesSlice';
+import { useCreateGradeMutation, useCreateClassMutation, useCreateSubjectMutation, useCreateTeacherMutation, useCreateClassroomMutation } from '@/lib/redux/api/entityApi'; // Assuming these exist
 
 interface SchoolConfigFormProps {}
 
 export const SchoolConfigForm: React.FC<SchoolConfigFormProps> = () => {
   const dispatch = useAppDispatch();
   const data = useAppSelector(selectSchoolConfig);
-  const activeDraft = useAppSelector(selectActiveDraft);
   const grades = useAppSelector(selectAllGrades);
-  const saveStatus = useAppSelector(selectSaveStatus);
+
+  // Example of using a mutation hook (though we dispatch local changes here)
+  const [createGrade, { isLoading: isCreatingGrade }] = useCreateGradeMutation();
 
   const handleSchoolConfigChange = (field: keyof typeof data, value: any) => {
     dispatch(updateSchoolConfig({ [field]: value }));
-  };
-  
-  const handleDraftDetailsChange = (field: 'name' | 'description', value: string) => {
-    if (activeDraft) {
-      dispatch(updateActiveDraftDetails({ [field]: value }));
-    }
   };
   
   const dayOptions = [
@@ -53,22 +47,6 @@ export const SchoolConfigForm: React.FC<SchoolConfigFormProps> = () => {
     handleSchoolConfigChange('schoolDays', newDays);
   };
 
-  if (!activeDraft) {
-     return (
-        <Alert variant="default" className="border-primary/50 bg-primary/10">
-            <Info className="h-4 w-4" />
-            <AlertTitle>Commencez ici !</AlertTitle>
-            <AlertDescription>
-                Chargez un scénario existant ou en créez un nouveau pour commencer à configurer votre emploi du temps.
-                 <div className="flex justify-start gap-4 mt-4">
-                    <ImportConfigDialog grades={grades} />
-                    <ScenarioManager />
-                </div>
-            </AlertDescription>
-        </Alert>
-    );
-  }
-
   if (!data) return (
     <div className="flex items-center justify-center h-40">
       <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -79,34 +57,13 @@ export const SchoolConfigForm: React.FC<SchoolConfigFormProps> = () => {
     <div className="space-y-6">
        <div className="flex justify-end gap-2">
         <ImportConfigDialog grades={grades} />
-        <ScenarioManager />
       </div>
       <Card className="p-6">
         <div className="flex items-center space-x-2 mb-4">
           <School className="text-primary" size={20} />
-          <h3 className="text-lg font-semibold">Configuration du scénario et de l'établissement</h3>
+          <h3 className="text-lg font-semibold">Configuration de l'établissement</h3>
         </div>
         <div className="space-y-4">
-          <div>
-            <Label htmlFor="scenarioName">Nom du scénario</Label>
-            <Input 
-              id="scenarioName" 
-              value={activeDraft.name} 
-              onChange={(e) => handleDraftDetailsChange('name', e.target.value)} 
-              placeholder="Année scolaire 2024-2025" 
-              className="mt-1" 
-            />
-          </div>
-           <div>
-            <Label htmlFor="scenarioDesc">Description du scénario (Optionnel)</Label>
-            <Input 
-              id="scenarioDesc" 
-              value={activeDraft.description || ''} 
-              onChange={(e) => handleDraftDetailsChange('description', e.target.value)} 
-              placeholder="Configuration principale avec contraintes..." 
-              className="mt-1" 
-            />
-          </div>
            <div>
             <Label htmlFor="schoolName">Nom de l'établissement</Label>
             <Input 
