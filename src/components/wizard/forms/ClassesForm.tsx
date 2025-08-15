@@ -76,7 +76,7 @@ const ClassesForm: React.FC<ClassesFormProps> = () => {
     }
   };
 
-  const totalStudents = data.reduce((sum, cls) => sum + cls.capacity, 0);
+  const totalStudents = data.reduce((sum, cls) => sum + (cls.capacity || 0), 0);
   const averageClassSize = data.length > 0 ? Math.round(totalStudents / data.length) : 0;
   const uniqueGradeLevels = new Set(data.map(cls => cls.grade?.level)).size;
 
@@ -143,7 +143,7 @@ const ClassesForm: React.FC<ClassesFormProps> = () => {
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h4 className="font-semibold text-lg">{cls.name}</h4>
-                      <p className="text-sm text-muted-foreground">{cls.capacity} élèves</p>
+                      <p className="text-sm text-muted-foreground">{cls.capacity || 0} élèves</p>
                     </div>
                     <div className="flex space-x-1">
                       <Button variant="ghost" size="sm" onClick={() => toast({ title: 'Info', description: "L'édition se fait via la page 'Classes'."})}><Edit size={14} /></Button>

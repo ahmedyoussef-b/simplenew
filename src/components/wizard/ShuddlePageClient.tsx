@@ -4,7 +4,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
 import { cn } from '@/lib/utils';
-import { Loader2, ChevronLeft, ChevronRight, Sparkles, Info, CheckCircle, AlertTriangle, Calendar, Clock, Wand2, Download, Save, CloudOff, Edit, RotateCw, Printer } from 'lucide-react';
+import { Loader2, ChevronLeft, ChevronRight, Sparkles, Info, CheckCircle, AlertTriangle, Calendar, Clock, Wand2, Download, Save, CloudOff, Edit, RotateCw, Printer, BookOpen, MapPin, Puzzle, School, User as UserIcon } from 'lucide-react';
+
 
 // Components
 import { Button } from '@/components/ui/button';
@@ -14,17 +15,44 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import TimetableDisplay from '../schedule/TimetableDisplay';
 import ViewModeTabs from '../schedule/TimetableDisplay/components/ViewModeTabs';
 
+// Forms
+import { SchoolConfigForm } from '@/components/wizard/forms/SchoolConfigForm';
+import ClassesForm from '@/components/wizard/forms/ClassesForm';
+import SubjectsForm from '@/components/wizard/forms/SubjectsForm';
+import TeachersForm from '@/components/wizard/forms/TeachersForm';
+import ClassroomsForm from '@/components/wizard/forms/ClassroomsForm';
+import ConstraintsForm from '@/components/wizard/forms/ConstraintsForm';
+
+
 // Hooks & Redux
 import useWizardData from '@/hooks/useWizardData';
-import useWizardSteps from '@/hooks/useWizardSteps';
 import { setInitialSchedule, saveSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
 import { generateSchedule } from '@/lib/schedule-generation';
 import { useToast } from '@/hooks/use-toast';
-import { fetchScheduleDraft } from '@/lib/redux/features/scheduleDraftSlice';
+import { fetchScheduleDraft, saveOrUpdateDraft } from '@/lib/redux/features/scheduleDraftSlice';
 
-import { useGetClassesQuery, useGetSubjectsQuery, useGetTeachersQuery, useGetRoomsQuery, useGetGradesQuery } from '@/lib/redux/api/entityApi';
-import type { WizardData, Lesson, ValidationResult, Day, Subject } from '@/types';
+import { 
+  useGetClassesQuery, 
+  useGetSubjectsQuery, 
+  useGetTeachersQuery, 
+  useGetRoomsQuery, 
+  useGetGradesQuery 
+} from '@/lib/redux/api/entityApi';
+
+import type { WizardData, Lesson, ValidationResult, Day, Subject, ClassWithGrade } from '@/types';
 import ScenarioManager from '@/components/wizard/ScenarioManager';
+
+import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
+import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
+import { setAllGrades } from '@/lib/redux/features/grades/gradesSlice';
+import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
+import { setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
+import { setSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
+import { setAllRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
+import { setAllTeacherConstraints } from '@/lib/redux/features/teacherConstraintsSlice';
+import { setAllSubjectRequirements } from '@/lib/redux/features/subjectRequirementsSlice';
+import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
+
 
 
 interface ShuddlePageClientProps {
@@ -63,13 +91,14 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const [mode, setMode] = useState<'wizard' | 'view'>('wizard');
     const scheduleItems = useAppSelector(state => state.schedule.items);
     
-    // RTK Query hooks for data fetching
-    const { data: classesData, isLoading: isLoadingClasses } = useGetClassesQuery(undefined);
-    const { data: subjectsData, isLoading: isLoadingSubjects } = useGetSubjectsQuery(undefined);
-    const { data: teachersData, isLoading: isLoadingTeachers } = useGetTeachersQuery(undefined);
-    const { data: roomsData, isLoading: isLoadingRooms } = useGetRoomsQuery(undefined);
-    const { data: gradesData, isLoading: isLoadingGrades } = useGetGradesQuery(undefined);
-
+    // RTK Query hooks for data fetching - these will keep the data up-to-date
+    useGetClassesQuery(undefined);
+    useGetSubjectsQuery(undefined);
+    useGetTeachersQuery(undefined);
+    useGetRoomsQuery(undefined);
+    useGetGradesQuery(undefined);
+    
+    // This hook aggregates the latest data from all Redux slices
     const wizardData = useWizardData();
 
     // View state
@@ -81,12 +110,30 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const [generationProgress, setGenerationProgress] = useState(0);
     const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
     
-    const isDataLoading = isLoadingClasses || isLoadingSubjects || isLoadingTeachers || isLoadingRooms || isLoadingGrades;
     
-    // Hydrate store from active draft or initial data
+    // HYDRATION EFFECT
     useEffect(() => {
-        console.log("💧 [ShuddlePageClient] Déclenchement de la récupération du brouillon actif.");
-        dispatch(fetchScheduleDraft({ initialWizardData: initialData }));
+        console.log("💧 [ShuddlePageClient] Initializing Redux store with server data.");
+        
+        // Always hydrate with fresh data from the server.
+        const completeClasses: ClassWithGrade[] = initialData.classes.map(c => ({
+          ...c,
+          grade: initialData.grades.find(g => g.id === c.gradeId)!,
+          _count: c._count || { students: 0, lessons: 0 }
+        }));
+
+        dispatch(setSchoolConfig(initialData.school));
+        dispatch(setAllClasses(completeClasses));
+        dispatch(setAllSubjects(initialData.subjects));
+        dispatch(setAllTeachers(initialData.teachers));
+        dispatch(setAllClassrooms(initialData.rooms));
+        dispatch(setAllGrades(initialData.grades));
+        dispatch(setAllRequirements(initialData.lessonRequirements));
+        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+        dispatch(setInitialSchedule(initialData.schedule || []));
+        
     }, [dispatch, initialData]);
     
     
@@ -173,7 +220,22 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         }
     };
     
-
+    const handleSaveAndFinish = async () => {
+        try {
+            await dispatch(saveSchedule(scheduleItems)).unwrap();
+            toast({
+                title: 'Emploi du temps sauvegardé !',
+                description: "La configuration actuelle de l'emploi du temps a été enregistrée dans la base de données."
+            })
+        } catch (error: any) {
+             toast({
+                variant: 'destructive',
+                title: 'Erreur de Sauvegarde',
+                description: error.message || "Impossible de sauvegarder l'emploi du temps."
+            })
+        }
+    }
+    
     const renderStepContent = () => {
         const StepComponent = steps[currentStep].component;
         
@@ -192,24 +254,14 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         return <StepComponent />;
     };
     
-    if (isDataLoading) {
-        return (
-             <div className="flex items-center justify-center min-h-[50vh]">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <p className="ml-4 text-muted-foreground">Chargement des données du planificateur...</p>
-            </div>
-        );
-    }
-
     const renderWizard = () => (
         <>
             <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-foreground truncate pr-4">
-                       Scénario: <span className="text-primary">{wizardData.school.name}</span>
+                       Configuration de l'emploi du temps
                     </h2>
                      <div className="flex items-center gap-2">
-                        <ScenarioManager />
                         <Button variant="outline" onClick={() => setMode('view')}>
                             <Calendar size={16} className="mr-2"/>
                             Voir l'emploi du temps
@@ -261,7 +313,10 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                         <Printer size={16} className="mr-2" />
                         Imprimer
                     </Button>
-                    <ScenarioManager />
+                     <Button onClick={handleSaveAndFinish}>
+                        <Save className="mr-2 h-4 w-4"/>
+                        Sauvegarder et Terminer
+                    </Button>
                  </div>
             </div>
             
@@ -301,6 +356,37 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         </div>
     );
 };
+
+// --- Wizard Steps Definition ---
+function useWizardSteps() {
+    const [currentStep, setCurrentStep] = useState(0);
+    
+    const steps = [
+        { id: 'school', title: 'Établissement', icon: School, description: 'Paramètres généraux', component: SchoolConfigForm },
+        { id: 'classes', title: 'Classes', icon: Users, description: 'Définition des classes', component: ClassesForm, csvPath: '/imports/classes.csv' },
+        { id: 'subjects', title: 'Matières', icon: BookOpen, description: 'Horaires par classe', component: SubjectsForm, csvPath: '/imports/subjects.csv' },
+        { id: 'teachers', title: 'Professeurs', icon: UserIcon, description: 'Gestion des enseignants', component: TeachersForm, csvPath: '/imports/teachers.csv' },
+        { id: 'rooms', title: 'Salles', icon: MapPin, description: 'Déclaration des espaces', component: ClassroomsForm, csvPath: '/imports/classrooms.csv' },
+        { id: 'constraints', title: 'Contraintes', icon: Puzzle, description: 'Indisponibilités et exigences', component: ConstraintsForm },
+        { id: 'validation', title: 'Génération', icon: CheckCircle, description: 'Vérification et génération', component: () => (<div>Validation</div>) }
+    ];
+
+    const progress = ((currentStep + 1) / steps.length) * 100;
+
+    const handleNext = () => currentStep < steps.length - 1 && setCurrentStep(currentStep + 1);
+    const handlePrevious = () => currentStep > 0 && setCurrentStep(currentStep - 1);
+    const handleStepClick = (stepIndex: number) => setCurrentStep(stepIndex);
+
+    return {
+        steps,
+        currentStep,
+        progress,
+        handleNext,
+        handlePrevious,
+        handleStepClick
+    };
+}
+
 
 // --- Sub-components ---
 const getValidationIcon = (type: string) => {
