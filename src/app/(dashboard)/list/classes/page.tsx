@@ -7,17 +7,9 @@ import type { Class, Grade, Role as AppRole } from "@/types/index";
 import { Prisma } from "@prisma/client";
 import GradeCard from "@/components/classes/GradeCard";
 import ClassCard from "@/components/classes/ClassCard";
-import FormContainer from "@/components/FormContainer";
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Layers3 } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
-
+import React from 'react';
 
 // --- TYPE DEFINITIONS ---
-
 type GradeWithClassCount = Grade & {
   _count: { classes: number };
 };
@@ -33,11 +25,21 @@ interface ClassesPageClientProps {
     initialGradeIdParam: string | null;
 }
 
+
 // --- CLIENT COMPONENT ---
 // This component handles all the user interaction, state, and animations.
 const ClassesPageContent: React.FC<ClassesPageClientProps> = ({ grades, classes, userRole, initialGradeIdParam }) => {
   'use client'; // This directive ONLY applies to this component and its children.
   
+  // Client-side imports are placed here
+  const { useState } = React;
+  const { useRouter } = require('next/navigation');
+  const FormContainer = require("@/components/FormContainer").default;
+  const Link = require("next/link").default;
+  const { Button } = require("@/components/ui/button");
+  const { ArrowLeft, Layers3 } = require("lucide-react");
+  const { cn } = require("@/lib/utils");
+
   const router = useRouter();
   const [selectedGradeId, setSelectedGradeId] = useState<number | null>(initialGradeIdParam ? Number(initialGradeIdParam) : null);
 
