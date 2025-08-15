@@ -7,12 +7,15 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import type { WizardData, Lesson, Subject, Day } from '@/types';
 import { type Lesson as PrismaLesson } from '@prisma/client';
 import { TimetableLessonCell, InteractiveEmptyCell } from './components/TimetableCells';
-import { formatTimeSimple } from './components/utils';
+import { formatTimeSimple, getSubjectColorClass } from './components/utils';
 import { generateTimeSlots } from '@/lib/time-utils';
 import { mergeConsecutiveLessons } from '@/lib/lesson-utils';
 import { dayLabels } from '@/lib/constants';
 import { useScheduleActions } from '../ScheduleEditor/hooks/useScheduleActions';
 import { useAppSelector } from '@/hooks/redux-hooks';
+import { buildScheduleGrid } from './components/gridUtils';
+import { cn } from '@/lib/utils';
+
 
 interface TimetableDisplayProps {
   wizardData: WizardData | null;
@@ -28,6 +31,8 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
     selectedViewId,
 }) => {
   const fullSchedule = useAppSelector((state) => state.schedule.items);
+  const [hoveredSubjectId, setHoveredSubjectId] = useState<number | null>(null);
+
 
   const { handlePlaceLesson, handleDeleteLesson } = useScheduleActions(
     wizardData!, // Not null here because of the check below
@@ -131,7 +136,14 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                       
                       if (cellData) {
                           return (
-                          <TableCell key={uniqueKey} rowSpan={cellData.rowSpan} className="p-0 border align-top relative">
+                          <TableCell 
+                            key={uniqueKey} 
+                            rowSpan={cellData.rowSpan} 
+                            className={cn(
+                              "p-0 border align-top relative",
+                              getSubjectColorClass(cellData.lesson.subjectId)
+                            )}
+                          >
                               <TimetableLessonCell 
                                   lesson={cellData.lesson} 
                                   wizardData={wizardData} 
@@ -152,6 +164,8 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                                       wizardData={wizardData}
                                       fullSchedule={fullSchedule || []}
                                       isEditable={isEditable}
+                                      setHoveredSubjectId={setHoveredSubjectId}
+                                      hoveredSubjectId={hoveredSubjectId}
                                   />
                               </TableCell>
                           );
@@ -166,63 +180,5 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
   );
 };
 
-
-function buildScheduleGrid(
-  scheduleData: Lesson[] | undefined,
-  wizardData: WizardData,
-  timeSlots: string[]
-) {
-  if (!Array.isArray(scheduleData)) {
-     return { scheduleGrid: {}, spannedSlots: new Set() };
-  }
-  
-  const scheduleWithDates: PrismaLesson[] = scheduleData.map(l => ({
-    ...l,
-    startTime: new Date(l.startTime),
-    endTime: new Date(l.endTime),
-    createdAt: new Date(l.createdAt),
-    updatedAt: new Date(l.updatedAt),
-  }));
-
-
-  const mergedLessons = mergeConsecutiveLessons(scheduleWithDates, wizardData);
-  const grid: Record<string, { lesson: Lesson, rowSpan: number }> = {};
-  const localSpannedSlots = new Set<string>();
-
-  mergedLessons.forEach((lesson) => {
-    const day = lesson.day;
-    const time = formatTimeSimple(lesson.startTime);
-    const cellId = `${day}-${time}`;
-
-    if (localSpannedSlots.has(cellId)) return;
-
-    const startTime = new Date(lesson.startTime);
-    const endTime = new Date(lesson.endTime);
-    const durationInMinutes = (endTime.getTime() - startTime.getTime()) / (1000 * 60);
-    const rowSpan = Math.max(1, Math.round(durationInMinutes / (wizardData.school?.sessionDuration || 60)));
-
-    const gridLesson: Lesson = {
-      ...lesson,
-      startTime: lesson.startTime.toISOString(),
-      endTime: lesson.endTime.toISOString(),
-      createdAt: lesson.createdAt.toISOString(),
-      updatedAt: lesson.updatedAt.toISOString(),
-    };
-
-    grid[cellId] = { lesson: gridLesson, rowSpan };
-
-    if (rowSpan > 1) {
-      for (let i = 1; i < rowSpan; i++) {
-        const nextTimeSlotIndex = timeSlots.indexOf(time) + i;
-        if (nextTimeSlotIndex < timeSlots.length) {
-          const nextTimeSlot = timeSlots[nextTimeSlotIndex];
-          localSpannedSlots.add(`${day}-${nextTimeSlot}`);
-        }
-      }
-    }
-  });
-
-  return { scheduleGrid: grid, spannedSlots: localSpannedSlots };
-}
 
 export default TimetableDisplay;

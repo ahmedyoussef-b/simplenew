@@ -37,8 +37,7 @@ const LessonCell: React.FC<LessonCellProps> = ({
   return (
     <div 
       className={cn(
-        `absolute inset-1 p-2 rounded-md border text-xs flex flex-col justify-center transition-colors group`, 
-        getSubjectColorClass(lesson.subjectId)
+        `h-full w-full p-2 text-xs flex flex-col justify-center transition-colors group`
       )}
     >
       {isEditable && (
