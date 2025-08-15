@@ -140,7 +140,7 @@ const ParentPage = async () => {
     teacherConstraints: [],
     subjectRequirements: [],
     teacherAssignments: [],
-    schedule: [],
+    schedule: lessons,
     scheduleDraftId: null
   };
   
@@ -155,7 +155,11 @@ const ParentPage = async () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <TimetableDisplay wizardData={wizardData} viewMode={"class"} selectedViewId={childrenClassIds[0]?.toString() || ""} />
+          <TimetableDisplay 
+            wizardData={wizardData} 
+            viewMode={"class"} 
+            selectedViewId={childrenClassIds[0]?.toString() || ""}
+          />
         </CardContent>
       </Card>
     </div>
