@@ -15,7 +15,7 @@ import { useScheduleActions } from '../ScheduleEditor/hooks/useScheduleActions';
 import { useAppSelector } from '@/hooks/redux-hooks';
 
 interface TimetableDisplayProps {
-  wizardData: WizardData;
+  wizardData: WizardData | null;
   isEditable?: boolean;
   viewMode: 'class' | 'teacher';
   selectedViewId: string;
@@ -30,11 +30,15 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
   const fullSchedule = useAppSelector((state) => state.schedule.items);
 
   const { handlePlaceLesson, handleDeleteLesson } = useScheduleActions(
-    wizardData,
+    wizardData!, // Not null here because of the check below
     fullSchedule,
     viewMode,
     selectedViewId
   );
+
+  if (!wizardData) {
+      return <div>Chargement des données de configuration...</div>;
+  }
 
   const schoolDays = (wizardData.school.schoolDays || []).map(dayKey => dayLabels[dayKey.toUpperCase() as keyof typeof dayLabels] || dayKey);
   const timeSlots = generateTimeSlots(
@@ -69,35 +73,34 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
     timeSlots
   );
 
-  // Memoize possible subjects calculation
-  const possibleSubjectsByClass = useMemo(() => {
-    if (viewMode !== 'class' || !selectedViewId) return [];
+  const possibleSubjectsForClass = useMemo(() => {
+    if (viewMode !== 'class' || !selectedViewId || !wizardData || !wizardData.lessonRequirements || !wizardData.subjects) return [];
     
     const classIdNum = parseInt(selectedViewId, 10);
-    if (!classIdNum || !wizardData.lessonRequirements) return [];
+    if (isNaN(classIdNum)) return [];
 
     const scheduledHoursBySubject = fullSchedule
-      .filter(l => l.classId === classIdNum)
-      .reduce((acc, l) => {
-        const lessonDurationMinutes = (new Date(l.endTime).getTime() - new Date(l.startTime).getTime()) / (1000 * 60);
-        const lessonHours = lessonDurationMinutes / 60; 
-        acc[l.subjectId] = (acc[l.subjectId] || 0) + lessonHours;
-        return acc;
-      }, {} as Record<number, number>);
+        .filter(l => l.classId === classIdNum)
+        .reduce((acc, l) => {
+            const lessonDurationMinutes = (new Date(l.endTime).getTime() - new Date(l.startTime).getTime()) / (1000 * 60);
+            const lessonHours = lessonDurationMinutes / 60;
+            acc[l.subjectId] = (acc[l.subjectId] || 0) + lessonHours;
+            return acc;
+        }, {} as Record<number, number>);
 
     return wizardData.subjects.map(subject => {
-      const requirement = wizardData.lessonRequirements?.find(r => 
-        r.classId === classIdNum && r.subjectId === subject.id
-      );
-      const requiredHours = requirement ? requirement.hours : (subject.weeklyHours || 0);
-      const scheduledHours = scheduledHoursBySubject[subject.id] || 0;
-      return {
-        subject,
-        remainingHours: requiredHours - scheduledHours,
-      };
-    });
-
+        const requirement = wizardData.lessonRequirements?.find(r =>
+            r.classId === classIdNum && r.subjectId === subject.id
+        );
+        const requiredHours = requirement ? requirement.hours : (subject.weeklyHours || 0);
+        const scheduledHours = scheduledHoursBySubject[subject.id] || 0;
+        return {
+            subject,
+            remainingHours: requiredHours - scheduledHours,
+        };
+    }).filter(item => item.remainingHours > 0);
   }, [fullSchedule, wizardData, selectedViewId, viewMode]);
+
 
   return (
       <Card className="p-4 print:shadow-none print:border-none">
@@ -144,7 +147,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                                   <InteractiveEmptyCell
                                       day={dayEnum}
                                       timeSlot={time}
-                                      possibleSubjects={possibleSubjectsByClass}
+                                      possibleSubjects={possibleSubjectsForClass}
                                       onAddLesson={handlePlaceLesson}
                                       wizardData={wizardData}
                                       fullSchedule={fullSchedule || []}

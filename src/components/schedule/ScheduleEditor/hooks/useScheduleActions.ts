@@ -10,7 +10,7 @@ import {
     useUpdateLessonMutation,
     useDeleteLessonMutation 
 } from '@/lib/redux/api/entityApi';
-import { removeLesson } from '@/lib/redux/features/schedule/scheduleSlice';
+import { addLesson, removeLesson } from '@/lib/redux/features/schedule/scheduleSlice';
 
 export const useScheduleActions = (
   wizardData: WizardData,
@@ -33,7 +33,6 @@ export const useScheduleActions = (
       return;
     }
     
-    // --- Determine Class and Teacher based on viewMode ---
     let classInfo: Class | undefined;
     let teacherInfo: Teacher | undefined;
     
@@ -44,7 +43,7 @@ export const useScheduleActions = (
         const assignment = teacherAssignments.find(a => a.subjectId === subjectInfo.id && a.classIds.includes(classIdNum));
         teacherInfo = teachers.find(t => t.id === assignment?.teacherId);
       }
-    } else { // viewMode is 'teacher'
+    } else { 
       teacherInfo = teachers.find(t => t.id === selectedViewId);
       const assignment = teacherAssignments.find(a => a.teacherId === selectedViewId && a.subjectId === subjectInfo.id);
       if (assignment?.classIds.length === 1) {
@@ -70,7 +69,6 @@ export const useScheduleActions = (
     const lessonEndTimeDate = new Date(lessonStartTimeDate.getTime() + school.sessionDuration * 60 * 1000);
     const lessonEndTimeStr = formatTimeSimple(lessonEndTimeDate);
     
-    // Perform all checks...
     const isTeacherBusy = fullSchedule.some(l => 
       l.teacherId === teacherInfo!.id && 
       l.day === day && 
@@ -128,7 +126,7 @@ export const useScheduleActions = (
     
     const availableRoom = potentialRooms[0] || null;
 
-    const newLessonPayload = {
+    const newLessonPayload: Omit<Lesson, 'id' | 'createdAt' | 'updatedAt'> = {
       name: `${subjectInfo.name} - ${classInfo.name}`,
       day: day,
       startTime: formatTimeSimple(lessonStartTimeDate),
@@ -137,25 +135,27 @@ export const useScheduleActions = (
       classId: classInfo.id,
       teacherId: teacherInfo.id,
       classroomId: availableRoom ? availableRoom.id : null,
+      scheduleDraftId: wizardData.scheduleDraftId || null,
     };
 
     try {
-      await createLesson(newLessonPayload).unwrap();
+      const createdLesson = await createLesson(newLessonPayload).unwrap();
+      dispatch(addLesson(createdLesson)); // Add the returned lesson with its DB ID
       toast({ title: "Cours ajouté", description: `"${subjectInfo.name}" a été ajouté à l'emploi du temps.` });
     } catch (error: any) {
        toast({ variant: "destructive", title: "Erreur", description: error.data?.message || "Impossible d'ajouter le cours." });
     }
-  }, [wizardData, fullSchedule, selectedViewId, viewMode, createLesson, toast]);
+  }, [wizardData, fullSchedule, selectedViewId, viewMode, createLesson, toast, dispatch]);
 
   const handleDeleteLesson = useCallback(async (lessonId: number) => {
     try {
       await deleteLesson(lessonId).unwrap();
-      // No need to dispatch local removal anymore, list will be re-fetched.
+      dispatch(removeLesson(lessonId)); // Immediately update the UI
       toast({ title: "Cours supprimé", description: "Le cours a été retiré de l'emploi du temps." });
     } catch (error: any) {
       toast({ variant: "destructive", title: "Erreur", description: error.data?.message || "Impossible de supprimer le cours." });
     }
-  }, [deleteLesson, toast]);
+  }, [deleteLesson, toast, dispatch]);
 
   const handleUpdateLessonSlot = useCallback(async (lessonId: number, newDay: Day, newTime: string) => {
     const lessonToUpdate = fullSchedule.find(l => l.id === lessonId);

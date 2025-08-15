@@ -65,7 +65,6 @@ export const saveSchedule = createAsyncThunk<Lesson[], Lesson[], { rejectValue: 
         return rejectWithValue(errorData.message ?? 'Échec de la sauvegarde de l\'emploi du temps');
       }
       
-      // The API now returns the created lessons with their new IDs.
       const result = await response.json();
       return result; 
     } catch (error) {
@@ -101,7 +100,6 @@ export const scheduleSlice = createSlice({
         const durationMs = new Date(lessonToUpdate.endTime).getTime() - new Date(lessonToUpdate.startTime).getTime();
         const newEndDate = new Date(newStartDate.getTime() + durationMs);
     
-        // Conflict checks
         const conflictingTeacherLesson = state.items.find(l =>
           l.id !== lessonId &&
           l.teacherId === lessonToUpdate.teacherId &&
@@ -131,13 +129,6 @@ export const scheduleSlice = createSlice({
         lessonToUpdate.endTime = newEndDate.toISOString();
       }
     },
-    updateLessonSubject(state, action: PayloadAction<{ lessonId: number; newSubjectId: number }>) {
-      state.items = state.items.map(lesson =>
-        lesson.id === action.payload.lessonId
-          ? { ...lesson, subjectId: action.payload.newSubjectId }
-          : lesson
-      );
-    },
     updateLessonRoom(state, action: PayloadAction<{ lessonId: number; classroomId: number | null }>) {
       const { lessonId, classroomId } = action.payload;
       state.items = state.items.map(lesson =>
@@ -146,28 +137,11 @@ export const scheduleSlice = createSlice({
           : lesson
       );
     },
-    addLesson(state, action: PayloadAction<SchedulableLesson>) {
-      const tempId = -Date.now();
-      const newLesson: Lesson = { 
-        ...action.payload, 
-        id: tempId, 
-        startTime: action.payload.startTime,
-        endTime: action.payload.endTime,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
-      };
-      state.items.push(newLesson);
+    addLesson(state, action: PayloadAction<Lesson>) {
+      state.items.push(action.payload);
     },
     removeLesson(state, action: PayloadAction<number>) {
       state.items = state.items.filter(lesson => lesson.id !== action.payload);
-    },
-    extendLesson(state, action: PayloadAction<{ lessonId: number }>) {
-      const lesson = state.items.find(l => l.id === action.payload.lessonId);
-      if (lesson) {
-        const endTime = new Date(lesson.endTime);
-        endTime.setHours(endTime.getHours() + 1); // Assumes 1-hour extension
-        lesson.endTime = endTime.toISOString(); 
-      }
     },
   },
   extraReducers: (builder) => {
@@ -197,6 +171,6 @@ export const scheduleSlice = createSlice({
   }
 });
 
-export const { setInitialSchedule, updateLessonSlot, updateLessonSubject, updateLessonRoom, addLesson, removeLesson, extendLesson } = scheduleSlice.actions;
+export const { setInitialSchedule, updateLessonSlot, updateLessonRoom, addLesson, removeLesson } = scheduleSlice.actions;
 export const { selectSchedule, selectScheduleStatus } = scheduleSlice.selectors;
 export default scheduleSlice.reducer;
