@@ -45,11 +45,10 @@ const rootReducer = combineReducers({
   scheduleDraft: scheduleDraftReducer, 
 });
 
-const preloadedState = loadState();
-
 export const store = configureStore({
   reducer: rootReducer,
-  preloadedState,
+  // The preloaded state will now be handled client-side to avoid hydration errors.
+  // preloadedState: loadState(), 
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       immutableCheck: false,
