@@ -4,8 +4,7 @@
 import { useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import FormContainer from "@/components/FormContainer";
-import prisma from "@/lib/prisma"; // This will be passed as props now
-import { type Class, type Grade, type Teacher, Role as AppRole } from "@/types/index";
+import { type Class, type Grade, Role as AppRole } from "@/types/index";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Layers3 } from "lucide-react";
@@ -13,6 +12,7 @@ import GradeCard from "@/components/classes/GradeCard";
 import ClassCard from "@/components/classes/ClassCard";
 import { cn } from '@/lib/utils';
 import { getServerSession } from '@/lib/auth-utils';
+import prisma from "@/lib/prisma"; // This will be removed as part of the fix
 
 type GradeWithClassCount = Grade & {
   _count: { classes: number };
