@@ -32,12 +32,13 @@ const ClassesPageContent: React.FC<ClassesPageClientProps> = ({ grades, classes,
   
   // Client-side imports are placed here
   const { useState } = React;
+  const { useRouter } = require('next/navigation');
   const FormContainer = require("@/components/FormContainer").default;
   const Link = require("next/link").default;
   const { Button } = require("@/components/ui/button");
   const { ArrowLeft, Layers3 } = require("lucide-react");
   const { cn } = require("@/lib/utils");
-  const { useRouter } = require('next/navigation');
+  
 
   const router = useRouter();
   const [selectedGradeId, setSelectedGradeId] = useState<number | null>(initialGradeIdParam ? Number(initialGradeIdParam) : null);
