@@ -65,8 +65,9 @@ export const saveSchedule = createAsyncThunk<Lesson[], Lesson[], { rejectValue: 
         return rejectWithValue(errorData.message ?? 'Échec de la sauvegarde de l\'emploi du temps');
       }
       
+      // The API now returns the created lessons with their new IDs.
       const result = await response.json();
-      return result.lessons || []; 
+      return result; 
     } catch (error) {
       if (error instanceof Error) {
         return rejectWithValue(error.message);

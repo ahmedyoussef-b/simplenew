@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
 
     console.log("[API] Début de la transaction de base de données pour remplacer l'emploi du temps.");
     
+    let createdLessons;
     await prisma.$transaction(async (tx) => {
       // Étape 1 : Obtenir tous les IDs des leçons existantes
       console.log("[API] Transaction: Étape 1 - Recherche des leçons existantes...");
@@ -101,10 +102,13 @@ export async function POST(request: NextRequest) {
       } else {
         console.log("[API] Transaction: Aucun nouveau cours à créer.");
       }
+      
+      // Step 7: Fetch the newly created lessons to return them with their DB-generated IDs
+      createdLessons = await tx.lesson.findMany({});
     });
 
     console.log("✅ [API] Transaction terminée avec succès. Envoi de la réponse au client.");
-    return NextResponse.json({ message: 'Emploi du temps enregistré avec succès', count: lessons.length }, { status: 201 });
+    return NextResponse.json(createdLessons, { status: 201 });
 
   } catch (error: unknown) {
     console.error("❌ [API] Erreur catastrophique lors de l'enregistrement de l'emploi du temps:", error);

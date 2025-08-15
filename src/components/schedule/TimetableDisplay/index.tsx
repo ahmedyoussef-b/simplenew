@@ -53,6 +53,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
   };
   
   const scheduleData = useMemo(() => {
+    if (!fullSchedule) return [];
     if (viewMode === 'class' && selectedViewId) {
       return fullSchedule.filter(l => l.classId === parseInt(selectedViewId));
     }
@@ -70,6 +71,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
 
   // Memoize possible subjects calculation
   const possibleSubjectsByClass = useMemo(() => {
+    if (!fullSchedule) return [];
     const classIdNum = parseInt(selectedViewId, 10);
     if (viewMode !== 'class' || !classIdNum) return [];
 
@@ -144,7 +146,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                                       possibleSubjects={viewMode === 'class' ? possibleSubjectsByClass : []}
                                       onAddLesson={handlePlaceLesson}
                                       wizardData={wizardData}
-                                      fullSchedule={fullSchedule}
+                                      fullSchedule={fullSchedule || []}
                                       isEditable={isEditable}
                                   />
                               </TableCell>
@@ -162,7 +164,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
 
 
 function buildScheduleGrid(
-  scheduleData: Lesson[],
+  scheduleData: Lesson[] | undefined,
   wizardData: WizardData,
   timeSlots: string[]
 ) {
