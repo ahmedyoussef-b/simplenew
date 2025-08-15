@@ -187,10 +187,11 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
                     disabled={remainingHours <= 0}
                 >
                     <span>{subject.name}</span>
+                    <span className='text-muted-foreground text-xs'>{remainingHours}h</span>
                 </Button>
               ))}
               {(!possibleSubjects || possibleSubjects.length === 0) && (
-                <p className="text-xs text-center text-muted-foreground p-4">Aucune matière assignée à cette classe.</p>
+                <p className="text-xs text-center text-muted-foreground p-4">Aucune matière assignée ou toutes les heures sont planifiées.</p>
               )}
             </div>
           </ScrollArea>
