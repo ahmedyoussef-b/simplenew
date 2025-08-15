@@ -1,6 +1,7 @@
 // src/lib/redux/features/classes/classesSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { ClassWithGrade } from '@/types';
+import { entityApi } from '../../api/entityApi';
 
 export type ClassesState = {
   items: Array<ClassWithGrade>;
@@ -19,18 +20,19 @@ export const classesSlice = createSlice({
   name: 'classes',
   initialState,
   reducers: {
-    // --- Local Reducers for Draft Mode ---
     setAllClasses(state, action: PayloadAction<ClassWithGrade[]>) {
       state.items = action.payload;
       state.status = 'succeeded';
     },
-    localAddClass(state, action: PayloadAction<ClassWithGrade>) {
-        state.items.push(action.payload);
-        state.items.sort((a,b) => a.name.localeCompare(b.name));
-    },
-    localDeleteClass(state, action: PayloadAction<number>) {
-        state.items = state.items.filter(c => c.id !== action.payload);
-    },
+  },
+   extraReducers: (builder) => {
+    builder.addMatcher(
+      entityApi.endpoints.getClasses.matchFulfilled,
+      (state, { payload }) => {
+        state.items = payload as ClassWithGrade[];
+        state.status = 'succeeded';
+      }
+    )
   },
   selectors: {
     selectAllClasses: (state) => state.items,
@@ -39,6 +41,6 @@ export const classesSlice = createSlice({
   }
 });
 
-export const { setAllClasses, localAddClass, localDeleteClass } = classesSlice.actions;
+export const { setAllClasses } = classesSlice.actions;
 export const { selectAllClasses, getClassesStatus, getClassesError } = classesSlice.selectors;
 export default classesSlice.reducer;

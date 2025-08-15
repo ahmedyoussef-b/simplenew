@@ -1,6 +1,7 @@
 // src/lib/redux/features/teachers/teachersSlice.ts
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { TeacherWithDetails } from '@/types'; 
+import { entityApi } from '../../api/entityApi';
 
 export type TeachersState = {
   items: Array<TeacherWithDetails>;
@@ -22,20 +23,20 @@ export const teachersSlice = createSlice({
     setAllTeachers(state, action: PayloadAction<any[]>) {
       state.items = action.payload.map(teacher => ({
         ...teacher,
-        // Ensure birthday is always a serializable string or null
         birthday: teacher.birthday ? new Date(teacher.birthday).toISOString() : null,
-        classes: teacher.classes || [], // Ensure classes is an array
+        classes: teacher.classes || [], 
       }));
       state.status = 'succeeded';
     },
-    localAddTeacher(state, action: PayloadAction<TeacherWithDetails>) {
-        const teacher = action.payload;
-        state.items.push(teacher);
-        state.items.sort((a,b) => (a.surname || '').localeCompare(b.surname || '') || (a.name || '').localeCompare(b.name || ''));
-    },
-    localDeleteTeacher(state, action: PayloadAction<string>) {
-        state.items = state.items.filter(t => t.id !== action.payload);
-    },
+  },
+  extraReducers: (builder) => {
+    builder.addMatcher(
+      entityApi.endpoints.getTeachers.matchFulfilled,
+      (state, { payload }) => {
+        state.items = payload as TeacherWithDetails[];
+        state.status = 'succeeded';
+      }
+    )
   },
   selectors: {
     selectAllProfesseurs: (state) => state.items,
@@ -44,6 +45,6 @@ export const teachersSlice = createSlice({
   }
 });
 
-export const { setAllTeachers, localAddTeacher, localDeleteTeacher } = teachersSlice.actions;
+export const { setAllTeachers } = teachersSlice.actions;
 export const { selectAllProfesseurs, getProfesseursStatus, getProfesseursError } = teachersSlice.selectors;
 export default teachersSlice.reducer;

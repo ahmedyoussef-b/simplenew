@@ -21,20 +21,9 @@ import { addLesson, removeLesson, setInitialSchedule } from '@/lib/redux/feature
 import { generateSchedule } from '@/lib/schedule-generation';
 import { useToast } from '@/hooks/use-toast';
 
-import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
-import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
-import { setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
-import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
-import { setAllGrades } from '@/lib/redux/features/grades/gradesSlice';
-import { setAllRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
-import { setAllTeacherConstraints } from '@/lib/redux/features/teacherConstraintsSlice';
-import { setAllSubjectRequirements } from '@/lib/redux/features/subjectRequirementsSlice';
-import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
-import { setSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
+import { useGetClassesQuery, useGetSubjectsQuery, useGetTeachersQuery, useGetRoomsQuery, useGetGradesQuery } from '@/lib/redux/api/entityApi';
 import type { WizardData, Lesson, ValidationResult, Day, Subject } from '@/types';
-import { entityApi } from '@/lib/redux/api/entityApi';
-import { saveState, loadState } from '@/lib/redux/storage';
-import throttle from 'lodash/throttle';
+
 
 interface ShuddlePageClientProps {
     initialData: WizardData;
@@ -71,9 +60,14 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const { toast } = useToast();
     const [mode, setMode] = useState<'wizard' | 'view'>('wizard'); 
     
-    // Selectors
+    // RTK Query hooks for data fetching
+    const { data: classesData, isLoading: isLoadingClasses } = useGetClassesQuery(undefined);
+    const { data: subjectsData, isLoading: isLoadingSubjects } = useGetSubjectsQuery(undefined);
+    const { data: teachersData, isLoading: isLoadingTeachers } = useGetTeachersQuery(undefined);
+    const { data: roomsData, isLoading: isLoadingRooms } = useGetRoomsQuery(undefined);
+    const { data: gradesData, isLoading: isLoadingGrades } = useGetGradesQuery(undefined);
+
     const wizardData = useWizardData();
-    const store = useAppSelector(state => state);
 
     // View state
     const [viewMode, setViewMode] = useState<'class' | 'teacher'>('class');
@@ -84,42 +78,8 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const [generationProgress, setGenerationProgress] = useState(0);
     const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
     
-    // --- State Hydration Logic ---
-    useEffect(() => {
-        console.log("💾 [ShuddlePageClient] Initializing Redux state.");
-        const persistedState = loadState();
-        if (persistedState && Object.keys(persistedState).length > 0) {
-            console.log("💾 [ShuddlePageClient] Hydrating state from localStorage.");
-            dispatch({ type: 'REPLACE_STATE', payload: persistedState });
-        } else {
-            console.log("💾 [ShuddlePageClient] Hydrating state from initial server data.");
-            dispatch(setSchoolConfig(initialData.school));
-            dispatch(setAllClasses(initialData.classes));
-            dispatch(setAllSubjects(initialData.subjects));
-            dispatch(setAllTeachers(initialData.teachers));
-            dispatch(setAllClassrooms(initialData.rooms));
-            dispatch(setAllGrades(initialData.grades));
-            dispatch(setAllRequirements(initialData.lessonRequirements));
-            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-            dispatch(setInitialSchedule(initialData.schedule));
-        }
-    }, [dispatch, initialData]);
+    const isDataLoading = isLoadingClasses || isLoadingSubjects || isLoadingTeachers || isLoadingRooms || isLoadingGrades;
     
-    // --- Local Storage Autosave ---
-    useEffect(() => {
-        const throttledSave = throttle(() => {
-            saveState(store);
-            console.log("💾 Autosaved state to localStorage");
-        }, 1000);
-
-        throttledSave();
-        return () => throttledSave.cancel();
-    }, [store]);
-
-    // --- End State Hydration & Autosave ---
-
     useEffect(() => {
         if (!selectedViewId) {
             if (viewMode === 'class' && wizardData.classes.length > 0) {
@@ -169,17 +129,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
             setValidationResults(validateData());
         }
     }, [wizardData, currentStep, steps.length, validateData]);
-
-    const handleSave = async () => {
-        toast({ title: "Sauvegarde en cours...", description: "Les données sont en train d'être synchronisées."});
-        const schedulePayload = { lessons: wizardData.schedule };
-        try {
-            await dispatch(entityApi.endpoints.createLesson.initiate(schedulePayload as any) as any).unwrap();
-            toast({ title: "Sauvegarde réussie!", description: "L'emploi du temps a été sauvegardé en base de données."});
-        } catch (error) {
-            toast({ variant: 'destructive', title: "Erreur de sauvegarde", description: "Impossible de sauvegarder l'emploi du temps."});
-        }
-    }
     
 
     const handleGenerate = async () => {
@@ -233,7 +182,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         return <StepComponent />;
     };
     
-    if (!wizardData.school.name) {
+    if (isDataLoading) {
         return (
              <div className="flex items-center justify-center min-h-[50vh]">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -296,10 +245,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                      <Button onClick={handleGenerate}>
                         <RotateCw size={16} className="mr-2" />
                         Regénérer
-                    </Button>
-                    <Button variant="secondary" onClick={handleSave}>
-                        <Save size={16} className="mr-2" />
-                        Sauvegarder
                     </Button>
                     <Button variant="outline" onClick={() => window.print()}>
                         <Printer size={16} className="mr-2" />

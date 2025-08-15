@@ -1,7 +1,7 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query';
 
 // Define the type locally to break the circular dependency chain
-export type EntityType = 'grade' | 'subject' | 'class' | 'teacher' | 'student' | 'parent' | 'lesson' | 'exam' | 'assignment' | 'event' | 'announcement' | 'result' | 'attendance' | 'quiz';
+export type EntityType = 'grade' | 'subject' | 'class' | 'teacher' | 'student' | 'parent' | 'lesson' | 'exam' | 'assignment' | 'event' | 'announcement' | 'result' | 'attendance' | 'quiz' | 'classroom';
 
 // Centralized base query to include credentials in every request
 export const baseQueryWithCredentials = fetchBaseQuery({
@@ -24,5 +24,6 @@ export const entityConfig: Record<EntityType, { route: string; tag: string }> = 
     announcement: { route: 'announcements', tag: 'Announcement' },
     result: { route: 'results', tag: 'Result' },
     attendance: { route: 'attendances', tag: 'Attendance' },
-    quiz: { route: 'quizzes', tag: 'Quiz' }, // Exemple, si vous ajoutez l'entité Quiz
+    quiz: { route: 'quizzes', tag: 'Quiz' },
+    classroom: { route: 'classrooms', tag: 'Classroom' },
   };
