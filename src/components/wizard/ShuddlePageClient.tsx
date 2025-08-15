@@ -85,27 +85,22 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     // Initial data hydration & View selection setup
     useEffect(() => {
-        // The store is now hydrated from localStorage by the store itself.
-        // We might still need to dispatch initialData if localStorage is empty.
-        // For simplicity, we assume localStorage is the source of truth if it exists.
-        console.log("💾 [ShuddlePageClient] Store initialisé (potentiellement depuis localStorage).");
-
-        // The following dispatches can be removed if the persisted state from `loadState` is sufficient.
-        // However, keeping them provides a "reset" mechanism if the user clears their storage.
-        if (!localStorage.getItem('schedulerState')) {
-            console.log("💾 [ShuddlePageClient] localStorage vide, hydratation avec les données initiales du serveur.");
-            dispatch(setSchoolConfig(initialData.school));
-            dispatch(setAllClasses(initialData.classes));
-            dispatch(setAllSubjects(initialData.subjects));
-            dispatch(setAllTeachers(initialData.teachers));
-            dispatch(setAllClassrooms(initialData.rooms));
-            dispatch(setAllGrades(initialData.grades));
-            dispatch(setAllRequirements(initialData.lessonRequirements));
-            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-            dispatch(setInitialSchedule(initialData.schedule));
-        }
+        // Always hydrate the store with the fresh data from the server on initial load.
+        // This ensures that the wizard reflects the current state of the database.
+        // The persisted state from localStorage will only be used if the page is reloaded
+        // without a server fetch (e.g., hard refresh).
+        console.log("💾 [ShuddlePageClient] Hydratation du store avec les données initiales du serveur.");
+        dispatch(setSchoolConfig(initialData.school));
+        dispatch(setAllClasses(initialData.classes));
+        dispatch(setAllSubjects(initialData.subjects));
+        dispatch(setAllTeachers(initialData.teachers));
+        dispatch(setAllClassrooms(initialData.rooms));
+        dispatch(setAllGrades(initialData.grades));
+        dispatch(setAllRequirements(initialData.lessonRequirements));
+        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+        dispatch(setInitialSchedule(initialData.schedule));
 
     }, [dispatch, initialData]);
 
