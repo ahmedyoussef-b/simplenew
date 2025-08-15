@@ -1,12 +1,15 @@
 // src/components/schedule/ScheduleEditor/hooks/useScheduleActions.ts
-
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/redux-hooks';
-import { addLesson, removeLesson, saveSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from '@/hooks/use-toast';
 import type { Day, Lesson, Subject, WizardData, Class, Teacher } from '@/types';
 import { findConflictingConstraint } from '@/lib/constraint-utils';
 import { formatTimeSimple, timeToMinutes } from '../utils/scheduleUtils';
+import { 
+    useCreateLessonMutation,
+    useUpdateLessonMutation,
+    useDeleteLessonMutation 
+} from '@/lib/redux/api/entityApi';
 
 export const useScheduleActions = (
   wizardData: WizardData,
@@ -17,7 +20,11 @@ export const useScheduleActions = (
   const dispatch = useAppDispatch();
   const { toast } = useToast();
 
-  const handlePlaceLesson = useCallback((subject: Subject, day: Day, time: string) => {
+  const [createLesson] = useCreateLessonMutation();
+  const [updateLesson] = useUpdateLessonMutation();
+  const [deleteLesson] = useDeleteLessonMutation();
+
+  const handlePlaceLesson = useCallback(async (subject: Subject, day: Day, time: string) => {
     const { school, teachers, rooms, classes, teacherConstraints = [], subjectRequirements = [], teacherAssignments = [] } = wizardData;
 
     if (!school?.sessionDuration) {
@@ -38,9 +45,6 @@ export const useScheduleActions = (
       }
     } else { // viewMode is 'teacher'
       teacherInfo = teachers.find(t => t.id === selectedViewId);
-      // We need to infer the class. This is tricky. Let's find a class assigned to this teacher for this subject.
-      // This logic assumes a simple 1-teacher-1-subject-to-N-classes model for manual add.
-      // A more complex UI might be needed for other cases.
       const assignment = teacherAssignments.find(a => a.teacherId === selectedViewId && a.subjectId === subject.id);
       if (assignment?.classIds.length === 1) {
         classInfo = classes.find(c => c.id === assignment.classIds[0]);
@@ -59,14 +63,13 @@ export const useScheduleActions = (
       toast({ variant: "destructive", title: "Aucun enseignant assigné", description: `Aucun enseignant n'est assigné pour enseigner "${subject.name}" à la classe "${classInfo.name}".` });
       return;
     }
-    // --- End Determination Logic ---
 
     const [hour, minute] = time.split(':').map(Number);
     const lessonStartTimeDate = new Date(Date.UTC(2000, 0, 1, hour, minute));
     const lessonEndTimeDate = new Date(lessonStartTimeDate.getTime() + school.sessionDuration * 60 * 1000);
     const lessonEndTimeStr = formatTimeSimple(lessonEndTimeDate);
     
-    // Check Teacher Availability
+    // Perform all checks...
     const isTeacherBusy = schedule.some(l => 
       l.teacherId === teacherInfo!.id && 
       l.day === day && 
@@ -81,8 +84,6 @@ export const useScheduleActions = (
       toast({ variant: "destructive", title: "Enseignant indisponible", description: `${teacherInfo.name} ${teacherInfo.surname} a une contrainte sur ce créneau.` });
       return;
     }
-    
-    // Check Class Availability
     const isClassBusy = schedule.some(l => 
       l.classId === classInfo!.id && 
       l.day === day && 
@@ -94,7 +95,6 @@ export const useScheduleActions = (
       return;
     }
     
-    // Check Subject Time Preference
     const subjectReq = subjectRequirements.find(r => r.subjectId === subject.id);
     const lessonStartMinutes = timeToMinutes(time);
     if (subjectReq?.timePreference === 'AM' && lessonStartMinutes >= 720) {
@@ -106,7 +106,6 @@ export const useScheduleActions = (
       return;
     }
 
-    // --- ROOM ALLOCATION LOGIC ---
     const occupiedRoomIdsInSlot = new Set(
       schedule.filter(l => {
           if (l.classroomId == null || l.day !== day) return false;
@@ -128,33 +127,60 @@ export const useScheduleActions = (
     
     const availableRoom = potentialRooms[0] || null;
 
-    const newLesson = {
+    const newLessonPayload = {
       name: `${subject.name} - ${classInfo.name}`,
       day: day,
-      startTime: lessonStartTimeDate.toISOString(),
-      endTime: lessonEndTimeDate.toISOString(),
+      startTime: formatTimeSimple(lessonStartTimeDate),
+      endTime: formatTimeSimple(lessonEndTimeDate),
       subjectId: subject.id,
       classId: classInfo.id,
       teacherId: teacherInfo.id,
       classroomId: availableRoom ? availableRoom.id : null,
-      scheduleDraftId: wizardData.scheduleDraftId,
     };
 
-    dispatch(addLesson(newLesson));
-    toast({ title: "Cours ajouté", description: `"${subject.name}" a été ajouté à l'emploi du temps.` });
-  }, [wizardData, schedule, selectedViewId, viewMode, dispatch, toast]);
+    try {
+      await createLesson(newLessonPayload).unwrap();
+      toast({ title: "Cours ajouté", description: `"${subject.name}" a été ajouté à l'emploi du temps.` });
+    } catch (error: any) {
+       toast({ variant: "destructive", title: "Erreur", description: error.data?.message || "Impossible d'ajouter le cours." });
+    }
+  }, [wizardData, schedule, selectedViewId, viewMode, createLesson, toast]);
 
-  const handleDeleteLesson = useCallback((lessonId: number) => {
-    dispatch(removeLesson(lessonId));
-  }, [dispatch]);
+  const handleDeleteLesson = useCallback(async (lessonId: number) => {
+    try {
+      await deleteLesson(lessonId).unwrap();
+      toast({ title: "Cours supprimé", description: "Le cours a été retiré de l'emploi du temps." });
+    } catch (error: any) {
+      toast({ variant: "destructive", title: "Erreur", description: error.data?.message || "Impossible de supprimer le cours." });
+    }
+  }, [deleteLesson, toast]);
 
-  const handleSaveChanges = useCallback(() => {
-    dispatch(saveSchedule(schedule));
-  }, [dispatch, schedule]);
+  const handleUpdateLessonSlot = useCallback(async (lessonId: number, newDay: Day, newTime: string) => {
+    const lessonToUpdate = schedule.find(l => l.id === lessonId);
+    if (!lessonToUpdate) return;
+    
+    const durationMs = new Date(lessonToUpdate.endTime).getTime() - new Date(lessonToUpdate.startTime).getTime();
+    const newStartTime = new Date(Date.UTC(2000, 0, 1, ...newTime.split(':').map(Number) as [number, number]));
+    const newEndTime = new Date(newStartTime.getTime() + durationMs);
+
+    const updatedPayload = {
+        id: lessonId,
+        day: newDay,
+        startTime: formatTimeSimple(newStartTime),
+        endTime: formatTimeSimple(newEndTime),
+    };
+
+    try {
+        await updateLesson(updatedPayload).unwrap();
+        toast({ title: "Cours déplacé", description: "Le cours a été déplacé avec succès." });
+    } catch (error: any) {
+        toast({ variant: "destructive", title: "Erreur de déplacement", description: error.data?.message || "Impossible de déplacer le cours." });
+    }
+  }, [schedule, updateLesson, toast]);
 
   return {
     handlePlaceLesson,
     handleDeleteLesson,
-    handleSaveChanges
+    handleUpdateLessonSlot
   };
 };

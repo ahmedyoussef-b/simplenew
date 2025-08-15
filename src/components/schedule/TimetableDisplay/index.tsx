@@ -6,8 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { WizardData, Lesson, Subject, Day } from '@/types';
 import { type Lesson as PrismaLesson } from '@prisma/client';
-import LessonCell from './components/LessonCell';
-import InteractiveEmptyCell from './components/InteractiveEmptyCell';
+import { TimetableLessonCell, InteractiveEmptyCell } from './components/TimetableCells';
 import { formatTimeSimple } from './components/utils';
 import { generateTimeSlots } from '@/lib/time-utils';
 import { mergeConsecutiveLessons } from '@/lib/lesson-utils';
@@ -100,7 +99,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                       if (cellData) {
                           return (
                           <TableCell key={uniqueKey} rowSpan={cellData.rowSpan} className="p-0 border align-top relative">
-                              <LessonCell 
+                              <TimetableLessonCell 
                                   lesson={cellData.lesson} 
                                   wizardData={wizardData} 
                                   onDelete={handleDeleteLesson} 
@@ -115,12 +114,12 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                                   <InteractiveEmptyCell
                                       day={dayEnum}
                                       timeSlot={time}
-                                      viewMode={viewMode}
-                                      selectedViewId={selectedViewId}
                                       wizardData={wizardData}
                                       fullSchedule={fullSchedule}
                                       onAddLesson={handlePlaceLesson}
                                       isDropDisabled={!isEditable}
+                                      viewMode={viewMode}
+                                      selectedViewId={selectedViewId}
                                       setHoveredSubjectId={setHoveredSubjectId}
                                       hoveredSubjectId={hoveredSubjectId}
                                   />
