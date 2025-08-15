@@ -114,16 +114,17 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     // HYDRATION EFFECT
     useEffect(() => {
         console.log("💧 [ShuddlePageClient] Hydratation des données initiales du serveur.");
+        if (!initialData) return;
         dispatch(setSchoolConfig(initialData.school));
-        dispatch(setAllClasses(initialData.classes as ClassWithGrade[]));
-        dispatch(setAllSubjects(initialData.subjects));
-        dispatch(setAllTeachers(initialData.teachers));
-        dispatch(setAllClassrooms(initialData.rooms));
-        dispatch(setAllGrades(initialData.grades));
-        dispatch(setAllRequirements(initialData.lessonRequirements));
-        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+        dispatch(setAllClasses(initialData.classes || []));
+        dispatch(setAllSubjects(initialData.subjects || []));
+        dispatch(setAllTeachers(initialData.teachers || []));
+        dispatch(setAllClassrooms(initialData.rooms || []));
+        dispatch(setAllGrades(initialData.grades || []));
+        dispatch(setAllRequirements(initialData.lessonRequirements || []));
+        dispatch(setAllTeacherConstraints(initialData.teacherConstraints || []));
+        dispatch(setAllSubjectRequirements(initialData.subjectRequirements || []));
+        dispatch(setAllTeacherAssignments(initialData.teacherAssignments || []));
         dispatch(setInitialSchedule(initialData.schedule || []));
     }, [dispatch, initialData]);
     
