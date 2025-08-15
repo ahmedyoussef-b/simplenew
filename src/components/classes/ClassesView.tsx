@@ -4,14 +4,13 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import FormContainer from "@/components/FormContainer";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Layers3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import GradeCard from "@/components/classes/GradeCard";
 import ClassCard from "@/components/classes/ClassCard";
 import type { GradeWithClassCount, ClassWithDetails } from '@/app/(dashboard)/list/classes/page';
-import type { Role as AppRole } from '@/types';
+import { Role as AppRole } from '@/types';
 
 interface ClassesViewProps {
     grades: GradeWithClassCount[];
