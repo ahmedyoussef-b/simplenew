@@ -72,9 +72,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const [mode, setMode] = useState<'wizard' | 'view'>('wizard'); 
     
     // Selectors
-    const activeDraft = useAppSelector(selectActiveDraft);
-    const draftStatus = useAppSelector(selectDraftStatus);
-    const saveStatus = useAppSelector(selectSaveStatus);
     const wizardData = useWizardData();
 
     // View state
@@ -88,24 +85,31 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     // Initial data hydration & View selection setup
     useEffect(() => {
-        console.log("💾 [ShuddlePageClient] Hydratation du store Redux avec les données initiales du serveur.");
-        dispatch(setSchoolConfig(initialData.school));
-        dispatch(setAllClasses(initialData.classes));
-        dispatch(setAllSubjects(initialData.subjects));
-        dispatch(setAllTeachers(initialData.teachers));
-        dispatch(setAllClassrooms(initialData.rooms));
-        dispatch(setAllGrades(initialData.grades));
-        dispatch(setAllRequirements(initialData.lessonRequirements));
-        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-        dispatch(setInitialSchedule(initialData.schedule));
-        
-        dispatch(fetchScheduleDraft({ initialWizardData: initialData }));
+        // The store is now hydrated from localStorage by the store itself.
+        // We might still need to dispatch initialData if localStorage is empty.
+        // For simplicity, we assume localStorage is the source of truth if it exists.
+        console.log("💾 [ShuddlePageClient] Store initialisé (potentiellement depuis localStorage).");
+
+        // The following dispatches can be removed if the persisted state from `loadState` is sufficient.
+        // However, keeping them provides a "reset" mechanism if the user clears their storage.
+        if (!localStorage.getItem('schedulerState')) {
+            console.log("💾 [ShuddlePageClient] localStorage vide, hydratation avec les données initiales du serveur.");
+            dispatch(setSchoolConfig(initialData.school));
+            dispatch(setAllClasses(initialData.classes));
+            dispatch(setAllSubjects(initialData.subjects));
+            dispatch(setAllTeachers(initialData.teachers));
+            dispatch(setAllClassrooms(initialData.rooms));
+            dispatch(setAllGrades(initialData.grades));
+            dispatch(setAllRequirements(initialData.lessonRequirements));
+            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+            dispatch(setInitialSchedule(initialData.schedule));
+        }
+
     }, [dispatch, initialData]);
 
     useEffect(() => {
-        // Only set the default selected ID if it's currently empty
         if (!selectedViewId) {
             if (viewMode === 'class' && wizardData.classes.length > 0) {
                 setSelectedViewId(wizardData.classes[0].id.toString());
@@ -116,40 +120,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     }, [viewMode, wizardData.classes, wizardData.teachers, selectedViewId]);
 
 
-    // Custom hooks
     const { steps, currentStep, progress, handleNext, handlePrevious, handleStepClick } = useWizardSteps();
-    
-    // --- AUTOSAVE LOGIC ---
-    const autosaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-    useEffect(() => {
-        if (draftStatus === 'succeeded' && activeDraft) {
-            if (autosaveTimeoutRef.current) {
-                clearTimeout(autosaveTimeoutRef.current);
-            }
-            autosaveTimeoutRef.current = setTimeout(() => {
-                 console.log("⏱️ [Autosave] Déclenchement de la sauvegarde automatique...");
-                 dispatch(saveOrUpdateDraft({ wizardData, activeDraft }))
-            }, 5000); 
-        }
-        return () => {
-            if (autosaveTimeoutRef.current) {
-                clearTimeout(autosaveTimeoutRef.current);
-            }
-        };
-    }, [wizardData, activeDraft, draftStatus, dispatch]);
-    // --- END AUTOSAVE LOGIC ---
-
-    const handleManualSave = () => {
-        if (!activeDraft) {
-            toast({ title: 'Aucun scénario actif', description: 'Impossible de sauvegarder sans scénario actif.', variant: 'destructive'});
-            return;
-        }
-        dispatch(saveOrUpdateDraft({ wizardData, activeDraft }))
-            .unwrap()
-            .then((updatedDraft) => toast({ title: 'Sauvegarde réussie', description: `Le scénario "${updatedDraft.name}" a été enregistré.`}))
-            .catch((error) => toast({ title: 'Erreur de sauvegarde', description: error.message || "Une erreur est survenue.", variant: 'destructive'}));
-    };
     
     const validateData = useCallback(() => {
         console.log("🔬 [ShuddlePageClient] Lancement de la validation des données de configuration.");
@@ -183,7 +154,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
       }, [wizardData]);
 
     useEffect(() => {
-        if(currentStep === steps.length - 1) { // Only validate on the last step
+        if(currentStep === steps.length - 1) { 
             setValidationResults(validateData());
         }
     }, [wizardData, currentStep, steps.length, validateData]);
@@ -239,7 +210,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         return <StepComponent />;
     };
     
-    if (draftStatus !== 'succeeded') {
+    if (!wizardData.school.name) {
         return (
              <div className="flex items-center justify-center min-h-[50vh]">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -253,22 +224,16 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
             <div className="mb-8">
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-xl font-semibold text-foreground truncate pr-4">
-                       Scénario: <span className="text-primary">{activeDraft?.name || 'Aucun scénario actif'}</span>
+                       Scénario: <span className="text-primary">{wizardData.school.name}</span>
                     </h2>
                      <div className="flex items-center gap-2">
                         <Button variant="outline" onClick={() => setMode('view')}>
                             <Calendar size={16} className="mr-2"/>
                             Voir l'emploi du temps
                         </Button>
-                        <Button onClick={handleManualSave} disabled={saveStatus === 'loading'}>
-                             {saveStatus === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
-                             saveStatus === 'failed' ? <CloudOff className="mr-2 h-4 w-4 text-destructive" /> : 
-                             <Save className="mr-2 h-4 w-4" />}
-                            {saveStatus === 'loading' ? 'Sauvegarde...' : saveStatus === 'failed' ? 'Échec sauvegarde' : 'Sauvegarder'}
-                        </Button>
                     </div>
                 </div>
-                <Progress value={activeDraft ? progress : 0} className="h-2" />
+                <Progress value={progress} className="h-2" />
             </div>
             
             <div className="flex flex-col md:flex-row gap-8">
@@ -276,29 +241,19 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                     steps={steps}
                     currentStep={currentStep}
                     onStepClick={handleStepClick}
-                    disabled={!activeDraft}
                 />
                 
                 <div className="flex-1">
                     <Card className="p-8 min-h-full">
                         <div className="flex flex-col h-full">
                            <div className="flex-grow">
-                                {activeDraft ? renderStepContent() : (
-                                    <Alert>
-                                        <Info className="h-4 w-4" />
-                                        <AlertTitle>Aucun scénario actif</AlertTitle>
-                                        <AlertDescription>
-                                            Pour commencer, veuillez charger un scénario existant ou en créer un nouveau en utilisant les boutons d'action de la première étape ("Établissement").
-                                        </AlertDescription>
-                                    </Alert>
-                                )}
+                               {renderStepContent()}
                            </div>
                             <StepFooter 
                                 onPrevious={handlePrevious}
                                 onNext={handleNext}
                                 currentStep={currentStep}
                                 stepsLength={steps.length}
-                                disabled={!activeDraft}
                             />
                         </div>
                     </Card>
@@ -319,10 +274,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                         <RotateCw size={16} className="mr-2" />
                         Regénérer
                     </Button>
-                    <Button variant="outline" onClick={handleManualSave} disabled={saveStatus === 'loading'}>
-                        {saveStatus === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                        {saveStatus === 'loading' ? 'Sauvegarde...' : 'Sauvegarder'}
-                    </Button>
                     <Button variant="outline" onClick={() => window.print()}>
                         <Printer size={16} className="mr-2" />
                         Imprimer
@@ -336,7 +287,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                         viewMode={viewMode}
                         onViewModeChange={(value) => {
                             setViewMode(value as 'class' | 'teacher');
-                            // Reset selectedViewId when changing mode to avoid invalid state
                             setSelectedViewId('');
                         }}
                         selectedClassId={selectedViewId}

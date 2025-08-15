@@ -20,7 +20,8 @@ import attendanceReducer from './features/attendance/attendanceSlice';
 import schoolConfigReducer from './features/schoolConfigSlice';
 import scheduleDraftReducer from './features/scheduleDraftSlice'; 
 import { entityApi } from './api/entityApi/index';
-// Removed loadState and saveState imports as they are no longer used
+import { loadState, saveState } from './storage';
+import { throttle } from 'lodash';
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -44,14 +45,37 @@ const rootReducer = combineReducers({
   scheduleDraft: scheduleDraftReducer, 
 });
 
+const preloadedState = loadState();
+
 export const store = configureStore({
   reducer: rootReducer,
+  preloadedState,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       immutableCheck: false,
       serializableCheck: false,
     }).concat([authApi.middleware, entityApi.middleware]),
 });
+
+// Save state to localStorage on every state change, throttled to once per second.
+store.subscribe(throttle(() => {
+  const state = store.getState();
+  // Only save the scheduler-related state
+  saveState({
+    schoolConfig: state.schoolConfig,
+    classes: state.classes,
+    subjects: state.subjects,
+    teachers: state.teachers,
+    classrooms: state.classrooms,
+    grades: state.grades,
+    lessonRequirements: state.lessonRequirements,
+    teacherConstraints: state.teacherConstraints,
+    subjectRequirements: state.subjectRequirements,
+    teacherAssignments: state.teacherAssignments,
+    schedule: state.schedule,
+    scheduleDraft: state.scheduleDraft
+  });
+}, 1000));
 
 
 export type RootState = ReturnType<typeof rootReducer>;
