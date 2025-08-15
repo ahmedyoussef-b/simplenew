@@ -261,7 +261,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                             Voir l'emploi du temps
                         </Button>
                         <Button onClick={handleManualSave} disabled={saveStatus === 'loading'}>
-                            {saveStatus === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
+                             {saveStatus === 'loading' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 
                              saveStatus === 'failed' ? <CloudOff className="mr-2 h-4 w-4 text-destructive" /> : 
                              <Save className="mr-2 h-4 w-4" />}
                             {saveStatus === 'loading' ? 'Sauvegarde...' : saveStatus === 'failed' ? 'Échec sauvegarde' : 'Sauvegarder'}
