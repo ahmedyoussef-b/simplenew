@@ -1,17 +1,15 @@
 // src/app/(dashboard)/list/classes/page.tsx
-'use client';
 
-import { useState } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
-import FormContainer from "@/components/FormContainer";
-import { type Class, type Grade, Role as AppRole } from "@/types/index";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, Layers3 } from "lucide-react";
+// --- SERVER-SIDE IMPORTS ---
+import prisma from "@/lib/prisma";
+import { getServerSession } from "@/lib/auth-utils";
+import type { Class, Grade, Role as AppRole } from "@/types/index";
+import { Prisma } from "@prisma/client";
 import GradeCard from "@/components/classes/GradeCard";
 import ClassCard from "@/components/classes/ClassCard";
-import { cn } from '@/lib/utils';
-import { SafeUser } from '@/types'; // Import SafeUser for session type
+import FormContainer from "@/components/FormContainer";
+
+// --- TYPE DEFINITIONS ---
 
 type GradeWithClassCount = Grade & {
   _count: { classes: number };
@@ -21,15 +19,28 @@ type ClassWithDetails = Omit<Class, 'supervisorId'> & {
   _count: { students: number };
 };
 
-// Define props for the new client component
-interface ClassesPageProps {
+interface ClassesPageClientProps {
     grades: GradeWithClassCount[];
     classes: ClassWithDetails[];
     userRole?: AppRole;
     initialGradeIdParam: string | null;
 }
 
-const ClassesPageContent: React.FC<ClassesPageProps> = ({ grades, classes, userRole, initialGradeIdParam }) => {
+// --- CLIENT COMPONENT ---
+// This component handles all the user interaction, state, and animations.
+const ClassesPageContent: React.FC<ClassesPageClientProps> = ({ grades, classes, userRole, initialGradeIdParam }) => {
+  'use client'; // This directive ONLY applies to this component and its children.
+  
+  // --- CLIENT-SIDE IMPORTS ---
+  const React = require('react');
+  const { useState } = require('react');
+  const { useRouter } = require('next/navigation');
+  const Link = require('next/link');
+  const { Button } = require('@/components/ui/button');
+  const { ArrowLeft, Layers3 } = require('lucide-react');
+  const { cn } = require('@/lib/utils');
+
+
   const router = useRouter();
   const [selectedGradeId, setSelectedGradeId] = useState<number | null>(initialGradeIdParam ? Number(initialGradeIdParam) : null);
 
@@ -38,7 +49,6 @@ const ClassesPageContent: React.FC<ClassesPageProps> = ({ grades, classes, userR
   
   const handleGradeSelect = (gradeId: number) => {
     setSelectedGradeId(gradeId);
-    // We can update URL without a full reload for better UX
     router.push(`/list/classes?viewGradeId=${gradeId}`, { scroll: false });
   };
   
@@ -125,16 +135,14 @@ const ClassesPageContent: React.FC<ClassesPageProps> = ({ grades, classes, userR
 };
 
 
-// This is the Server Component that fetches data. It does NOT have 'use client'.
+// --- SERVER COMPONENT (Default Export) ---
+// This component fetches data on the server and passes it to the client component.
 export default async function ServerClassesPage({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
 }) {
-    const { getServerSession } = await import('@/lib/auth-utils');
-    const prisma = (await import('@/lib/prisma')).default;
-
-    const session: { user: SafeUser } | null = await getServerSession();
+    const session = await getServerSession();
     const userRole = session?.user?.role as AppRole | undefined;
 
     const gradesData: GradeWithClassCount[] = await prisma.grade.findMany({
@@ -147,14 +155,13 @@ export default async function ServerClassesPage({
     const classesData: ClassWithDetails[] = await prisma.class.findMany({
       include: {
         _count: { select: { students: true } },
-        grade: true, // Also fetch grade info to pass to the client
+        grade: true,
       },
       orderBy: { name: 'asc' },
     });
 
     const initialGradeIdParam = typeof searchParams?.viewGradeId === 'string' ? searchParams.viewGradeId : null;
 
-    // The data is fetched here on the server and passed as props to the client component.
     return <ClassesPageContent 
         grades={gradesData} 
         classes={classesData} 
