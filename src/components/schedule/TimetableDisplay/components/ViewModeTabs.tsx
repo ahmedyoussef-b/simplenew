@@ -53,9 +53,11 @@ const ViewModeTabs: React.FC<ViewModeTabsProps> = ({
             </SelectTrigger>
             <SelectContent>
               {classes.map(classItem => (
-                <SelectItem key={classItem.id} value={classItem.id.toString()}>
-                  {classItem.name}
-                </SelectItem>
+                classItem && classItem.id ? (
+                  <SelectItem key={classItem.id} value={classItem.id.toString()}>
+                    {classItem.name}
+                  </SelectItem>
+                ) : null
               ))}
             </SelectContent>
           </Select>
@@ -69,9 +71,11 @@ const ViewModeTabs: React.FC<ViewModeTabsProps> = ({
             </SelectTrigger>
             <SelectContent>
               {teachers.map(teacher => (
-                <SelectItem key={teacher.id} value={teacher.id}>
-                  {teacher.name} {teacher.surname}
-                </SelectItem>
+                teacher && teacher.id ? (
+                  <SelectItem key={teacher.id} value={teacher.id}>
+                    {teacher.name} {teacher.surname}
+                  </SelectItem>
+                ) : null
               ))}
             </SelectContent>
           </Select>
