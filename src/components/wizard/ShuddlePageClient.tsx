@@ -33,7 +33,8 @@ import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignment
 import { setSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
 import type { WizardData, Lesson, ValidationResult, Day, Subject } from '@/types';
 import { entityApi } from '@/lib/redux/api/entityApi';
-
+import { saveState, loadState } from '@/lib/redux/storage';
+import throttle from 'lodash/throttle';
 
 interface ShuddlePageClientProps {
     initialData: WizardData;
@@ -72,6 +73,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     // Selectors
     const wizardData = useWizardData();
+    const store = useAppSelector(state => state);
 
     // View state
     const [viewMode, setViewMode] = useState<'class' | 'teacher'>('class');
@@ -82,22 +84,41 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const [generationProgress, setGenerationProgress] = useState(0);
     const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
     
-    // --- Hydration Logic ---
+    // --- State Hydration Logic ---
     useEffect(() => {
-        console.log("💾 [ShuddlePageClient] Hydratation du store avec les données initiales du serveur.");
-        dispatch(setSchoolConfig(initialData.school));
-        dispatch(setAllClasses(initialData.classes));
-        dispatch(setAllSubjects(initialData.subjects));
-        dispatch(setAllTeachers(initialData.teachers));
-        dispatch(setAllClassrooms(initialData.rooms));
-        dispatch(setAllGrades(initialData.grades));
-        dispatch(setAllRequirements(initialData.lessonRequirements));
-        dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
-        dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
-        dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
-        dispatch(setInitialSchedule(initialData.schedule));
+        console.log("💾 [ShuddlePageClient] Initializing Redux state.");
+        const persistedState = loadState();
+        if (persistedState && Object.keys(persistedState).length > 0) {
+            console.log("💾 [ShuddlePageClient] Hydrating state from localStorage.");
+            dispatch({ type: 'REPLACE_STATE', payload: persistedState });
+        } else {
+            console.log("💾 [ShuddlePageClient] Hydrating state from initial server data.");
+            dispatch(setSchoolConfig(initialData.school));
+            dispatch(setAllClasses(initialData.classes));
+            dispatch(setAllSubjects(initialData.subjects));
+            dispatch(setAllTeachers(initialData.teachers));
+            dispatch(setAllClassrooms(initialData.rooms));
+            dispatch(setAllGrades(initialData.grades));
+            dispatch(setAllRequirements(initialData.lessonRequirements));
+            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+            dispatch(setInitialSchedule(initialData.schedule));
+        }
     }, [dispatch, initialData]);
-    // --- End Hydration Logic ---
+    
+    // --- Local Storage Autosave ---
+    useEffect(() => {
+        const throttledSave = throttle(() => {
+            saveState(store);
+            console.log("💾 Autosaved state to localStorage");
+        }, 1000);
+
+        throttledSave();
+        return () => throttledSave.cancel();
+    }, [store]);
+
+    // --- End State Hydration & Autosave ---
 
     useEffect(() => {
         if (!selectedViewId) {
@@ -153,7 +174,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         toast({ title: "Sauvegarde en cours...", description: "Les données sont en train d'être synchronisées."});
         const schedulePayload = { lessons: wizardData.schedule };
         try {
-            await dispatch(entityApi.endpoints.createLesson.initiate(schedulePayload as any) as any).unwrap(); // This needs proper typing
+            await dispatch(entityApi.endpoints.createLesson.initiate(schedulePayload as any) as any).unwrap();
             toast({ title: "Sauvegarde réussie!", description: "L'emploi du temps a été sauvegardé en base de données."});
         } catch (error) {
             toast({ variant: 'destructive', title: "Erreur de sauvegarde", description: "Impossible de sauvegarder l'emploi du temps."});
@@ -276,7 +297,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                         <RotateCw size={16} className="mr-2" />
                         Regénérer
                     </Button>
-                     <Button variant="secondary" onClick={handleSave}>
+                    <Button variant="secondary" onClick={handleSave}>
                         <Save size={16} className="mr-2" />
                         Sauvegarder
                     </Button>

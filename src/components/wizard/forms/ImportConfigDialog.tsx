@@ -14,20 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from '@/components/ui/button';
 import { Upload, FileText, Loader2, CheckCircle, AlertTriangle, List, Trash2 } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
-
 
 // Redux Actions
 import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
@@ -35,8 +22,7 @@ import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
 import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
 import { localAddTeacher, setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
 import { setAllTeacherAssignments, setAssignment } from '@/lib/redux/features/teacherAssignmentsSlice';
-import { fetchAllDrafts, activateDraft, deleteDraft, selectAllDrafts } from '@/lib/redux/features/scheduleDraftSlice';
-import { Role, UserSex, type Grade, type TeacherWithDetails, type Subject, type ClassWithGrade, type ScheduleDraft } from '@/types'; 
+import { Role, UserSex, type Grade, type TeacherWithDetails, type Subject, type ClassWithGrade } from '@/types'; 
 import { selectAllGrades } from '@/lib/redux/features/grades/gradesSlice';
 import { selectLessonRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
 
@@ -78,20 +64,11 @@ export const ImportConfigDialog: React.FC<ImportConfigDialogProps> = ({ grades }
   const [error, setError] = useState<string | null>(null);
   
   const dispatch = useAppDispatch();
-  const router = useRouter();
   const { toast } = useToast();
 
-  const drafts = useAppSelector(selectAllDrafts);
   const allSubjects = useAppSelector(state => state.subjects.items);
   const allRequirements = useAppSelector(selectLessonRequirements);
   const allClasses = useAppSelector(state => state.classes.items);
-
-
-  useEffect(() => {
-    if (isOpen) {
-      dispatch(fetchAllDrafts());
-    }
-  }, [isOpen, dispatch]);
 
 
   const processFile = (file: File, type: ImportType) => {
@@ -129,7 +106,7 @@ export const ImportConfigDialog: React.FC<ImportConfigDialogProps> = ({ grades }
                 gradeId: grade.id,
                 grade: grade,
                 _count: { students: 0, lessons: 0 },
-                supervisorId: null, // Fix: Added missing property
+                supervisorId: null,
               };
             });
             dispatch(setAllClasses(classes));
@@ -172,7 +149,7 @@ export const ImportConfigDialog: React.FC<ImportConfigDialogProps> = ({ grades }
                       name: `${teacherData.name} ${teacherData.surname}`,
                       email: teacherData.email, username: teacherData.email, role: Role.TEACHER, active: true,
                       img: null, createdAt: new Date(), updatedAt: new Date(),
-                      twoFactorEnabled: false, firstName: teacherData.name, lastName: teacherData.surname, // Fix: Added missing properties
+                      twoFactorEnabled: false, firstName: teacherData.name, lastName: teacherData.surname, 
                     },
                     subjects: teacherSubjects,
                     classes: [],
@@ -229,27 +206,6 @@ export const ImportConfigDialog: React.FC<ImportConfigDialogProps> = ({ grades }
     }
   };
   
-  const handleLoad = async (draftId: string) => {
-    await dispatch(activateDraft(draftId));
-    toast({ title: 'Scénario activé', description: "Les données du scénario ont été chargées. La page va s'actualiser." });
-    setIsOpen(false);
-    router.refresh(); 
-  };
-  
-  const handleDelete = async (draftId: string) => {
-    try {
-        await dispatch(deleteDraft(draftId)).unwrap();
-        toast({ title: 'Scénario supprimé' });
-    } catch (error: any) {
-        toast({
-            variant: 'destructive',
-            title: 'Erreur de suppression',
-            description: error.message || 'Impossible de supprimer le scénario.'
-        });
-    }
-};
-
-
   const ImportTabContent = ({ type, title, headers, example }: { type: ImportType, title: string, headers: string, example: string }) => (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
@@ -293,75 +249,25 @@ export const ImportConfigDialog: React.FC<ImportConfigDialogProps> = ({ grades }
     </div>
   );
 
-  const LoadScenarioTabContent = () => (
-    <div className="space-y-4">
-        <p className="text-sm text-muted-foreground">
-            Sélectionnez un scénario sauvegardé pour l'activer et l'éditer. Vos modifications actuelles non sauvegardées seront perdues.
-        </p>
-        <ScrollArea className="max-h-[50vh] overflow-y-auto p-1 border rounded-lg">
-            {drafts.length > 0 ? drafts.map((draft: ScheduleDraft) => (
-                <div key={draft.id} className="flex items-center justify-between p-3 rounded-md hover:bg-muted">
-                    <div>
-                        <p className="font-semibold flex items-center gap-2">
-                            {draft.name}
-                            {draft.isActive && <CheckCircle className="h-4 w-4 text-green-500" />}
-                        </p>
-                        <p className="text-sm text-muted-foreground">{draft.description}</p>
-                    </div>
-                    <div className="flex gap-2">
-                        <Button size="sm" variant="outline" onClick={() => handleLoad(draft.id)} disabled={draft.isActive || !!loading}>
-                            {draft.isActive ? 'Actif' : 'Charger'}
-                        </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <Button size="icon" variant="destructive" className="h-8 w-8" disabled={!!loading}>
-                                <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Confirmer la suppression</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Êtes-vous sûr de vouloir supprimer définitivement le scénario "{draft.name}" ? Cette action est irréversible.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDelete(draft.id)} className="bg-destructive hover:bg-destructive/90">Supprimer</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                    </div>
-                </div>
-            )) : <p className="text-center text-muted-foreground py-8">Aucun scénario sauvegardé.</p>}
-        </ScrollArea>
-    </div>
-  );
-
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline"><Upload className="mr-2 h-4 w-4" />Importer / Charger</Button>
+        <Button variant="outline"><Upload className="mr-2 h-4 w-4" />Importer depuis CSV</Button>
       </DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Importer ou Charger une Configuration</DialogTitle>
+          <DialogTitle>Importer une Configuration depuis CSV</DialogTitle>
           <DialogDescription>
-            Accélérez la configuration en importent vos données en masse ou en chargeant un scénario existant.
+            Accélérez la configuration en importent vos données en masse.
           </DialogDescription>
         </DialogHeader>
-        <Tabs defaultValue="load_scenario" className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="load_scenario">Charger Scénario</TabsTrigger>
-                <TabsTrigger value="subjects">Matières (CSV)</TabsTrigger>
-                <TabsTrigger value="classes">Classes (CSV)</TabsTrigger>
-                <TabsTrigger value="teachers">Professeurs (CSV)</TabsTrigger>
-                <TabsTrigger value="classrooms">Salles (CSV)</TabsTrigger>
+        <Tabs defaultValue="subjects" className="w-full">
+            <TabsList className="grid w-full grid-cols-4">
+                <TabsTrigger value="subjects">Matières</TabsTrigger>
+                <TabsTrigger value="classes">Classes</TabsTrigger>
+                <TabsTrigger value="teachers">Professeurs</TabsTrigger>
+                <TabsTrigger value="classrooms">Salles</TabsTrigger>
             </TabsList>
-             <TabsContent value="load_scenario" className="pt-4">
-                <LoadScenarioTabContent />
-            </TabsContent>
             <TabsContent value="subjects" className="pt-4">
                 <ImportTabContent type="subjects" title="Matières" headers="name, weeklyHours, coefficient" example="Mathématiques, 4, 2"/>
             </TabsContent>

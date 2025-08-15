@@ -16,8 +16,8 @@ import gradesReducer from './features/grades/gradesSlice';
 import teacherConstraintsReducer from './features/teacherConstraintsSlice';
 import subjectRequirementsReducer from './features/subjectRequirementsSlice';
 import teacherAssignmentsReducer from './features/teacherAssignmentsSlice';
-import attendanceReducer from './features/attendance/attendanceSlice';
 import schoolConfigReducer from './features/schoolConfigSlice';
+import attendanceReducer from './features/attendance/attendanceSlice';
 import { entityApi } from './api/entityApi/index';
 
 const rootReducer = combineReducers({
