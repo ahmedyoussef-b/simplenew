@@ -28,7 +28,6 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
     selectedViewId,
 }) => {
   const fullSchedule = useAppSelector((state) => state.schedule.items);
-  const [hoveredSubjectId, setHoveredSubjectId] = useState<number | null>(null);
 
   const { handlePlaceLesson, handleDeleteLesson } = useScheduleActions(
     wizardData,
@@ -68,6 +67,34 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
     wizardData, 
     timeSlots
   );
+
+  // Memoize possible subjects calculation
+  const possibleSubjectsByClass = useMemo(() => {
+    const classIdNum = parseInt(selectedViewId, 10);
+    if (viewMode !== 'class' || !classIdNum) return [];
+
+    const scheduledHoursBySubject = fullSchedule
+      .filter(l => l.classId === classIdNum)
+      .reduce((acc, l) => {
+        const lessonDurationMinutes = (new Date(l.endTime).getTime() - new Date(l.startTime).getTime()) / (1000 * 60);
+        const lessonHours = lessonDurationMinutes / 60; 
+        acc[l.subjectId] = (acc[l.subjectId] || 0) + lessonHours;
+        return acc;
+      }, {} as Record<number, number>);
+
+    return wizardData.subjects.map(subject => {
+      const requirement = wizardData.lessonRequirements?.find(r => 
+        r.classId === classIdNum && r.subjectId === subject.id
+      );
+      const requiredHours = requirement ? requirement.hours : (subject.weeklyHours || 0);
+      const scheduledHours = scheduledHoursBySubject[subject.id] || 0;
+      return {
+        subject,
+        remainingHours: requiredHours - scheduledHours,
+      };
+    }).filter(s => s.remainingHours > 0);
+
+  }, [fullSchedule, wizardData, selectedViewId, viewMode]);
 
   return (
       <Card className="p-4 print:shadow-none print:border-none">
@@ -114,14 +141,11 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                                   <InteractiveEmptyCell
                                       day={dayEnum}
                                       timeSlot={time}
+                                      possibleSubjects={viewMode === 'class' ? possibleSubjectsByClass : []}
+                                      onAddLesson={handlePlaceLesson}
                                       wizardData={wizardData}
                                       fullSchedule={fullSchedule}
-                                      onAddLesson={handlePlaceLesson}
-                                      isDropDisabled={!isEditable}
-                                      viewMode={viewMode}
-                                      selectedViewId={selectedViewId}
-                                      setHoveredSubjectId={setHoveredSubjectId}
-                                      hoveredSubjectId={hoveredSubjectId}
+                                      isEditable={isEditable}
                                   />
                               </TableCell>
                           );

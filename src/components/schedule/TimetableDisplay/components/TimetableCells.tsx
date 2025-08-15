@@ -1,7 +1,7 @@
 // src/components/schedule/TimetableDisplay/components/TimetableCells.tsx
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useAppDispatch } from '@/hooks/redux-hooks';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -128,6 +128,7 @@ interface InteractiveEmptyCellProps {
   onAddLesson: (subject: Subject, day: Day, timeSlot: string) => void;
   wizardData: WizardData;
   fullSchedule: Lesson[];
+  isEditable: boolean;
 }
 
 export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
@@ -137,6 +138,7 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
   onAddLesson,
   wizardData,
   fullSchedule,
+  isEditable
 }) => {
     
   const availableRoomsCount = React.useMemo(() => {
@@ -150,6 +152,10 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
     ).length;
   }, [day, timeSlot, wizardData, fullSchedule]);
 
+  if (!isEditable) {
+    return <div className="h-full w-full p-1 bg-muted/20"></div>;
+  }
+
   return (
     <div className="h-full w-full p-1 transition-colors flex flex-col items-center justify-center text-muted-foreground/80 group/cell hover:bg-muted/50">
       <div className="flex-1 flex flex-col items-center justify-center opacity-0 group-hover/cell:opacity-100 transition-opacity">
@@ -159,7 +165,7 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
         </div>
          <div className="flex items-center gap-1 text-xs">
             <BookOpen size={12}/>
-            <span>{possibleSubjects.length}</span>
+            <span>{possibleSubjects?.length || 0}</span>
         </div>
       </div>
       <Popover>
@@ -172,7 +178,7 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
           <p className="text-xs text-center font-semibold mb-2">Ajouter un cours</p>
           <ScrollArea className="h-60">
             <div className="space-y-1">
-              {possibleSubjects.map(({ subject, remainingHours }) => (
+              {(possibleSubjects || []).map(({ subject, remainingHours }) => (
                 <Button 
                     key={subject.id}
                     variant="ghost"
@@ -187,7 +193,7 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
                     </Badge>
                 </Button>
               ))}
-              {possibleSubjects.length === 0 && (
+              {(!possibleSubjects || possibleSubjects.length === 0) && (
                 <p className="text-xs text-center text-muted-foreground p-4">Aucune matière assignée à cette classe.</p>
               )}
             </div>
