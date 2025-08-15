@@ -4,13 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/componen
 import { Button } from '@/components/ui/button';
 import { Users, ArrowRight } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-
-type ClassWithDetails = {
-    id: number;
-    name: string;
-    capacity: number;
-    _count: { students: number };
-};
+import type { ClassWithDetails } from '@/app/(dashboard)/list/classes/page';
 
 interface ClassCardProps {
     classItem: ClassWithDetails;
