@@ -71,7 +71,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
          <Button variant="outline" size="sm" asChild>
-          <Link href={`/list/classes?viewGradeId=${classData.grade.level}`}>
+          <Link href={`/list/classes?viewGradeId=${classData.grade.id}`}>
             <ArrowLeft className="mr-2 h-4 w-4" />
             Retour aux Classes du Niveau {classData.grade.level}
           </Link>
@@ -135,7 +135,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
 
         {/* Colonne de Droite: Emploi du Temps */}
         <div className="lg:col-span-2">
-            <Card className="h-[900px] flex flex-col">
+            <Card className="h-full flex flex-col">
                 <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                         <CalendarIcon />
@@ -145,7 +145,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
                         Horaire des cours pour la classe {classData.name}.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="flex-grow">
+                <CardContent className="flex-grow min-h-[700px]">
                     <TimetableDisplay
                         wizardData={wizardData}
                         viewMode="class"
