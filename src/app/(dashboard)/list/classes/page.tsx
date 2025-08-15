@@ -11,8 +11,7 @@ import { ArrowLeft, Layers3 } from "lucide-react";
 import GradeCard from "@/components/classes/GradeCard";
 import ClassCard from "@/components/classes/ClassCard";
 import { cn } from '@/lib/utils';
-import { getServerSession } from '@/lib/auth-utils';
-import prisma from "@/lib/prisma"; // This will be removed as part of the fix
+import { SafeUser } from '@/types'; // Import SafeUser for session type
 
 type GradeWithClassCount = Grade & {
   _count: { classes: number };
@@ -128,12 +127,15 @@ const ClassesPageContent: React.FC<ClassesPageProps> = ({ grades, classes, userR
 
 
 // This is the new Server Component wrapper that fetches data
-export default async function ClassesPage({
+const ServerClassesPage = async ({
   searchParams,
 }: {
   searchParams: { [key: string]: string | string[] | undefined };
-}) {
-    const session = await getServerSession();
+}) => {
+    const { getServerSession } = await import('@/lib/auth-utils');
+    const prisma = (await import('@/lib/prisma')).default;
+
+    const session: { user: SafeUser } | null = await getServerSession();
     const userRole = session?.user?.role as AppRole | undefined;
 
     const grades: GradeWithClassCount[] = await prisma.grade.findMany({
@@ -152,3 +154,5 @@ export default async function ClassesPage({
 
     return <ClassesPageContent grades={grades} classes={classes} userRole={userRole} />;
 }
+
+export default ServerClassesPage;
