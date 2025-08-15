@@ -17,12 +17,23 @@ import ViewModeTabs from '../schedule/TimetableDisplay/components/ViewModeTabs';
 // Hooks & Redux
 import useWizardData from '@/hooks/useWizardData';
 import useWizardSteps from '@/hooks/useWizardSteps';
-import { addLesson, removeLesson, setInitialSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
+import { setInitialSchedule, saveSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
 import { generateSchedule } from '@/lib/schedule-generation';
 import { useToast } from '@/hooks/use-toast';
+import { loadState, saveState } from '@/lib/redux/storage';
 
 import { useGetClassesQuery, useGetSubjectsQuery, useGetTeachersQuery, useGetRoomsQuery, useGetGradesQuery } from '@/lib/redux/api/entityApi';
 import type { WizardData, Lesson, ValidationResult, Day, Subject } from '@/types';
+import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
+import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
+import { setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
+import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
+import { setAllGrades } from '@/lib/redux/features/grades/gradesSlice';
+import { setAllLessonRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
+import { setAllTeacherConstraints } from '@/lib/redux/features/teacherConstraintsSlice';
+import { setAllSubjectRequirements } from '@/lib/redux/features/subjectRequirementsSlice';
+import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
+import { setSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
 
 
 interface ShuddlePageClientProps {
@@ -59,7 +70,9 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const dispatch = useAppDispatch();
     const { toast } = useToast();
     const [mode, setMode] = useState<'wizard' | 'view'>('wizard'); 
-    
+    const scheduleItems = useAppSelector(state => state.schedule.items);
+    const [isSaving, setIsSaving] = useState(false);
+
     // RTK Query hooks for data fetching
     const { data: classesData, isLoading: isLoadingClasses } = useGetClassesQuery(undefined);
     const { data: subjectsData, isLoading: isLoadingSubjects } = useGetSubjectsQuery(undefined);
@@ -79,6 +92,40 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const [validationResults, setValidationResults] = useState<ValidationResult[]>([]);
     
     const isDataLoading = isLoadingClasses || isLoadingSubjects || isLoadingTeachers || isLoadingRooms || isLoadingGrades;
+    
+    // Hydrate store from initial server data
+    useEffect(() => {
+        console.log("💧 [ShuddlePageClient] Hydratation du store Redux avec les données initiales du serveur.");
+        const persistedState = loadState();
+        if(persistedState) {
+            console.log("💾 [ShuddlePageClient] État trouvé dans le localStorage, restauration.");
+            dispatch(setAllClasses(persistedState.classes.items));
+            dispatch(setAllSubjects(persistedState.subjects.items));
+            dispatch(setAllTeachers(persistedState.teachers.items));
+            dispatch(setAllClassrooms(persistedState.classrooms.items));
+            dispatch(setAllGrades(persistedState.grades.items));
+            dispatch(setAllLessonRequirements(persistedState.lessonRequirements.items));
+            dispatch(setAllTeacherConstraints(persistedState.teacherConstraints.items));
+            dispatch(setAllSubjectRequirements(persistedState.subjectRequirements.items));
+            dispatch(setAllTeacherAssignments(persistedState.teacherAssignments.items));
+            dispatch(setSchoolConfig(persistedState.schoolConfig));
+            dispatch(setInitialSchedule(persistedState.schedule.items));
+        } else if (initialData) {
+             console.log("📦 [ShuddlePageClient] Aucune donnée locale, utilisation des données initiales du serveur.");
+            dispatch(setAllClasses(initialData.classes));
+            dispatch(setAllSubjects(initialData.subjects));
+            dispatch(setAllTeachers(initialData.teachers));
+            dispatch(setAllClassrooms(initialData.rooms));
+            dispatch(setAllGrades(initialData.grades));
+            dispatch(setAllLessonRequirements(initialData.lessonRequirements));
+            dispatch(setAllTeacherConstraints(initialData.teacherConstraints));
+            dispatch(setAllSubjectRequirements(initialData.subjectRequirements));
+            dispatch(setAllTeacherAssignments(initialData.teacherAssignments));
+            dispatch(setSchoolConfig(initialData.school));
+            dispatch(setInitialSchedule(initialData.schedule || []));
+        }
+    }, [dispatch, initialData]);
+    
     
     useEffect(() => {
         if (!selectedViewId) {
@@ -163,6 +210,26 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
         }
     };
     
+    const handleSaveSchedule = useCallback(async () => {
+        setIsSaving(true);
+        toast({ title: "Sauvegarde en cours...", description: "Vos modifications sont en cours d'enregistrement dans la base de données." });
+        try {
+            await dispatch(saveSchedule(scheduleItems)).unwrap();
+            toast({
+                title: "Emploi du temps sauvegardé !",
+                description: "Toutes vos modifications ont été enregistrées avec succès."
+            });
+        } catch (error: any) {
+             toast({
+                variant: 'destructive',
+                title: "Échec de la sauvegarde",
+                description: error.message || "Une erreur est survenue lors de la sauvegarde."
+            });
+        } finally {
+            setIsSaving(false);
+        }
+    }, [dispatch, scheduleItems, toast]);
+
 
     const renderStepContent = () => {
         const StepComponent = steps[currentStep].component;
@@ -249,6 +316,10 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
                     <Button variant="outline" onClick={() => window.print()}>
                         <Printer size={16} className="mr-2" />
                         Imprimer
+                    </Button>
+                     <Button onClick={handleSaveSchedule} disabled={isSaving}>
+                        {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                        Sauvegarder et Terminer
                     </Button>
                  </div>
             </div>

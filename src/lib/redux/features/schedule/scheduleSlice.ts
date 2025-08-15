@@ -1,4 +1,3 @@
-
 // src/lib/redux/features/schedule/scheduleSlice.ts
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit';
 import { Day, Lesson as AppLesson, TeacherConstraint } from '@/types';
