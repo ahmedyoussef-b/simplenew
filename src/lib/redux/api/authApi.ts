@@ -57,7 +57,7 @@ export interface Verify2FARequest {
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({ baseUrl: '/api/auth/' }),
-  tagTypes: ['Session'], // Added a tag for session data
+  tagTypes: ['Session'],
   endpoints: (builder) => ({
     login: builder.mutation<LoginResponse, LoginSchema>({
       query: (credentials) => ({
@@ -72,8 +72,9 @@ export const authApi = createApi({
             console.log("✅ [authApi] Login queryFulfilled. Data:", data);
             if ('user' in data) { // Check if it's AuthResponse
                 dispatch(setUser(data.user));
+                 // Invalidate the session tag to force a re-fetch of the session state
+                dispatch(authApi.util.invalidateTags(['Session']));
             }
-            // If it's a TwoFactorResponse, we do nothing here. The component will handle redirection.
         } catch (error) {
             console.error("❌ [authApi] Login queryFulfilled failed.", error);
         }
@@ -125,6 +126,8 @@ export const authApi = createApi({
             try {
                 const { data } = await queryFulfilled;
                 dispatch(setUser(data.user));
+                // Invalidate the session tag to force a re-fetch of the session state
+                dispatch(authApi.util.invalidateTags(['Session']));
             } catch (error) {
                 // Handle error
             }
@@ -132,8 +135,8 @@ export const authApi = createApi({
     }),
     getSession: builder.query<SessionResponse, void>({
       query: () => 'session',
-      providesTags: ['Session'], // Provide the 'Session' tag
-      async onQueryStarted(args, { dispatch, queryFulfilled }) {
+      providesTags: (result) => (result ? [{ type: 'Session', id: 'CURRENT' }] : []),
+       async onQueryStarted(args, { dispatch, queryFulfilled }) {
         console.log("▶️ [authApi] onQueryStarted for getSession query.");
         try {
           const { data } = await queryFulfilled;
@@ -141,11 +144,13 @@ export const authApi = createApi({
           if (data?.user) {
             dispatch(setUser(data.user));
           } else {
-             dispatch(logoutAction());
+             // We no longer automatically log out here to prevent race conditions.
+             // The UI will simply show a logged-out state if user is null.
+             console.log("ℹ️ [authApi] getSession found no active user.");
           }
         } catch (error) {
           console.error("❌ [authApi] getSession queryFulfilled failed.", error);
-          dispatch(logoutAction());
+          // We also don't logout on error to avoid race conditions.
         }
       },
     }),
@@ -154,10 +159,17 @@ export const authApi = createApi({
         url: 'logout',
         method: 'POST',
       }),
-      invalidatesTags: ['Session'], // Invalidate session on logout
       async onQueryStarted(args, { dispatch, queryFulfilled }) {
-        await queryFulfilled;
-        dispatch(logoutAction());
+        try {
+            await queryFulfilled;
+            dispatch(logoutAction());
+            // Clear the cache to ensure a clean state on next login
+            dispatch(authApi.util.resetApiState());
+        } catch {
+             // Even if logout fails on the server, force it on the client
+             dispatch(logoutAction());
+             dispatch(authApi.util.resetApiState());
+        }
       },
     }),
   }),
