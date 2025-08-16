@@ -1,9 +1,11 @@
+
 // src/components/teacher/TeacherStatsCards.tsx
 import { Book, GraduationCap, CalendarCheck } from 'lucide-react';
 
 interface TeacherStatsCardsProps {
   stats: {
     subjects: number;
+    lessons: number;
   };
 }
 
@@ -23,7 +25,7 @@ export default function TeacherStatsCards({ stats }: TeacherStatsCardsProps) {
         <GraduationCap className="w-6 h-6 text-primary"/>
         <div>
           <h1 className="text-xl font-semibold">
-            N/A
+            {stats.lessons}
           </h1>
           <span className="text-sm text-gray-400">Cours Donnés</span>
         </div>

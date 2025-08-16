@@ -1,3 +1,4 @@
+
 // src/lib/data-fetching/fetch-wizard-data.ts
 import prisma from "@/lib/prisma";
 import type { WizardData, ClassWithGrade, TeacherWithDetails, Subject, Classroom, Grade, LessonRequirement, TeacherConstraint, SubjectRequirement, TeacherAssignment, SchoolData, Lesson } from '@/types';
@@ -56,7 +57,11 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
         const teachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
             ...t,
             classes: [],
-            _count: { subjects: t.subjects.length, classes: new Set(t.lessons.map(l => l.classId)).size },
+            _count: { 
+              subjects: t.subjects.length, 
+              classes: new Set(t.lessons.map(l => l.classId)).size,
+              lessons: activeDraft.lessons.filter(l => l.teacherId === t.id).length
+            },
         }));
 
         return toSerializable({
@@ -109,6 +114,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
         _count: {
             subjects: t.subjects.length,
             classes: classIds.size,
+            lessons: lessons.filter(l => l.teacherId === t.id).length
         },
       };
     });

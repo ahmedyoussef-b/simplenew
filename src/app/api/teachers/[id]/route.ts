@@ -17,7 +17,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       include: {
         user: true,
         subjects: true,
-        lessons: { // Fetch lessons to determine classes
+        lessons: { // Fetch lessons to determine classes and count
           select: {
             class: true,
           },
@@ -29,6 +29,8 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     if (!teacherFromDb) {
       return NextResponse.json({ message: 'Enseignant non trouvé' }, { status: 404 });
     }
+
+    const totalLessons = await prisma.lesson.count({ where: { teacherId: id } });
     
     // Extract unique classes from lessons
     const uniqueClasses = teacherFromDb.lessons.map(l => l.class).filter((c): c is NonNullable<typeof c> => c !== null);
@@ -39,6 +41,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
       _count: {
         subjects: teacherFromDb.subjects.length,
         classes: uniqueClasses.length,
+        lessons: totalLessons,
       }
     };
 
@@ -131,6 +134,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         distinct: ['classId']
     });
     const uniqueClasses = lessons.map(l => l.class).filter((c): c is NonNullable<typeof c> => c !== null);
+    const totalLessons = await prisma.lesson.count({ where: { teacherId: id } });
 
     const responseData: TeacherWithDetails = {
       ...updatedTeacherWithRelations,
@@ -138,6 +142,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
       _count: {
         subjects: updatedTeacherWithRelations.subjects.length,
         classes: uniqueClasses.length,
+        lessons: totalLessons
       }
     };
 

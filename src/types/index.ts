@@ -106,6 +106,7 @@ export type TeacherWithDetails = Omit<PrismaTeacher, 'user'> & {
     _count: {
         subjects: number;
         classes: number;
+        lessons: number; // Added lesson count
     };
 };
 
