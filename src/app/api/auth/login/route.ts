@@ -79,8 +79,8 @@ export async function POST(req: NextRequest) {
             name: SESSION_COOKIE_NAME,
             value: finalToken,
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+            secure: true, // Forcer à true pour la compatibilité cross-origin
+            sameSite: 'none', // Forcer à 'none' pour la compatibilité cross-origin (iframe)
             maxAge: 60 * 60 * 24, // 1 jour
             path: '/',
             domain: process.env.NODE_ENV === 'production' ? '.riadh5college.netlify.app' : undefined
