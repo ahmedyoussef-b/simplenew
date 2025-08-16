@@ -79,10 +79,11 @@ export async function POST(req: NextRequest) {
             name: SESSION_COOKIE_NAME,
             value: finalToken,
             httpOnly: true,
-            secure: true, // Required for sameSite: 'none'
-            sameSite: 'none', // Allow cross-domain cookie
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
             maxAge: 60 * 60 * 24, // 1 jour
             path: '/',
+            domain: process.env.NODE_ENV === 'production' ? '.riadh5college.netlify.app' : undefined
         });
 
         return response;
