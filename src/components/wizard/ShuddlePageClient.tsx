@@ -29,7 +29,7 @@ import useWizardData from '@/hooks/useWizardData';
 import { setInitialSchedule, saveSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
 import { generateSchedule } from '@/lib/schedule-generation';
 import { useToast } from '@/hooks/use-toast';
-import { loadDraftsFromStorage } from '@/lib/redux/features/scheduleDraftSlice';
+import { loadDraftsFromStorage, selectActiveDraft } from '@/lib/redux/features/scheduleDraftSlice';
 import { setInitialData } from '@/lib/redux/features/wizardSlice';
 
 import type { WizardData, Lesson, ValidationResult, Day, Subject, ClassWithGrade } from '@/types';
@@ -71,6 +71,7 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const [mode, setMode] = useState<'wizard' | 'view'>('wizard');
     const scheduleItems = useAppSelector(state => state.schedule.items);
     const wizardData = useWizardData();
+    const activeDraft = useAppSelector(selectActiveDraft);
 
     // View state
     const [viewMode, setViewMode] = useState<'class' | 'teacher'>('class');
@@ -85,8 +86,23 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     // HYDRATION EFFECT
     useEffect(() => {
         console.log("💧 [ShuddlePageClient] Hydratation des données initiales.");
-        dispatch(setInitialData(initialData));
         dispatch(loadDraftsFromStorage());
+        // We check if an active draft exists in localStorage. If so, we use its data.
+        // Otherwise, we use the fresh data from the server.
+        const storedDrafts = localStorage.getItem('scheduleDrafts');
+        if (storedDrafts) {
+            const drafts = JSON.parse(storedDrafts);
+            const activeDraftFromStorage = drafts.find((d: any) => d.isActive);
+            if (activeDraftFromStorage) {
+                console.log("💧 [ShuddlePageClient] Scénario actif trouvé dans le stockage local. Hydratation avec les données du scénario.");
+                dispatch(setInitialData(activeDraftFromStorage.data));
+                return;
+            }
+        }
+        // Fallback to initial server data if no active draft is found.
+        console.log("💧 [ShuddlePageClient] Aucun scénario actif local. Hydratation avec les données du serveur.");
+        dispatch(setInitialData(initialData));
+
     }, [dispatch, initialData]);
     
     
