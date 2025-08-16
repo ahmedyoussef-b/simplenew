@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { useAppDispatch } from '@/hooks/redux-hooks';
 import { useToast } from "@/hooks/use-toast";
-import type { Day, Lesson, Subject, WizardData, Class, Teacher } from '@/types';
+import type { Day, Lesson, Subject, WizardData, Class, Teacher, TeacherWithDetails } from '@/types';
 import { findConflictingConstraint } from '@/lib/constraint-utils';
 import { formatTimeSimple, timeToMinutes } from '../utils/scheduleUtils';
 import { 
@@ -10,7 +10,7 @@ import {
     useUpdateLessonMutation,
     useDeleteLessonMutation 
 } from '@/lib/redux/api/entityApi';
-import { addLesson, removeLesson, updateLesson as updateLocalLesson } from '@/lib/redux/features/schedule/scheduleSlice';
+import { addLesson, removeLesson, updateLocalLesson } from '@/lib/redux/features/schedule/scheduleSlice';
 
 export const useScheduleActions = (
   wizardData: WizardData,
