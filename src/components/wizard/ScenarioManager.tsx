@@ -6,13 +6,12 @@ import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import {
-  fetchAllDrafts,
-  createDraft,
-  activateDraft,
-  deleteDraft,
-  selectAllDrafts,
-  selectActiveDraft,
-  saveOrUpdateDraft,
+    loadDraftsFromStorage,
+    saveDraftToStorage,
+    setActiveDraft,
+    deleteDraftFromStorage,
+    selectAllDrafts,
+    selectActiveDraft,
 } from '@/lib/redux/features/scheduleDraftSlice';
 import useWizardData from '@/hooks/useWizardData';
 
@@ -34,6 +33,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { setInitialData } from '@/lib/redux/features/wizardSlice';
+
 
 export default function ScenarioManager() {
   const dispatch = useAppDispatch();
@@ -51,7 +52,7 @@ export default function ScenarioManager() {
 
   useEffect(() => {
     if (isDialogOpen) {
-      dispatch(fetchAllDrafts());
+      dispatch(loadDraftsFromStorage());
     }
   }, [isDialogOpen, dispatch]);
 
@@ -61,61 +62,59 @@ export default function ScenarioManager() {
       return;
     }
     setLoading(true);
-    try {
-      await dispatch(createDraft({ 
-        name: newScenarioName, 
+    
+    const newDraft = {
+        id: `draft_${Date.now()}`,
+        name: newScenarioName,
         description: newScenarioDesc,
-        wizardData 
-      })).unwrap();
-      toast({ title: 'Nouveau scénario créé et activé' });
-      setNewScenarioName('');
-      setNewScenarioDesc('');
-      setIsDialogOpen(false);
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Erreur', description: error.message });
-    } finally {
-      setLoading(false);
+        data: wizardData,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    };
+
+    dispatch(saveDraftToStorage(newDraft));
+    dispatch(setActiveDraft(newDraft));
+    
+    toast({ title: 'Nouveau scénario créé et activé' });
+    setNewScenarioName('');
+    setNewScenarioDesc('');
+    setIsDialogOpen(false);
+    setLoading(false);
+  };
+
+  const handleLoad = (draftId: string) => {
+    const draftToLoad = drafts.find(d => d.id === draftId);
+    if (draftToLoad) {
+        dispatch(setActiveDraft(draftToLoad));
+        dispatch(setInitialData(draftToLoad.data)); // Hydrate Redux with draft data
+        toast({ title: 'Scénario activé', description: "Les données du scénario ont été chargées." });
+        setIsDialogOpen(false);
     }
   };
 
-  const handleLoad = async (draftId: string) => {
-    setLoading(true);
-    try {
-      await dispatch(activateDraft(draftId)).unwrap();
-      toast({ title: 'Scénario activé', description: "Les données du scénario ont été chargées." });
-      setIsDialogOpen(false);
-      // Let the main page handle data re-hydration from the new active draft state
-      window.location.reload(); 
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Erreur', description: error.message });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async (draftId: string) => {
+  const handleDelete = (draftId: string) => {
     setDeletingId(draftId);
-    try {
-      await dispatch(deleteDraft(draftId)).unwrap();
-      toast({ title: 'Scénario supprimé' });
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Erreur de suppression', description: error.message });
-    } finally {
-      setDeletingId(null);
-    }
+    dispatch(deleteDraftFromStorage(draftId));
+    toast({ title: 'Scénario supprimé' });
+    setDeletingId(null);
   };
   
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!activeDraft) return;
     setLoading(true);
-    try {
-      await dispatch(saveOrUpdateDraft({ wizardData, activeDraft })).unwrap();
-      toast({ title: 'Scénario sauvegardé', description: `Vos modifications pour "${activeDraft.name}" ont été sauvegardées.`});
-    } catch (error: any) {
-       toast({ variant: 'destructive', title: 'Erreur de sauvegarde', description: error.message });
-    } finally {
-      setLoading(false);
-    }
+    
+    const updatedDraft = {
+      ...activeDraft,
+      data: wizardData,
+      updatedAt: new Date().toISOString(),
+    };
+    
+    dispatch(saveDraftToStorage(updatedDraft));
+    dispatch(setActiveDraft(updatedDraft));
+
+    toast({ title: 'Scénario sauvegardé', description: `Vos modifications pour "${activeDraft.name}" ont été sauvegardées localement.`});
+    setLoading(false);
   };
 
 
@@ -133,7 +132,7 @@ export default function ScenarioManager() {
           <DialogHeader>
             <DialogTitle>Gérer les Scénarios d'Emploi du Temps</DialogTitle>
             <DialogDescription>
-              Créez, chargez ou supprimez différents scénarios pour expérimenter avec votre emploi du temps.
+              Créez, chargez ou supprimez différents scénarios pour expérimenter avec votre emploi du temps. Tout est sauvegardé dans votre navigateur.
             </DialogDescription>
           </DialogHeader>
 
@@ -167,7 +166,7 @@ export default function ScenarioManager() {
             </div>
             
             <div className="space-y-4">
-              <h4 className="font-semibold">Scénarios Existants</h4>
+              <h4 className="font-semibold">Scénarios Locaux</h4>
               <ScrollArea className="h-64 border rounded-lg p-2">
                 {drafts.length > 0 ? drafts.map(draft => (
                   <div key={draft.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted">
@@ -192,7 +191,7 @@ export default function ScenarioManager() {
                               <AlertDialogHeader>
                                 <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Cette action supprimera définitivement le scénario "{draft.name}".
+                                  Cette action supprimera définitivement le scénario "{draft.name}" de votre navigateur.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>

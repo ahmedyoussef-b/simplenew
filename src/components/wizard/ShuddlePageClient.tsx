@@ -29,31 +29,11 @@ import useWizardData from '@/hooks/useWizardData';
 import { setInitialSchedule, saveSchedule } from '@/lib/redux/features/schedule/scheduleSlice';
 import { generateSchedule } from '@/lib/schedule-generation';
 import { useToast } from '@/hooks/use-toast';
-import { fetchScheduleDraft, saveOrUpdateDraft } from '@/lib/redux/features/scheduleDraftSlice';
-
-import { 
-  useGetClassesQuery, 
-  useGetSubjectsQuery, 
-  useGetTeachersQuery, 
-  useGetRoomsQuery, 
-  useGetGradesQuery 
-} from '@/lib/redux/api/entityApi';
+import { loadDraftsFromStorage } from '@/lib/redux/features/scheduleDraftSlice';
+import { setInitialData } from '@/lib/redux/features/wizardSlice';
 
 import type { WizardData, Lesson, ValidationResult, Day, Subject, ClassWithGrade } from '@/types';
 import ScenarioManager from '@/components/wizard/ScenarioManager';
-
-import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
-import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
-import { setAllGrades } from '@/lib/redux/features/grades/gradesSlice';
-import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
-import { setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
-import { setSchoolConfig } from '@/lib/redux/features/schoolConfigSlice';
-import { setAllRequirements } from '@/lib/redux/features/lessonRequirements/lessonRequirementsSlice';
-import { setAllTeacherConstraints } from '@/lib/redux/features/teacherConstraintsSlice';
-import { setAllSubjectRequirements } from '@/lib/redux/features/subjectRequirementsSlice';
-import { setAllTeacherAssignments } from '@/lib/redux/features/teacherAssignmentsSlice';
-
-
 
 interface ShuddlePageClientProps {
     initialData: WizardData;
@@ -90,15 +70,6 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     const { toast } = useToast();
     const [mode, setMode] = useState<'wizard' | 'view'>('wizard');
     const scheduleItems = useAppSelector(state => state.schedule.items);
-    
-    // RTK Query hooks for data fetching - these will keep the data up-to-date
-    useGetClassesQuery(undefined);
-    useGetSubjectsQuery(undefined);
-    useGetTeachersQuery(undefined);
-    useGetRoomsQuery(undefined);
-    useGetGradesQuery(undefined);
-    
-    // This hook aggregates the latest data from all Redux slices
     const wizardData = useWizardData();
 
     // View state
@@ -113,19 +84,9 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     
     // HYDRATION EFFECT
     useEffect(() => {
-        console.log("💧 [ShuddlePageClient] Hydratation des données initiales du serveur.");
-        if (!initialData) return;
-        dispatch(setSchoolConfig(initialData.school));
-        dispatch(setAllClasses(initialData.classes || []));
-        dispatch(setAllSubjects(initialData.subjects || []));
-        dispatch(setAllTeachers(initialData.teachers || []));
-        dispatch(setAllClassrooms(initialData.rooms || []));
-        dispatch(setAllGrades(initialData.grades || []));
-        dispatch(setAllRequirements(initialData.lessonRequirements || []));
-        dispatch(setAllTeacherConstraints(initialData.teacherConstraints || []));
-        dispatch(setAllSubjectRequirements(initialData.subjectRequirements || []));
-        dispatch(setAllTeacherAssignments(initialData.teacherAssignments || []));
-        dispatch(setInitialSchedule(initialData.schedule || []));
+        console.log("💧 [ShuddlePageClient] Hydratation des données initiales.");
+        dispatch(setInitialData(initialData));
+        dispatch(loadDraftsFromStorage());
     }, [dispatch, initialData]);
     
     
@@ -566,6 +527,7 @@ const PageHeader: React.FC = () => (
             <Sparkles className="text-primary"/>
             Planificateur d'Emplois du Temps
         </h1>
+        <ScenarioManager />
     </div>
 );
 

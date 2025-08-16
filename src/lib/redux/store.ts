@@ -20,6 +20,7 @@ import schoolConfigReducer from './features/schoolConfigSlice';
 import attendanceReducer from './features/attendance/attendanceSlice';
 import { entityApi } from './api/entityApi/index';
 import scheduleDraftReducer from './features/scheduleDraftSlice';
+import wizardReducer from './features/wizardSlice'; // Import the new wizard slice
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -41,6 +42,7 @@ const rootReducer = combineReducers({
   schoolConfig: schoolConfigReducer,
   attendance: attendanceReducer,
   scheduleDraft: scheduleDraftReducer,
+  wizard: wizardReducer, // Add wizard slice to the root reducer
 });
 
 export const store = configureStore({
