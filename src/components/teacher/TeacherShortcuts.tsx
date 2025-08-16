@@ -15,27 +15,27 @@ export default function TeacherShortcuts({ teacherId }: TeacherShortcutsProps) {
         <div className="mt-4 flex gap-4 flex-wrap text-xs text-gray-500">
           <Link
             className="p-3 rounded-md bg-lamaPurpleLight shadow-sm hover:shadow-md hover:scale-105 transform transition-all duration-200 ease-out"
-            href={`/list/students?teacherId=${teacherId}`}
+            href={`/list/classes?teacherId=${teacherId}`}
           >
-            Étudiants de l'enseignant
+            Mes Classes
           </Link>
           <Link
             className="p-3 rounded-md bg-lamaYellowLight shadow-sm hover:shadow-md hover:scale-105 transform transition-all duration-200 ease-out"
             href={`/list/lessons?teacherId=${teacherId}`}
           >
-            Cours de l'enseignant
+            Mes Cours
           </Link>
           <Link
             className="p-3 rounded-md bg-pink-50 shadow-sm hover:shadow-md hover:scale-105 transform transition-all duration-200 ease-out"
             href={`/list/exams?teacherId=${teacherId}`}
           >
-            Examens de l'enseignant
+            Mes Examens
           </Link>
           <Link
             className="p-3 rounded-md bg-lamaSkyLight shadow-sm hover:shadow-md hover:scale-105 transform transition-all duration-200 ease-out"
             href={`/list/assignments?teacherId=${teacherId}`}
           >
-            Devoirs de l'enseignant
+            Mes Devoirs
           </Link>
         </div>
       </div>

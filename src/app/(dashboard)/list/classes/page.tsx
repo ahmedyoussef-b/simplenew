@@ -1,10 +1,10 @@
-
 // src/app/(dashboard)/list/classes/page.tsx
 
 import prisma from "@/lib/prisma";
 import { getServerSession } from "@/lib/auth-utils";
 import { type Class, type Grade, type Role as AppRole } from "@/types/index";
 import ClassesView from "@/components/classes/ClassesView";
+import { Prisma } from "@prisma/client";
 
 // --- TYPE DEFINITIONS ---
 export type GradeWithClassCount = Grade & {
@@ -33,7 +33,26 @@ export default async function ServerClassesPage({
         orderBy: { level: 'asc' },
     });
 
+    const whereClause: Prisma.ClassWhereInput = {};
+    const teacherId = searchParams?.teacherId;
+    let isTeacherFilteredView = false;
+    let teacherName: string | undefined = undefined;
+
+    if (teacherId && typeof teacherId === 'string') {
+        whereClause.lessons = {
+            some: {
+                teacherId: teacherId,
+            }
+        };
+        isTeacherFilteredView = true;
+        const teacher = await prisma.teacher.findUnique({ where: { id: teacherId }});
+        if (teacher) {
+            teacherName = `${teacher.name} ${teacher.surname}`;
+        }
+    }
+
     const classesData: ClassWithDetails[] = await prisma.class.findMany({
+      where: whereClause,
       include: {
         _count: { select: { students: true } },
         grade: true,
@@ -48,5 +67,7 @@ export default async function ServerClassesPage({
         classes={classesData} 
         userRole={userRole}
         initialGradeIdParam={initialGradeIdParam}
+        isTeacherFilteredView={isTeacherFilteredView}
+        teacherName={teacherName}
     />;
 }
