@@ -143,6 +143,13 @@ export const scheduleSlice = createSlice({
     removeLesson(state, action: PayloadAction<number>) {
       state.items = state.items.filter(lesson => lesson.id !== action.payload);
     },
+    updateLesson(state, action: PayloadAction<{ tempId: number; updatedLesson: Lesson }>) {
+        const { tempId, updatedLesson } = action.payload;
+        const index = state.items.findIndex(lesson => lesson.id === tempId);
+        if (index !== -1) {
+            state.items[index] = updatedLesson;
+        }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -171,6 +178,6 @@ export const scheduleSlice = createSlice({
   }
 });
 
-export const { setInitialSchedule, updateLessonSlot, updateLessonRoom, addLesson, removeLesson } = scheduleSlice.actions;
+export const { setInitialSchedule, updateLessonSlot, updateLessonRoom, addLesson, removeLesson, updateLesson } = scheduleSlice.actions;
 export const { selectSchedule, selectScheduleStatus } = scheduleSlice.selectors;
 export default scheduleSlice.reducer;
