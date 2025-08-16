@@ -3,24 +3,24 @@ import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import { TypedUseSelectorHook, useSelector } from 'react-redux';
 import { authApi } from './api/authApi';
 import authReducer from './features/auth/authSlice';
-import classesReducer from './features/classes/classesSlice';
-import subjectsReducer from './features/subjects/subjectsSlice';
-import teachersReducer from './features/teachers/teachersSlice';
-import classroomsReducer from './features/classrooms/classroomsSlice';
-import scheduleReducer from './features/schedule/scheduleSlice';
+import classesReducer, { setAllClasses } from './features/classes/classesSlice';
+import subjectsReducer, { setAllSubjects } from './features/subjects/subjectsSlice';
+import teachersReducer, { setAllTeachers } from './features/teachers/teachersSlice';
+import classroomsReducer, { setAllClassrooms } from './features/classrooms/classroomsSlice';
+import scheduleReducer, { setInitialSchedule } from './features/schedule/scheduleSlice';
 import sessionReducer from './slices/sessionSlice';
 import notificationReducer from './slices/notificationSlice';
 import reportReducer from './slices/reportSlice';
-import lessonRequirementsReducer from './features/lessonRequirements/lessonRequirementsSlice';
-import gradesReducer from './features/grades/gradesSlice';
-import teacherConstraintsReducer from './features/teacherConstraintsSlice';
-import subjectRequirementsReducer from './features/subjectRequirementsSlice';
-import teacherAssignmentsReducer from './features/teacherAssignmentsSlice';
-import schoolConfigReducer from './features/schoolConfigSlice';
+import lessonRequirementsReducer, { setAllRequirements } from './features/lessonRequirements/lessonRequirementsSlice';
+import gradesReducer, { setAllGrades } from './features/grades/gradesSlice';
+import teacherConstraintsReducer, { setAllTeacherConstraints } from './features/teacherConstraintsSlice';
+import subjectRequirementsReducer, { setAllSubjectRequirements } from './features/subjectRequirementsSlice';
+import teacherAssignmentsReducer, { setAllTeacherAssignments } from './features/teacherAssignmentsSlice';
+import schoolConfigReducer, { setSchoolConfig } from './features/schoolConfigSlice';
 import attendanceReducer from './features/attendance/attendanceSlice';
 import { entityApi } from './api/entityApi/index';
 import scheduleDraftReducer from './features/scheduleDraftSlice';
-import wizardReducer from './features/wizardSlice'; // Import the new wizard slice
+import wizardReducer from './features/wizardSlice';
 import { setInitialData } from './features/wizardSlice';
 
 const rootReducer = combineReducers({
@@ -43,7 +43,7 @@ const rootReducer = combineReducers({
   schoolConfig: schoolConfigReducer,
   attendance: attendanceReducer,
   scheduleDraft: scheduleDraftReducer,
-  wizard: wizardReducer, // Add wizard slice to the root reducer
+  wizard: wizardReducer,
 });
 
 // Middleware to handle the setInitialData action
