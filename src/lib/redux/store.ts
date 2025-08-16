@@ -21,6 +21,7 @@ import attendanceReducer from './features/attendance/attendanceSlice';
 import { entityApi } from './api/entityApi/index';
 import scheduleDraftReducer from './features/scheduleDraftSlice';
 import wizardReducer from './features/wizardSlice'; // Import the new wizard slice
+import { setInitialData } from './features/wizardSlice';
 
 const rootReducer = combineReducers({
   [authApi.reducerPath]: authApi.reducer,
@@ -45,13 +46,33 @@ const rootReducer = combineReducers({
   wizard: wizardReducer, // Add wizard slice to the root reducer
 });
 
+// Middleware to handle the setInitialData action
+const hydrationMiddleware = (store: any) => (next: any) => (action: any) => {
+  if (action.type === setInitialData.type) {
+    const data = action.payload;
+    store.dispatch(setSchoolConfig(data.school));
+    store.dispatch(setAllClasses(data.classes));
+    store.dispatch(setAllSubjects(data.subjects));
+    store.dispatch(setAllTeachers(data.teachers));
+    store.dispatch(setAllClassrooms(data.rooms));
+    store.dispatch(setAllGrades(data.grades));
+    store.dispatch(setAllRequirements(data.lessonRequirements));
+    store.dispatch(setAllTeacherConstraints(data.teacherConstraints));
+    store.dispatch(setAllSubjectRequirements(data.subjectRequirements));
+    store.dispatch(setAllTeacherAssignments(data.teacherAssignments));
+    store.dispatch(setInitialSchedule(data.schedule));
+  }
+  return next(action);
+};
+
+
 export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       immutableCheck: false,
       serializableCheck: false,
-    }).concat([authApi.middleware, entityApi.middleware]),
+    }).concat([authApi.middleware, entityApi.middleware, hydrationMiddleware]),
 });
 
 export type RootState = ReturnType<typeof rootReducer>;
