@@ -69,6 +69,13 @@ const nextConfig = {
         use: ['@svgr/webpack'],
     });
 
+    // Suppress warnings from handlebars library
+    config.resolve.alias = {
+        ...config.resolve.alias,
+        'handlebars/runtime': 'handlebars/dist/cjs/handlebars.runtime',
+        'handlebars': 'handlebars/dist/cjs/handlebars',
+    };
+
     return config;
   },
 };
