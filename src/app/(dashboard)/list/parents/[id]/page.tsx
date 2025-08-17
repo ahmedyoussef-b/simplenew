@@ -4,13 +4,12 @@ import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth-utils";
 import { Role as AppRole } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, User, Calendar as CalendarIcon, ArrowLeft, Mail, Phone, Home } from "lucide-react";
+import { Users, User, ArrowLeft, Mail, Phone, Home } from "lucide-react";
 import Link from "next/link";
-import TimetableDisplay from "@/components/schedule/TimetableDisplay";
 import DynamicAvatar from "@/components/DynamicAvatar";
-import type { WizardData, ClassWithGrade, TeacherWithDetails, Parent, Student, Subject, Classroom, LessonRequirement, TeacherConstraint, SubjectRequirement, Grade } from '@/types';
+import type { Parent } from '@/types';
 import type { Prisma } from '@prisma/client';
 
 // Define arguments for the prisma query to ensure type safety and reusability
@@ -80,82 +79,6 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
   }
   // --- End Access Control ---
 
-  const childrenClassIds = [...new Set(parent.students.map((child: ParentWithDetails['students'][number]) => child.classId).filter((id): id is number => id !== null))];
-
-  const [lessons, allSubjects, allTeachersFromDb, allClassrooms, allGrades, allLessonRequirements, allTeacherConstraints, allSubjectRequirements] = await Promise.all([
-    prisma.lesson.findMany({
-      where: {
-        classId: { in: childrenClassIds },
-      },
-      select: {
-        id: true,
-        name: true,
-        day: true,
-        startTime: true,
-        endTime: true,
-        subjectId: true,
-        classId: true,
-        teacherId: true,
-        classroomId: true,
-        scheduleDraftId: true,
-        createdAt: true,
-        updatedAt: true,
-        subject: { select: { name: true } },
-        class: { select: { name: true } },
-      },
-    }),
-    prisma.subject.findMany(),
-    prisma.teacher.findMany({ 
-        include: { 
-            user: true, 
-            subjects: true,
-            lessons: { select: { classId: true }, distinct: ['classId'] }
-        } 
-    }),
-    prisma.classroom.findMany(),
-    prisma.grade.findMany(),
-    prisma.lessonRequirement.findMany(),
-    prisma.teacherConstraint.findMany(),
-    prisma.subjectRequirement.findMany(),
-  ]);
-
-  const childrenClasses = parent.students.map((c: ParentWithDetails['students'][number]) => c.class).filter((c): c is ClassWithGrade => !!(c as any)?.grade);
-  const uniqueChildrenClasses = Array.from(new Map(childrenClasses.map(item => [item.id, item])).values());
-  
-  const teachersWithCount: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
-    ...t,
-    classes: [], // No need to map classes here as we get count from lessons
-    _count: {
-        subjects: t.subjects.length,
-        classes: new Set(t.lessons.map(l => l.classId)).size,
-    }
-  }));
-
-
-  const wizardData: WizardData = {
-    school: {
-      name: `Emploi du temps des enfants de ${parent.name} ${parent.surname}`,
-      startTime: '08:00',
-      endTime: '18:00',
-      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-      sessionDuration: 60,
-      scheduleDraftId: null,
-      schoolConfig: {}
-    },
-    classes: uniqueChildrenClasses,
-    subjects: allSubjects as Subject[],
-    teachers: teachersWithCount,
-    rooms: allClassrooms as Classroom[],
-    grades: allGrades as Grade[],
-    lessonRequirements: allLessonRequirements as LessonRequirement[],
-    teacherConstraints: allTeacherConstraints as TeacherConstraint[],
-    subjectRequirements: allSubjectRequirements as SubjectRequirement[],
-    teacherAssignments: [],
-    schedule: [],
-    scheduleDraftId: null
-  };
-
-
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -172,7 +95,6 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne de Gauche: Infos & Enfants */}
         <div className="lg:col-span-1 space-y-6">
             <Card>
                 <CardHeader>
@@ -206,7 +128,9 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
                      </div>
                 </CardContent>
             </Card>
-            
+        </div>
+        
+        <div className="lg:col-span-2">
             <Card>
                 <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
@@ -231,24 +155,6 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
                             </Link>
                         ))}
                     </div>
-                </CardContent>
-            </Card>
-        </div>
-
-        {/* Colonne de Droite: Emploi du Temps des Enfants */}
-        <div className="lg:col-span-2">
-            <Card className="h-full flex flex-col">
-                <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                        <CalendarIcon />
-                        <span>Emplois du Temps des Enfants</span>
-                    </CardTitle>
-                    <CardDescription>
-                        Vue combinée de l'horaire des cours pour tous les enfants.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow min-h-[700px]">
-                    <TimetableDisplay wizardData={wizardData} viewMode={"class"} selectedViewId={childrenClassIds[0]?.toString() || ""} />
                 </CardContent>
             </Card>
         </div>

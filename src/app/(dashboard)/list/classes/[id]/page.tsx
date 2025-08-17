@@ -3,22 +3,14 @@ import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/auth-utils";
 import { Role as AppRole } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Users, User, Calendar as CalendarIcon, ArrowLeft } from "lucide-react";
+import { Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
 import FormContainer from "@/components/FormContainer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import DynamicAvatar from "@/components/DynamicAvatar";
 import { Prisma } from "@prisma/client";
-import { fetchAllDataForWizard } from '@/lib/data-fetching/fetch-wizard-data';
-
-const TimetableDisplay = dynamic(() => import('@/components/schedule/TimetableDisplay'), {
-  ssr: false,
-  loading: () => <Skeleton className="h-full w-full" />,
-});
 
 
 // Define arguments for the prisma query to ensure type safety and reusability
@@ -52,15 +44,12 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
   const session = await getServerSession();
   const userRole = session?.user?.role as AppRole | undefined;
 
-  const [classData, wizardData] = await Promise.all([
-    prisma.class.findUnique({
+  const classData = await prisma.class.findUnique({
       where: {
         id: id,
       },
       include: classWithDetailsArgs.include,
-    }),
-    fetchAllDataForWizard(),
-  ]);
+    });
 
 
   if (!classData) {
@@ -85,7 +74,6 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne de Gauche: Infos & Étudiants */}
         <div className="lg:col-span-1 space-y-6">
             <Card>
                 <CardHeader>
@@ -114,7 +102,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
                         <span>Liste des Étudiants ({classData._count.students})</span>
                     </CardTitle>
                 </CardHeader>
-                <CardContent className="max-h-96 overflow-y-auto pr-2">
+                <CardContent className="max-h-[600px] overflow-y-auto pr-2">
                     <div className="space-y-3">
                         {classData.students.map(student => (
                             <Link key={student.id} href={`/list/students/${student.id}`} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted transition-colors">
@@ -129,28 +117,6 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
                             </Link>
                         ))}
                     </div>
-                </CardContent>
-            </Card>
-        </div>
-
-        {/* Colonne de Droite: Emploi du Temps */}
-        <div className="lg:col-span-2">
-            <Card className="h-full flex flex-col">
-                <CardHeader>
-                    <CardTitle className="flex items-center space-x-2">
-                        <CalendarIcon />
-                        <span>Emploi du Temps</span>
-                    </CardTitle>
-                    <CardDescription>
-                        Horaire des cours pour la classe {classData.name}.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="flex-grow min-h-[700px]">
-                    <TimetableDisplay
-                        wizardData={wizardData}
-                        viewMode="class"
-                        selectedViewId={classData.id.toString()}
-                    />
                 </CardContent>
             </Card>
         </div>
