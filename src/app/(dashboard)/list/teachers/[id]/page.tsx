@@ -1,14 +1,16 @@
+
 // src/app/(dashboard)/list/teachers/[id]/page.tsx
 import prisma from "@/lib/prisma";
 import { getServerSession } from "@/lib/auth-utils";
-import { type TeacherWithDetails } from "@/types/index";
+import { type TeacherWithDetails, Role, Lesson, ClassWithGrade, Subject, Classroom, WizardData } from "@/types/index";
 import { notFound, redirect } from "next/navigation";
-import { Role } from "@prisma/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import TeacherProfileCard from "@/components/teacher/TeacherProfileCard";
 import TeacherStatsCards from "@/components/teacher/TeacherStatsCards";
 import TeacherShortcuts from "@/components/teacher/TeacherShortcuts";
 import { fetchAllDataForWizard } from '@/lib/data-fetching/fetch-wizard-data';
+import TimetableDisplay from "@/components/schedule/TimetableDisplay";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 
 const SingleTeacherPage = async ({
   params,
@@ -26,25 +28,46 @@ const SingleTeacherPage = async ({
      redirect(`/${userRole?.toLowerCase() || 'login'}`);
   }
   
-  const wizardData = await fetchAllDataForWizard();
-
-  const teacher = wizardData.teachers.find(t => t.id === id);
+  const wizardDataFromDb = await fetchAllDataForWizard();
+  const teacher = wizardDataFromDb.teachers.find(t => t.id === id);
 
   if (!teacher) {
     return notFound();
   }
   
+  // Construct the specific wizardData for this teacher's schedule display
+  const teacherWizardData: WizardData = {
+      ...wizardDataFromDb,
+      schedule: wizardDataFromDb.schedule.filter(l => l.teacherId === id),
+  };
+
   return (
-    <div className="flex-1 p-4 flex flex-col gap-4 xl:flex-row">
-      <div className="w-full xl:w-2/3">
-        <div className="flex flex-col lg:flex-row gap-4">
-          <TeacherProfileCard teacher={teacher} userRole={userRole} />
-          <TeacherStatsCards stats={teacher._count} />
-        </div>
+    <div className="flex-1 p-4 flex flex-col gap-6">
+      <div className="flex flex-col xl:flex-row gap-6">
+          <div className="w-full xl:w-1/3">
+             <TeacherProfileCard teacher={teacher} userRole={userRole} />
+          </div>
+          <div className="w-full xl:w-2/3 flex flex-col gap-6">
+              <TeacherStatsCards stats={teacher._count} />
+              <TeacherShortcuts teacherId={teacher.id} />
+          </div>
       </div>
-      <div className="w-full xl:w-1/3 flex flex-col gap-4">
-        <TeacherShortcuts teacherId={teacher.id}  />
-      </div>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Emploi du Temps Personnel</CardTitle>
+          <CardDescription>
+            Aperçu de l'emploi du temps hebdomadaire pour cet enseignant.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TimetableDisplay 
+            wizardData={teacherWizardData} 
+            viewMode={"teacher"} 
+            selectedViewId={teacher.id} 
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };
