@@ -97,7 +97,7 @@ const TeacherPage = async () => {
     school: {
       name: 'Mon Emploi du Temps',
       startTime: '08:00',
-      endTime: '17:00',
+      endTime: '18:00',
       schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
       sessionDuration: 60,
       scheduleDraftId: null,

@@ -51,10 +51,11 @@ export function middleware(req: NextRequest) {
 
   // User is logged in
   if (userRole) {
+    const dashboardUrl = new URL(`/${userRole.toLowerCase()}`, req.url);
     // If they are on a public/auth page, redirect them to their dashboard
     if (['/login', '/register', '/accueil'].includes(pathname)) {
         console.log(`[Middleware] User is logged in. Redirecting from ${pathname} to their dashboard.`);
-        return NextResponse.redirect(new URL(`/${userRole.toLowerCase()}`, req.url));
+        return NextResponse.redirect(dashboardUrl);
     }
       
     // Check if the user has access to the requested protected route
@@ -64,7 +65,7 @@ export function middleware(req: NextRequest) {
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {
       console.log(`[Middleware] Role '${userRole}' not allowed for ${pathname}. Redirecting to their dashboard.`);
-      return NextResponse.redirect(new URL(`/${userRole.toLowerCase()}`, req.url));
+      return NextResponse.redirect(dashboardUrl);
     }
   } 
   // User is NOT logged in

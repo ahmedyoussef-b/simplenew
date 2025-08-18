@@ -106,7 +106,7 @@ const StudentPage = async () => {
     school: {
       name: `Classe ${studentClass.name}`,
       startTime: '08:00',
-      endTime: '17:00',
+      endTime: '18:00',
       schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
       sessionDuration: 60,
       scheduleDraftId: null,
