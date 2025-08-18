@@ -25,6 +25,9 @@ function main() {
         console.log('Nettoyage des anciennes données...');
         
         // Defensively check for models before trying to delete
+        if (prisma.chatroomSession) {
+            yield prisma.chatroomSession.deleteMany({});
+        }
         if (prisma.attendance) {
             yield prisma.attendance.deleteMany({});
         }
