@@ -51,7 +51,7 @@ const ConstraintsForm: React.FC<ConstraintsFormProps> = () => {
     }
 
     const newEntry: TeacherConstraint = {
-      id: Date.now().toString(),
+      id: (-Date.now()).toString(), // Create a temporary unique string ID for client-side
       teacherId: selectedTeacherId,
       day: newTeacherConstraint.day as Day,
       startTime: newTeacherConstraint.startTime,

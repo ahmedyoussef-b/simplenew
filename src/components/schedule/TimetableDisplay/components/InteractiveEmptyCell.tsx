@@ -15,12 +15,12 @@ interface InteractiveEmptyCellProps {
   day: Day;
   timeSlot: string;
   wizardData: WizardData;
-  fullSchedule: Lesson[];
-  onAddLesson: (subject: Subject, day: Day, timeSlot: string) => void;
+ fullSchedule: Lesson[];
+  onAddLesson: (subjectInfo: Pick<Subject, 'id' | 'name' | 'weeklyHours' | 'coefficient'>, day: Day, time: string) => Promise<void>;
   isDropDisabled?: boolean;
+ setHoveredSubjectId: (subjectId: number | null) => void;
   viewMode: 'class' | 'teacher';
   selectedViewId: string;
-  setHoveredSubjectId: (id: number | null) => void;
   hoveredSubjectId: number | null;
 }
 

@@ -15,7 +15,7 @@ export default function TeacherProfileCard({ teacher, userRole }: TeacherProfile
   return (
      <Card className="flex-1 overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
         <CardHeader className="p-0 relative h-32 bg-gradient-to-r from-primary/20 to-accent/20">
-           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[-50%] transform">
+           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[calc(20%+1rem)] transform">
                 <div className="relative h-32 w-32 rounded-full overflow-hidden border-4 border-background bg-background shadow-lg">
                     <DynamicAvatar 
                         imageUrl={teacher.user?.img || teacher.img}
