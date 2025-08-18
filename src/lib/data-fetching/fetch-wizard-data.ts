@@ -39,8 +39,9 @@ const parseJsonFields = (draft: any) => {
     };
 
     parsedData.school = { ...defaultSchoolConfig, ...(parsedData.schoolConfig || {}) };
+    parsedData.classrooms = parsedData.rooms || [];
     delete parsedData.schoolConfig; // Remove the redundant field
-    parsedData.classrooms = parsedData.rooms; // remap rooms to classrooms
+    delete parsedData.rooms; // Remove the old rooms field to avoid conflicts
 
     return parsedData;
 };
