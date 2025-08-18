@@ -196,19 +196,19 @@ function main() {
         // Professeurs spécialisés
         for (let i = 1; i <= 4; i++) {
             const user = yield prisma.user.create({ data: { email: `prof.sport${i}@example.com`, username: `prof.sport${i}`, password: hashedPassword, role: client_1.Role.TEACHER, name: `Prof Sport ${i}`, active: true, firstName: 'Professeur', lastName: `Sportif ${i}` } });
-            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Sportif ${i}`, sex: client_1.UserSex.MALE, birthday: new Date(), bloodType: 'A+', subjects: { connect: { id: subjectMap.get('EDUCATION SPORTIVE').id } } } }));
+            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Sportif ${i}`, sex: client_1.UserSex.MALE, birthday: new Date(), bloodType: 'A+', subjects: { connect: { id: subjectMap.get('EDUCATION SPORTIVE').id } } }));
         }
         for (let i = 1; i <= 3; i++) {
             const user = yield prisma.user.create({ data: { email: `prof.musi${i}@example.com`, username: `prof.musi${i}`, password: hashedPassword, role: client_1.Role.TEACHER, name: `Prof Musique ${i}`, active: true, firstName: 'Professeur', lastName: `Musical ${i}` } });
-            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Musical ${i}`, sex: client_1.UserSex.FEMALE, birthday: new Date(), bloodType: 'B+', subjects: { connect: { id: subjectMap.get('MUSIQUE').id } } } }));
+            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Musical ${i}`, sex: client_1.UserSex.FEMALE, birthday: new Date(), bloodType: 'B+', subjects: { connect: { id: subjectMap.get('MUSIQUE').id } } }));
         }
         for (let i = 1; i <= 2; i++) {
             const user = yield prisma.user.create({ data: { email: `prof.art${i}@example.com`, username: `prof.art${i}`, password: hashedPassword, role: client_1.Role.TEACHER, name: `Prof Art ${i}`, active: true, firstName: 'Professeur', lastName: `Artiste ${i}` } });
-            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Artiste ${i}`, sex: i % 2 === 0 ? client_1.UserSex.FEMALE : client_1.UserSex.MALE, birthday: new Date(), bloodType: 'AB+', subjects: { connect: { id: subjectMap.get('ART').id } } } }));
+            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Artiste ${i}`, sex: i % 2 === 0 ? client_1.UserSex.FEMALE : client_1.UserSex.MALE, birthday: new Date(), bloodType: 'AB+', subjects: { connect: { id: subjectMap.get('ART').id } } }));
         }
         for (let i = 1; i <= 3; i++) {
             const user = yield prisma.user.create({ data: { email: `prof.tech${i}@example.com`, username: `prof.tech${i}`, password: hashedPassword, role: client_1.Role.TEACHER, name: `Prof Technique ${i}`, active: true, firstName: 'Professeur', lastName: `Technique ${i}` } });
-            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Technique ${i}`, sex: client_1.UserSex.MALE, birthday: new Date(), bloodType: 'O+', subjects: { connect: { id: subjectMap.get('TECHNIQUE').id } } } }));
+            createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `Technique ${i}`, sex: client_1.UserSex.MALE, birthday: new Date(), bloodType: 'O+', subjects: { connect: { id: subjectMap.get('TECHNIQUE').id } } }));
         }
         // Professeurs pour les autres matières
         const coreSubjects = subjects.filter(s => !['EDUCATION SPORTIVE', 'MUSIQUE', 'ART', 'TECHNIQUE'].includes(s.name));
@@ -217,7 +217,7 @@ function main() {
                 const sanitizedSubjectName = subject.name.toLowerCase().replace(/[^a-z0-9]/g, '');
                 const username = `prof.${sanitizedSubjectName}${i}`;
                 const user = yield prisma.user.create({ data: { email: `${username}@example.com`, username: username, password: hashedPassword, role: client_1.Role.TEACHER, name: `Prof ${subject.name} ${i}`, active: true, firstName: 'Professeur', lastName: `${subject.name} ${i}` } });
-                createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `${subject.name} ${i}`, sex: i % 2 === 0 ? client_1.UserSex.FEMALE : client_1.UserSex.MALE, birthday: new Date(), bloodType: 'O-', subjects: { connect: { id: subject.id } } } }));
+                createdTeachers.push(yield prisma.teacher.create({ data: { userId: user.id, name: 'Professeur', surname: `${subject.name} ${i}`, sex: i % 2 === 0 ? client_1.UserSex.FEMALE : client_1.UserSex.MALE, birthday: new Date(), bloodType: 'O-', subjects: { connect: { id: subject.id } } }));
             }
         }
         console.log(`${createdTeachers.length} professeurs créés.`);
@@ -286,3 +286,5 @@ function main() {
         yield prisma.$disconnect();
     }
 }))();
+
+    

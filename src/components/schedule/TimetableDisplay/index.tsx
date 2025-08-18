@@ -79,7 +79,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
         const classLessons = fullSchedule.filter(l => l.classId === student.classId && !l.optionalSubjectId);
 
         const studentOptionalLessons = fullSchedule.filter(l => 
-          l.optionalSubjectId && student.optionalSubjects?.some((os: Subject) => os.id === l.optionalSubjectId)
+ l.optionalSubjectId && student.optionalSubjects?.some((os: { name: string; id: number; gradeId: number; description: string | null; }) => os.id === l.optionalSubjectId)
         );
 
         return [...classLessons, ...studentOptionalLessons];
