@@ -1,4 +1,3 @@
-
 import React, { useMemo } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { Button } from '@/components/ui/button';
@@ -17,11 +16,10 @@ interface InteractiveEmptyCellProps {
   wizardData: WizardData;
   fullSchedule: Lesson[];
   onAddLesson: (subjectInfo: Pick<Subject, 'id' | 'name' | 'weeklyHours' | 'coefficient'>, day: Day, time: string) => Promise<void>;
-  isDropDisabled?: boolean;
+  isEditable: boolean;
   setHoveredSubjectId: (subjectId: number | null) => void;
-  viewMode: 'class' | 'teacher';
-  selectedViewId: string;
   hoveredSubjectId: number | null;
+  possibleSubjects: Array<{ subject: Subject; remainingHours: number }>;
 }
 
 const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({ 
@@ -30,41 +28,17 @@ const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
   wizardData, 
   fullSchedule, 
   onAddLesson, 
-  isDropDisabled = false, 
-  viewMode, 
-  selectedViewId, 
+  isEditable, 
   setHoveredSubjectId,
   hoveredSubjectId,
+  possibleSubjects
 }) => {
 
   const isSaturdayAfternoon = useMemo(() => {
     return day === 'SATURDAY' && timeToMinutes(timeSlot) >= 720; // 12:00 PM
   }, [day, timeSlot]);
 
-  const isTeacherConstrained = useMemo(() => {
-    if (!hoveredSubjectId) return false;
-
-    const classIdNum = parseInt(selectedViewId, 10);
-    if (viewMode !== 'class' || isNaN(classIdNum)) return false;
-
-    const assignment = wizardData.teacherAssignments.find(a => 
-      a.subjectId === hoveredSubjectId && a.classIds.includes(classIdNum)
-    );
-    if (!assignment) return false;
-    
-    const teacher = wizardData.teachers.find(t => t.id === assignment.teacherId);
-    if (!teacher) return false;
-
-    const lessonStartTime = timeSlot;
-    const lessonEndTimeDate = new Date(Date.UTC(2000, 0, 1, ...lessonStartTime.split(':').map(Number) as [number, number]));
-    lessonEndTimeDate.setMinutes(lessonEndTimeDate.getMinutes() + (wizardData.school?.sessionDuration || 60));
-    const lessonEndTime = formatTimeSimple(lessonEndTimeDate);
-    
-    return !!findConflictingConstraint(teacher.id, day, lessonStartTime, lessonEndTime, wizardData.teacherConstraints);
-
-  }, [hoveredSubjectId, day, timeSlot, wizardData, selectedViewId, viewMode]);
-
-  const isDisabled = isDropDisabled || isTeacherConstrained || isSaturdayAfternoon;
+  const isDisabled = isEditable || isSaturdayAfternoon;
   
   const { setNodeRef, isOver } = useDroppable({
     id: `empty-${day}-${timeSlot}`,
@@ -80,30 +54,6 @@ const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
     fullSchedule
   ), [day, timeSlot, wizardData, fullSchedule]);
   
-  const availableSubjects = React.useMemo(() => {
-    if (viewMode !== 'class' || !selectedViewId || !wizardData.subjects || !wizardData.school) {
-      return [];
-    }
-    const classIdNum = parseInt(selectedViewId, 10);
-    
-    const scheduledHoursBySubject = fullSchedule
-      .filter(l => l.classId === classIdNum)
-      .reduce((acc, l) => {
-        const lessonDurationMinutes = (new Date(l.endTime).getTime() - new Date(l.startTime).getTime()) / (1000 * 60);
-        const lessonHours = lessonDurationMinutes / 60; 
-        acc[l.subjectId] = (acc[l.subjectId] || 0) + lessonHours;
-        return acc;
-      }, {} as Record<number, number>);
-
-    return wizardData.subjects.filter(subject => {
-      const requirement = wizardData.lessonRequirements?.find(r => 
-        r.classId === classIdNum && r.subjectId === subject.id
-      );
-      const requiredHours = requirement ? requirement.hours : (subject.weeklyHours || 0);
-      const scheduledHours = scheduledHoursBySubject[subject.id] || 0;
-      return scheduledHours < requiredHours;
-    });
-  }, [fullSchedule, wizardData, selectedViewId, viewMode]);
 
   return (
     <div 
@@ -118,7 +68,7 @@ const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
         "absolute bottom-1 right-1 flex gap-1 opacity-20 group-hover:opacity-100 transition-opacity",
         isDisabled && 'hidden'
       )}>
-        {viewMode === 'class' && (
+        {isEditable && (
           <Popover>
             <PopoverTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7"><BookOpen size={14} /></Button>
@@ -127,7 +77,7 @@ const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
               <h4 className="font-medium text-sm mb-2">Matières possibles</h4>
               <ScrollArea className="max-h-48">
                 <div className="space-y-1">
-                  {availableSubjects.length > 0 ? availableSubjects.map(subject => (
+                  {possibleSubjects.length > 0 ? possibleSubjects.map(({ subject }) => (
                     <Button 
                       key={subject.id} 
                       variant="outline" 

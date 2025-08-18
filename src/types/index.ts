@@ -1,4 +1,3 @@
-
 // src/types/index.ts
 
 // --- ENUMS (Single Source of Truth) ---
@@ -29,6 +28,7 @@ import type {
     School as PrismaSchool,
     Role,
     UserSex,
+    OptionalSubject as PrismaOptionalSubject,
 } from "@prisma/client";
 import type { Dispatch, SetStateAction } from "react";
 import type { FieldErrors, SubmitHandler, UseFormHandleSubmit, UseFormRegister, UseFormSetValue } from "react-hook-form";
@@ -45,7 +45,8 @@ export type EntityType = 'grade' | 'subject' | 'class' | 'teacher' | 'student' |
 export type User = PrismaUser;
 export type Admin = PrismaAdmin;
 export type Teacher = PrismaTeacher;
-export type Student = PrismaStudent;
+export type Student = PrismaStudent & { optionalSubjects?: PrismaOptionalSubject[] };
+export type OptionalSubject = PrismaOptionalSubject;
 export type Attendance = PrismaAttendance;
 export type Class = PrismaClass;
 export type Subject = PrismaSubject;
@@ -186,6 +187,7 @@ export interface WizardData {
   teachers: TeacherWithDetails[];
   rooms: Classroom[];
   grades: Grade[];
+  students: Student[];
   lessonRequirements: LessonRequirement[];
   teacherConstraints: (TeacherConstraint & { scheduleDraftId: string | null })[];
   subjectRequirements: SubjectRequirement[];

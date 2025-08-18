@@ -1,6 +1,6 @@
 // src/lib/data-fetching/fetch-wizard-data.ts
 import prisma from "@/lib/prisma";
-import type { WizardData, ClassWithGrade, TeacherWithDetails, Subject, Classroom, Grade, LessonRequirement, TeacherConstraint, SubjectRequirement, TeacherAssignment, SchoolData, Lesson } from '@/types';
+import type { WizardData, ClassWithGrade, TeacherWithDetails, Subject, Classroom, Grade, LessonRequirement, TeacherConstraint, SubjectRequirement, TeacherAssignment, SchoolData, Lesson, Student } from '@/types';
 import { getServerSession } from "../auth-utils";
 
 // Helper function to make an object serializable
@@ -16,7 +16,7 @@ const toSerializable = (obj: any) => {
 
 const parseJsonFields = (draft: any) => {
     const parsedData = { ...draft };
-    const fieldsToParse: (keyof WizardData)[] = ['schoolConfig', 'classes', 'subjects', 'teachers', 'classrooms', 'grades'];
+    const fieldsToParse: (keyof WizardData | 'rooms')[] = ['schoolConfig', 'classes', 'subjects', 'teachers', 'rooms', 'grades'];
     fieldsToParse.forEach(field => {
         if (typeof parsedData[field] === 'string') {
             try {
@@ -40,6 +40,7 @@ const parseJsonFields = (draft: any) => {
 
     parsedData.school = { ...defaultSchoolConfig, ...(parsedData.schoolConfig || {}) };
     delete parsedData.schoolConfig; // Remove the redundant field
+    parsedData.classrooms = parsedData.rooms; // remap rooms to classrooms
 
     return parsedData;
 };
@@ -70,6 +71,9 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
                 classIds: a.classAssignments.map((ca: any) => ca.classId),
             }));
 
+            // Make sure students are fetched and added to the draft data
+            const students = await prisma.student.findMany({ include: { optionalSubjects: true } });
+
             return toSerializable({
                 scheduleDraftId: parsedDraft.id,
                 school: parsedDraft.school,
@@ -78,6 +82,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
                 teachers: parsedDraft.teachers || [],
                 rooms: parsedDraft.classrooms || [],
                 grades: parsedDraft.grades || [],
+                students: students,
                 lessonRequirements: parsedDraft.lessonRequirements || [],
                 teacherConstraints: parsedDraft.teacherConstraints || [],
                 subjectRequirements: parsedDraft.subjectRequirements || [],
@@ -96,6 +101,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       teachersFromDb,
       rooms,
       grades,
+      students,
       lessons
     ] = await Promise.all([
       prisma.school.findFirst(),
@@ -104,6 +110,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       prisma.teacher.findMany({ include: { user: true, subjects: true, lessons: { select: { classId: true }, distinct: ['classId'] } } }),
       prisma.classroom.findMany({orderBy: {name: 'asc'}}),
       prisma.grade.findMany({orderBy: {level: 'asc'}}),
+      prisma.student.findMany({ include: { optionalSubjects: true } }), // Fetch students here
       prisma.lesson.findMany() // Fetch the "master" schedule
     ]);
     
@@ -139,6 +146,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
         teachers: teachers,
         rooms: rooms,
         grades: grades,
+        students: students,
         lessonRequirements: [],
         teacherConstraints: [],
         subjectRequirements: [],

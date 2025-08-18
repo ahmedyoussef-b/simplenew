@@ -16,6 +16,7 @@ import { useAppSelector } from '@/hooks/redux-hooks';
 import { buildScheduleGrid } from './components/gridUtils';
 import { cn } from '@/lib/utils';
 import prisma from '@/lib/prisma';
+import ViewModeTabs from './components/ViewModeTabs';
 
 
 interface TimetableDisplayProps {
@@ -72,19 +73,19 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
       return fullSchedule.filter(l => l.teacherId === selectedViewId);
     }
     if(viewMode === 'student' && selectedViewId) {
-        const student = wizardData.teachers.find(t => t.id === selectedViewId) as unknown as Student;
-        if (!student) return [];
+      const student = wizardData.students.find(s => s.id === selectedViewId);
+      if (!student || !student.optionalSubjects) return fullSchedule.filter(l => l.classId === student?.classId && !l.optionalSubjectId);
 
         const classLessons = fullSchedule.filter(l => l.classId === student.classId && !l.optionalSubjectId);
-        
+
         const studentOptionalLessons = fullSchedule.filter(l => 
-            l.optionalSubjectId && student.optionalSubjects?.some(os => os.id === l.optionalSubjectId)
+          l.optionalSubjectId && student.optionalSubjects?.some((os: Subject) => os.id === l.optionalSubjectId)
         );
 
         return [...classLessons, ...studentOptionalLessons];
     }
     return [];
-  }, [fullSchedule, viewMode, selectedViewId, wizardData.teachers]);
+  }, [fullSchedule, viewMode, selectedViewId, wizardData.students, wizardData.teachers]);
 
   const { scheduleGrid, spannedSlots } = buildScheduleGrid(
     scheduleData, 
@@ -181,8 +182,6 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                                               isEditable={isEditable}
                                               hoveredSubjectId={hoveredSubjectId || null}
                                               setHoveredSubjectId={setHoveredSubjectId}
-                                              viewMode={viewMode as 'class' | 'teacher'}
-                                              selectedViewId={selectedViewId}
                                           />
                                       </TableCell>
                                   );
