@@ -23,15 +23,28 @@ const LessonCell: React.FC<LessonCellProps> = ({
   fullSchedule 
 }) => {
   const getSubjectName = (lesson: Lesson) => {
+    if (lesson.name && (lesson.name.includes('(Groupe A)') || lesson.name.includes('(Groupe B)'))) {
+        return lesson.name.split('-')[0].trim();
+    }
     if (lesson.subjectId) {
       return wizardData.subjects?.find(s => s.id === lesson.subjectId)?.name || 'N/A';
     }
     if (lesson.optionalSubjectId) {
-      // Logic for optional subject display will be handled by the parent component
       return "Matière Option";
     }
     return 'N/A';
   };
+  
+  const getSubtext = (lesson: Lesson) => {
+      if (lesson.name && (lesson.name.includes('(Groupe A)'))) {
+          return '(Groupe A)';
+      }
+      if (lesson.name && (lesson.name.includes('(Groupe B)'))) {
+          return '(Groupe B)';
+      }
+      return getClassName(lesson.classId);
+  }
+
   const getTeacherName = (id: string) => {
     const teacher = wizardData.teachers?.find(t => t.id === id);
     return teacher ? `${teacher.name?.charAt(0)}. ${teacher.surname}` : 'N/A';
@@ -69,7 +82,7 @@ const LessonCell: React.FC<LessonCellProps> = ({
       )}
       <div className="font-semibold text-foreground">{getSubjectName(lesson)}</div>
       <div className="text-xs text-muted-foreground">{getTeacherName(lesson.teacherId)}</div>
-      <div className="text-xs text-muted-foreground">Cl: {getClassName(lesson.classId)}</div>
+      <div className="text-xs text-muted-foreground">Cl: {getSubtext(lesson)}</div>
       <div className="text-xs text-muted-foreground">Salle: {getRoomName(lesson.classroomId)}</div>
     </div>
   );

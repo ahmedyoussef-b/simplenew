@@ -20,6 +20,7 @@ export const dayLabels: Record<string, string> = {
     SUNDAY: 'Dimanche',
 };
 
+// Keywords to identify subjects that should be taught in labs/split groups
 export const labSubjectKeywords: string[] = ['physique', 'informatique', 'sciences', 'technique'];
 export const sectionOptions: string[] = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'];
 export const daysOfWeek = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
