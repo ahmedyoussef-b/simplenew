@@ -56,6 +56,9 @@ async function cleanupDatabase() {
     console.log('🧹 Nettoyage de la base de données...');
 
     // Delete in reverse order of dependency
+    await prisma.chatroomMessage.deleteMany().catch(e => console.log('Pas de messages de chatroom à supprimer, on continue.'));
+    await prisma.sessionParticipant.deleteMany().catch(e => console.log('Pas de participants de session à supprimer, on continue.'));
+    await prisma.chatroomSession.deleteMany().catch(e => console.log('Pas de sessions de chatroom à supprimer, on continue.'));
     await prisma.result.deleteMany().catch(e => console.log('Pas de résultats à supprimer, on continue.'));
     await prisma.assignment.deleteMany().catch(e => console.log('Pas de devoirs à supprimer, on continue.'));
     await prisma.exam.deleteMany().catch(e => console.log('Pas d\'examens à supprimer, on continue.'));
@@ -216,18 +219,35 @@ async function main() {
      console.log(`✅ Niveau ${level} et ses 10 classes de 30 élèves créés.`);
   }
 
-  // Create classrooms
-  console.log('🚪 Création des salles de classe...');
-  for(let i=1; i<=20; i++) {
-    await prisma.classroom.create({
-      data: {
-        name: `Salle ${100 + i}`,
-        capacity: 30
-      }
-    });
+  // --- Create classrooms ---
+  console.log('🚪 Création des salles...');
+  let totalRooms = 0;
+  // 25 general classrooms
+  for (let i = 1; i <= 25; i++) {
+    await prisma.classroom.create({ data: { name: `Salle ${100 + i}`, capacity: 30 } });
+    totalRooms++;
   }
-   console.log(`✅ 20 salles de classe créées.`);
-
+  // 2 physics labs
+  for (let i = 1; i <= 2; i++) {
+    await prisma.classroom.create({ data: { name: `Labo Physique ${i}`, capacity: 20 } });
+    totalRooms++;
+  }
+  // 2 tech labs
+  for (let i = 1; i <= 2; i++) {
+    await prisma.classroom.create({ data: { name: `Labo Technique ${i}`, capacity: 20 } });
+    totalRooms++;
+  }
+  // 2 science labs
+  for (let i = 1; i <= 2; i++) {
+    await prisma.classroom.create({ data: { name: `Labo Sciences ${i}`, capacity: 20 } });
+    totalRooms++;
+  }
+  // 2 gyms
+  for (let i = 1; i <= 2; i++) {
+    await prisma.classroom.create({ data: { name: `Gymnase ${i}`, capacity: 40 } });
+    totalRooms++;
+  }
+  console.log(`✅ ${totalRooms} salles et laboratoires créés.`);
 
   console.log('🎉 Peuplement de la base de données terminé avec succès !');
 }
