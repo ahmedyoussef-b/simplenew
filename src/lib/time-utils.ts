@@ -22,18 +22,17 @@ export const generateTimeSlots = (startTime: string, endTime: string, sessionDur
     const endTotalMinutes = endHour * 60 + endMinute;
     
     const lunchStartMinutes = 12 * 60;
-    const lunchEndMinutes = 14 * 60;
+    const lunchEndMinutes = 13 * 60; // Lunch break from 12:00 to 13:00 (1 hour)
 
     let currentMinute = startTotalMinutes;
     
     while (currentMinute < endTotalMinutes) {
         const slotEndMinute = currentMinute + sessionDuration;
         
-        const isSlotValid = 
-            (currentMinute < lunchStartMinutes && slotEndMinute <= lunchStartMinutes) || 
-            (currentMinute >= lunchEndMinutes && slotEndMinute <= endTotalMinutes);
+        // Slot is valid if it doesn't fall within the lunch break
+        const isSlotInLunch = currentMinute >= lunchStartMinutes && currentMinute < lunchEndMinutes;
 
-        if (slotEndMinute <= endTotalMinutes && isSlotValid) {
+        if (slotEndMinute <= endTotalMinutes && !isSlotInLunch) {
             const h = Math.floor(currentMinute / 60);
             const m = currentMinute % 60;
             slots.push(`${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`);
