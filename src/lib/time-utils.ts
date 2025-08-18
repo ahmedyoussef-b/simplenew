@@ -22,7 +22,7 @@ export const generateTimeSlots = (startTime: string, endTime: string, sessionDur
     const endTotalMinutes = endHour * 60 + endMinute;
     
     const lunchStartMinutes = 12 * 60;
-    const lunchEndMinutes = 13 * 60; // Lunch break from 12:00 to 13:00 (1 hour)
+    const lunchEndMinutes = 14 * 60; // Lunch break from 12:00 to 14:00 (2 hours)
 
     let currentMinute = startTotalMinutes;
     
