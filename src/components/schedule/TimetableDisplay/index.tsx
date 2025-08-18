@@ -47,7 +47,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
 
   const schoolDays = (wizardData.school.schoolDays || []).map(dayKey => dayLabels[dayKey.toUpperCase() as keyof typeof dayLabels] || dayKey);
   const timeSlots = generateTimeSlots(
-    wizardData.school.startTime, 
+    wizardData.school.startTime || '08:00', 
     wizardData.school.endTime || '18:00', 
     wizardData.school.sessionDuration || 60,
   );
@@ -127,7 +127,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                           {timeSlots.map((time, timeIndex) => {
                               const cellId = `${dayEnum}-${time}`;
                               const uniqueKey = `${cellId}-${dayIndex}-${timeIndex}`;
-
+console.log("cellId , spannedSlots", cellId, spannedSlots)
                               if (spannedSlots.has(cellId)) {
                                   return null;
                               }
