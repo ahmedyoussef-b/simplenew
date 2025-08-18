@@ -21,7 +21,7 @@ interface InteractiveEmptyCellProps {
   viewMode: 'class' | 'teacher';
   selectedViewId: string;
   setHoveredSubjectId: (id: number | null) => void;
-  hoveredSubjectId: number | null; 
+  hoveredSubjectId: number | null;
 }
 
 const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({ 
