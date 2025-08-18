@@ -7,10 +7,11 @@ import { redirect } from "next/navigation";
 import { Role } from "@prisma/client";
 import dynamic from 'next/dynamic';
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import StudentWeeklyAttendanceChart from "@/components/attendance/StudentWeeklyAttendanceChart";
 
 import type { Lesson, WizardData, ClassWithGrade, TeacherWithDetails, Subject, Classroom } from '@/types';
+import { fetchAllDataForWizard } from "@/lib/data-fetching/fetch-wizard-data";
 
 const TimetableDisplay = dynamic(() => import('@/components/schedule/TimetableDisplay'), {
   ssr: false,
@@ -50,90 +51,39 @@ const StudentPage = async () => {
 
   const studentClass = student.class;
 
-  const [lessonsFromDb, allSubjects, allTeachersFromDb, allClassrooms] = await Promise.all([
-    prisma.lesson.findMany({
-      where: {
-        classId: studentClass.id,
-      },
-      select: {
-        id: true,
-        name: true,
-        day: true,
-        startTime: true,
-        endTime: true,
-        subjectId: true,
-        classId: true,
-        teacherId: true,
-        classroomId: true,
-        scheduleDraftId: true,
-        createdAt: true,
-        updatedAt: true,
-        subject: { select: { name: true } },
-        class: { select: { name: true } },
-      },
-    }),
-    prisma.subject.findMany(),
-    prisma.teacher.findMany({ 
-        include: { 
-            user: true, 
-            subjects: true, 
-            lessons: { select: { classId: true }, distinct: ['classId'] } 
-        } 
-    }),
-    prisma.classroom.findMany(),
-  ]);
-
-  const allTeachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
-      ...t,
-      classes: [],
-      _count: {
-          subjects: t.subjects.length,
-          classes: new Set(t.lessons.map(l => l.classId)).size,
-          lessons: t.lessons.length,
-      }
-  }));
-
-  const lessons: Lesson[] = lessonsFromDb.map(lesson => ({
-    ...lesson,
-    startTime: lesson.startTime.toISOString(),
-    endTime: lesson.endTime.toISOString(),
-    createdAt: lesson.createdAt.toISOString(),
-    updatedAt: lesson.updatedAt.toISOString(),
-  }));
-
-
-  const wizardData: WizardData = {
-    school: {
-      name: `Classe ${studentClass.name}`,
-      startTime: '08:00',
-      endTime: '18:00',
-      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-      sessionDuration: 60,
-      scheduleDraftId: null,
-      schoolConfig: {}
-    },
-    classes: [studentClass as unknown as ClassWithGrade],
-    subjects: allSubjects as Subject[],
-    teachers: allTeachers,
-    rooms: allClassrooms as Classroom[],
-    grades: [],
-    lessonRequirements: [],
-    teacherConstraints: [],
-    subjectRequirements: [],
-    teacherAssignments: [],
-    schedule: lessons, // The actual schedule will come from lessons
-    scheduleDraftId: null
+  // Fetch all necessary data for the wizard, which now includes the timetable
+  const wizardData = await fetchAllDataForWizard();
+  
+  // Filter the schedule for the specific student's class
+  const studentSchedule = wizardData.schedule.filter(l => l.classId === studentClass.id);
+  
+  // Create a specific wizardData object for this student's view
+  const studentWizardData: WizardData = {
+    ...wizardData,
+    schedule: studentSchedule,
   };
+
 
   return (
     <div className="flex-1 p-4 flex flex-col gap-4">
       <div className="flex flex-col md:flex-row gap-4">
         <StudentWeeklyAttendanceChart studentId={student.id} />
       </div>
-      <div className="mt-4 bg-white rounded-md p-4 h-auto">
-        <h1 className="text-xl font-semibold mb-4">Mon Horaire</h1>
-        <TimetableDisplay wizardData={wizardData} viewMode={"class"} selectedViewId={student.classId?.toString() || ""} />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle>Mon Emploi du Temps</CardTitle>
+          <CardDescription>
+            Aperçu de votre emploi du temps hebdomadaire.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <TimetableDisplay 
+            wizardData={studentWizardData} 
+            viewMode={"class"} 
+            selectedViewId={student.classId?.toString() || ""} 
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 };
