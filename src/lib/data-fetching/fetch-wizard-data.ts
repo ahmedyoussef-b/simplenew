@@ -61,7 +61,7 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       startTime: '08:00',
       endTime: '17:00',
       sessionDuration: 60,
-      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
       scheduleDraftId: null,
       schoolConfig: {}
     };
