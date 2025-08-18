@@ -1,4 +1,3 @@
-
 // prisma/seed.js
 "use strict";
 var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
@@ -24,72 +23,33 @@ function main() {
         // 1. Nettoyage de la base de données
         console.log('Nettoyage des anciennes données...');
         
-        // Defensively check for models before trying to delete
-        if (prisma.chatroomSession) {
-            yield prisma.chatroomSession.deleteMany({});
-        }
-        if (prisma.attendance) {
-            yield prisma.attendance.deleteMany({});
-        }
-        if (prisma.result) {
-            yield prisma.result.deleteMany({});
-        }
-        if (prisma.assignment) {
-            yield prisma.assignment.deleteMany({});
-        }
-        if (prisma.exam) {
-            yield prisma.exam.deleteMany({});
-        }
-        if (prisma.lessonRequirement) {
-            yield prisma.lessonRequirement.deleteMany({});
-        }
-        if (prisma.teacherConstraint) {
-            yield prisma.teacherConstraint.deleteMany({});
-        }
-        if (prisma.scheduleDraft) {
-            yield prisma.scheduleDraft.deleteMany({});
-        }
-        if (prisma.announcement) {
-            yield prisma.announcement.deleteMany({});
-        }
-        if (prisma.event) {
-            yield prisma.event.deleteMany({});
-        }
-        if (prisma.lesson) {
-            yield prisma.lesson.deleteMany({});
-        }
-        if (prisma.student) {
-            yield prisma.student.deleteMany({});
-        }
-        if (prisma.parent) {
-            yield prisma.parent.deleteMany({});
-        }
-        if (prisma.teacher) {
-            yield prisma.teacher.deleteMany({});
-        }
-        if (prisma.admin) {
-            yield prisma.admin.deleteMany({});
-        }
-        if (prisma.class) {
-            yield prisma.class.deleteMany({});
-        }
-        if (prisma.grade) {
-            yield prisma.grade.deleteMany({});
-        }
-        if (prisma.subject) {
-            yield prisma.subject.deleteMany({});
-        }
-        if (prisma.classroom) {
-            yield prisma.classroom.deleteMany({});
-        }
+        // The order of deletion is crucial due to foreign key constraints.
+        // Delete models that depend on others first.
+        yield prisma.chatroomSession.deleteMany({});
+        yield prisma.attendance.deleteMany({});
+        yield prisma.result.deleteMany({});
+        yield prisma.assignment.deleteMany({});
+        yield prisma.exam.deleteMany({});
+        yield prisma.lessonRequirement.deleteMany({});
+        yield prisma.teacherConstraint.deleteMany({});
+        yield prisma.scheduleDraft.deleteMany({});
+        yield prisma.announcement.deleteMany({});
+        yield prisma.event.deleteMany({});
+        yield prisma.lesson.deleteMany({});
+        yield prisma.student.deleteMany({});
+        yield prisma.parent.deleteMany({});
+        yield prisma.teacher.deleteMany({});
+        yield prisma.admin.deleteMany({});
+        yield prisma.class.deleteMany({});
+        yield prisma.grade.deleteMany({});
+        yield prisma.subject.deleteMany({});
+        yield prisma.classroom.deleteMany({});
+        
         // User must be deleted after all profiles that depend on it
-        if (prisma.user) {
-            yield prisma.user.deleteMany({});
-        }
+        yield prisma.user.deleteMany({});
         // School is likely independent, but good to clean
-        if (prisma.school) {
-            yield prisma.school.deleteMany({});
-        }
+        yield prisma.school.deleteMany({});
+        
         console.log('Anciennes données supprimées.');
 
         // 2. Create School
