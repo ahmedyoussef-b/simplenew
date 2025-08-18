@@ -11,12 +11,12 @@ const arabicFirstNamesMale = [
   'Mustafa', 'Said', 'Jamal', 'Rashid', 'Sami', 'Nabil', 'Fahd', 'Walid', 'Zayd', 'Adil'
 ];
 const arabicFirstNamesFemale = [
-  'Fatima', 'Aisha', 'Zainab', 'Mariam', 'Nour', 'Layla', 'Salma', 'Hana', 'Yasmin', 'Amira',
+  'Fatma', 'Aisha', 'Zainab', 'Mariam', 'Nour', 'Layla', 'Salma', 'Hana', 'Yasmin', 'Amira',
   'Farah', 'Dina', 'Samira', 'Rania', 'Lina', 'Mona', 'Hind', 'Joud', 'Basma', 'Dalal'
 ];
 const arabicLastNames = [
   'Haddad', 'Nasser', 'Malik', 'Khan', 'Jaber', 'Abboud', 'Darwish', 'Ghanem', 'Mansour', 'Koury',
-  'Tahan', 'Zaki', 'Saleh', 'Farah', 'Bazzi', 'Chahine', 'Karam', 'Maalouf', 'Saba', 'Saliba'
+  'Thabet', 'Zaki', 'Saleh', 'Farah', 'Bazzi', 'Chahine', 'Karam', 'Maalouf', 'Saba', 'Saliba'
 ];
 
 const subjectsData = [
