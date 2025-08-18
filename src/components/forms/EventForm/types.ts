@@ -4,9 +4,9 @@ import type { Event, Class } from "@/types/index";
 import type { SubmitHandler, FieldErrors, UseFormRegister, UseFormHandleSubmit } from "react-hook-form";
 import type { z } from "zod";
 import type { Dispatch, SetStateAction } from "react";
-import { UseMutation } from "@reduxjs/toolkit/dist/query/react/buildHooks";
-import { MutationDefinition } from "@reduxjs/toolkit/query";
 
+// The complex UseMutation and MutationDefinition types are not needed here.
+// We can simplify the prop types to just be functions.
 export interface EventFormProps {
   initialData?: Event | null;
   availableClasses: Pick<Class, 'id' | 'name'>[];
@@ -14,8 +14,8 @@ export interface EventFormProps {
 }
 
 export interface UseEventFormProps extends EventFormProps {
-    createEvent: UseMutation<MutationDefinition<any, any, any, any>>;
-    updateEvent: UseMutation<MutationDefinition<any, any, any, any>>;
+    createEvent: (data: any) => any;
+    updateEvent: (data: any) => any;
 }
 
 export interface EventFormReturn {
