@@ -106,7 +106,8 @@ export const ImportConfigDialog: React.FC<ImportConfigDialogProps> = ({ grades }
                 gradeId: grade.id,
                 grade: grade,
                 _count: { students: 0, lessons: 0 },
-                supervisorId: null,
+                superviseurId: null,
+                supervisor: null,
               };
             });
             dispatch(setAllClasses(classes));
@@ -153,7 +154,7 @@ export const ImportConfigDialog: React.FC<ImportConfigDialogProps> = ({ grades }
                     },
                     subjects: teacherSubjects,
                     classes: [],
-                    _count: { subjects: teacherSubjects.length, classes: 0 }
+                    _count: { subjects: teacherSubjects.length, classes: 0, lessons: 0 }
                 };
             });
             

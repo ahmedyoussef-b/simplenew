@@ -39,7 +39,7 @@ import type { TeacherSchema, ParentSchema, StudentSchema } from './schemas';
 
 export { Role, UserSex, Day, TimePreference, type TeacherSchema, type StudentSchema } from '@prisma/client';
 
-export type EntityType = 'grade' | 'subject' | 'class' | 'teacher' | 'student' | 'parent' | 'lesson' | 'exam' | 'assignment' | 'event' | 'announcement' | 'result' | 'attendance' | 'quiz';
+export type EntityType = 'grade' | 'subject' | 'class' | 'teacher' | 'student' | 'parent' | 'lesson' | 'exam' | 'assignment' | 'event' | 'announcement' | 'result' | 'attendance' | 'quiz' | 'classroom';
 
 // --- BASE PRISMA TYPES (Re-exported for consistency) ---
 export type User = PrismaUser;
