@@ -5,7 +5,7 @@ import React from 'react';
 import { cn } from "@/lib/utils";
 
 /**
- * A component to display a user's avatar, falling back to a placeholder image.
+ * A component to display a user's avatar, falling back to a placeholder image from DiceBear.
  * @param {{
  *  seed?: string;
  *  imageUrl?: string | null;
@@ -22,8 +22,8 @@ const DynamicAvatar = ({
   isLCP = false 
 }) => {
   
-  const finalImageUrl = imageUrl || `https://placehold.co/128x128.png`;
-  const hint = imageUrl ? {} : { 'data-ai-hint': 'forest sun' };
+  const finalImageUrl = imageUrl || `https://api.dicebear.com/8.x/avataaars/svg?seed=${seed}`;
+  const hint = imageUrl ? {} : { 'data-ai-hint': 'avatar portrait' };
 
   return (
     <Image
