@@ -48,35 +48,34 @@ export function middleware(req: NextRequest) {
   const loginUrl = new URL('/login', req.url);
 
   // --- Route Protection Logic ---
-  
-  // If user is not authenticated and tries to access a protected route
-  if (!userRole && !['/login', '/register', '/accueil', '/'].includes(pathname)) {
-      const isProtectedRoute = Object.entries(routeAccessMap).some(([route, roles]) => 
-          new RegExp(`^${route.replace(':path*', '.*')}$`).test(pathname) && !roles.includes(Role.VISITOR)
-      );
 
-      if(isProtectedRoute) {
-        console.log(`[Middleware] Unauthorized access to ${pathname}, redirecting to login.`);
-        return NextResponse.redirect(loginUrl);
-      }
-  }
-  
-  // If user is authenticated, check their role against the route map
+  // User is logged in
   if (userRole) {
-    // Redirect logged-in users from auth pages to their dashboard
-    if (['/login', '/register', '/accueil', '/'].includes(pathname)) {
-        console.log(`[Middleware] User is already logged in. Redirecting from ${pathname} to /dashboard.`);
-        return NextResponse.redirect(new URL('/dashboard', req.url));
+    // If they are on a public/auth page, redirect them to their dashboard
+    if (['/login', '/register', '/accueil'].includes(pathname)) {
+        console.log(`[Middleware] User is logged in. Redirecting from ${pathname} to their dashboard.`);
+        return NextResponse.redirect(new URL(`/${userRole.toLowerCase()}`, req.url));
     }
       
+    // Check if the user has access to the requested protected route
     const allowedRoles = Object.entries(routeAccessMap).find(([route]) => 
       new RegExp(`^${route.replace(':path*', '.*')}$`).test(pathname)
     )?.[1];
 
     if (allowedRoles && !allowedRoles.includes(userRole)) {
-      console.log(`[Middleware] Role '${userRole}' not allowed for ${pathname}. Redirecting to home.`);
-      // Redirect to a generic "access denied" or home page for their role
+      console.log(`[Middleware] Role '${userRole}' not allowed for ${pathname}. Redirecting to their dashboard.`);
       return NextResponse.redirect(new URL(`/${userRole.toLowerCase()}`, req.url));
+    }
+  } 
+  // User is NOT logged in
+  else {
+    const isProtectedRoute = Object.keys(routeAccessMap).some(route => new RegExp(`^${route.replace(':path*', '.*')}$`).test(pathname));
+    const isPublicRoute = ['/login', '/register', '/accueil'].includes(pathname);
+
+    // If trying to access a protected route without being logged in, redirect to login
+    if (isProtectedRoute && !isPublicRoute) {
+        console.log(`[Middleware] Unauthorized access to ${pathname}, redirecting to login.`);
+        return NextResponse.redirect(loginUrl);
     }
   }
 

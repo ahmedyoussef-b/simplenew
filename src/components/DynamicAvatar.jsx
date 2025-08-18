@@ -31,7 +31,7 @@ const DynamicAvatar = ({
       alt={alt}
       fill
       sizes="(max-width: 768px) 50vw, 33vw"
-      className={cn('object-top', className)}
+      className={cn('object-top object-top', className)}
       priority={isLCP}
       {...hint}
     />
