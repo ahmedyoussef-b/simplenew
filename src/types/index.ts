@@ -70,7 +70,7 @@ export type SubjectRequirement = Omit<PrismaSubjectRequirement, 'allowedRoomIds'
 export type TeacherConstraint = PrismaTeacherConstraint;
 export type ClassAssignment = PrismaClassAssignment;
 
-export type TeacherAssignment = Omit<PrismaTeacherAssignment, 'classAssignments'> & {classIds: number[], classAssignments: ClassAssignment[];};
+export type TeacherAssignment = Omit<PrismaTeacherAssignment, 'classAssignments'> & {classIds: number[], classAssignments: ClassAssignment[]};
 
 export type ChatroomSession = PrismaChatroomSession;
 export type ScheduleDraft = Omit<PrismaScheduleDraft, 'createdAt' | 'updatedAt'> & {
@@ -121,6 +121,7 @@ export type StudentWithDetails = PrismaStudent & {
   }) | null;
   parent: PrismaParent | null;
   grade: PrismaGrade | null;
+  optionalSubjects?: OptionalSubject[];
 };
 
 export type StudentWithClassAndUser = PrismaStudent & {
@@ -180,7 +181,7 @@ export type ClassWithDetails = PrismaClass & {
 // --- WIZARD & SCHEDULER TYPES ---
 
 export interface WizardData {
-  scheduleDraftId: null;
+  scheduleDraftId: string | null;
   school: SchoolData;
   classes: ClassWithGrade[];
   subjects: Subject[];

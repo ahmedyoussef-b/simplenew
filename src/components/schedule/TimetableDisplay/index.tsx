@@ -1,9 +1,15 @@
+
 // src/components/schedule/TimetableDisplay/index.tsx
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { Card } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { useAppDispatch } from '@/hooks/redux-hooks';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Trash2, Building, Plus, BookOpen, AlertCircle, Calendar, Edit, RotateCw, Printer, Save, CloudOff } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import type { WizardData, Lesson, Subject, Day, Student } from '@/types';
 import { type Lesson as PrismaLesson } from '@prisma/client';
 import { TimetableLessonCell, InteractiveEmptyCell } from './components/TimetableCells';
@@ -14,10 +20,9 @@ import { dayLabels } from '@/lib/constants';
 import { useScheduleActions } from '../ScheduleEditor/hooks/useScheduleActions';
 import { useAppSelector } from '@/hooks/redux-hooks';
 import { buildScheduleGrid } from './components/gridUtils';
-import { cn } from '@/lib/utils';
-import prisma from '@/lib/prisma';
+import { Card } from '@/components/ui/card';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import ViewModeTabs from './components/ViewModeTabs';
-
 
 interface TimetableDisplayProps {
   wizardData: WizardData | null;
@@ -74,15 +79,14 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
     }
     if(viewMode === 'student' && selectedViewId) {
       const student = wizardData.students.find(s => s.id === selectedViewId);
-      if (!student || !student.optionalSubjects) return fullSchedule.filter(l => l.classId === student?.classId && !l.optionalSubjectId);
+      if (!student) return [];
+      
+      const classLessons = fullSchedule.filter(l => l.classId === student.classId && !l.optionalSubjectId);
+      const studentOptionalLessons = fullSchedule.filter(l => 
+          l.optionalSubjectId && student.optionalSubjects?.some(os => os.id === l.optionalSubjectId)
+      );
 
-        const classLessons = fullSchedule.filter(l => l.classId === student.classId && !l.optionalSubjectId);
-
-        const studentOptionalLessons = fullSchedule.filter(l => 
- l.optionalSubjectId && student.optionalSubjects?.some((os: { name: string; id: number; gradeId: number; description: string | null; }) => os.id === l.optionalSubjectId)
-        );
-
-        return [...classLessons, ...studentOptionalLessons];
+      return [...classLessons, ...studentOptionalLessons];
     }
     return [];
   }, [fullSchedule, viewMode, selectedViewId, wizardData.students, wizardData.teachers]);
@@ -196,6 +200,5 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
       </Card>
   );
 };
-
 
 export default TimetableDisplay;

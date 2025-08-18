@@ -36,10 +36,14 @@ const subjectsData = [
     { name: 'Musique', weeklyHours: 1, coefficient: 1 },
     { name: 'Art', weeklyHours: 1, coefficient: 1 },
     { name: 'Éducation Sportive', weeklyHours: 2, coefficient: 1 },
-    { name: 'Allemand', weeklyHours: 2, coefficient: 1 },
-    { name: 'Italien', weeklyHours: 2, coefficient: 1 },
-    { name: 'Espagnol', weeklyHours: 2, coefficient: 1 },
 ];
+
+const optionalSubjectsData = [
+    { name: 'Allemand', description: 'Langue vivante 2' },
+    { name: 'Italien', description: 'Langue vivante 2' },
+    { name: 'Espagnol', description: 'Langue vivante 2' },
+];
+
 
 // --- HELPER FUNCTIONS ---
 
@@ -72,6 +76,7 @@ async function cleanupDatabase() {
     await prisma.teacher.deleteMany().catch(e => console.log('Pas d\'enseignants à supprimer, on continue.'));
     await prisma.admin.deleteMany().catch(e => console.log('Pas d\'admins à supprimer, on continue.'));
     await prisma.class.deleteMany().catch(e => console.log('Pas de classes à supprimer, on continue.'));
+    await prisma.optionalSubject.deleteMany().catch(e => console.log('Pas de matières optionnelles à supprimer, on continue.'));
     await prisma.grade.deleteMany().catch(e => console.log('Pas de niveaux à supprimer, on continue.'));
     await prisma.subject.deleteMany().catch(e => console.log('Pas de matières à supprimer, on continue.'));
     await prisma.classroom.deleteMany().catch(e => console.log('Pas de salles à supprimer, on continue.'));
@@ -124,43 +129,14 @@ async function main() {
     subjectsData.map(subject => prisma.subject.create({ data: subject }))
   );
   console.log(`✅ ${createdSubjects.length} matières créées.`);
-
-  // --- Create Teachers ---
-  console.log('🧑‍🏫 Création des 90 professeurs...');
-  const createdTeachers = [];
-  for (let i = 0; i < 90; i++) {
-    const { firstName, lastName } = generateName('male');
-    const user = await prisma.user.create({
-      data: {
-        email: `teacher${i + 1}@example.com`,
-        username: `teacher${i + 1}`,
-        password: hashedPassword,
-        name: `${firstName} ${lastName}`,
-        role: 'TEACHER',
-        active: true,
-        firstName: firstName,
-        lastName: lastName,
-      }
-    });
-    const teacher = await prisma.teacher.create({
-      data: {
-        userId: user.id,
-        name: firstName,
-        surname: lastName,
-        subjects: {
-          connect: { id: createdSubjects[i % createdSubjects.length].id }
-        }
-      }
-    });
-    createdTeachers.push(teacher);
-  }
-  console.log(`✅ ${createdTeachers.length} professeurs créés.`);
   
   // --- Create Grades, Classes, Students, and Parents ---
   const createdClasses = [];
+  const createdGrades = [];
   for (let level = 1; level <= 4; level++) {
     console.log(`🏫 Création du niveau ${level}...`);
     const grade = await prisma.grade.create({ data: { level } });
+    createdGrades.push(grade);
 
     for (let classNum = 1; classNum <= 10; classNum++) {
       const className = `${level}ème Année - Section ${String.fromCharCode(64 + classNum)}`;
@@ -224,14 +200,81 @@ async function main() {
             gradeId: grade.id,
             parentId: parent.id,
             address: 'N/A', // Added a placeholder for address
- bloodType: 'Unknown', // Added a placeholder for bloodType
- birthday: new Date(), // Added a placeholder for the birthday field
+            bloodType: 'Unknown', // Added a placeholder for bloodType
+            birthday: new Date(), // Added a placeholder for the birthday field
           }
         });
       }
     }
      console.log(`✅ Niveau ${level} et ses 10 classes de 30 élèves créés.`);
   }
+  
+  // --- Create Optional Subjects & Assign them to students from 2nd year onwards ---
+  console.log('📚 Création des matières optionnelles et assignation aux élèves...');
+  const optionalSubjectsByGrade = {};
+  for(const grade of createdGrades.filter(g => g.level >= 2)) {
+      const createdOptionalSubjects = await Promise.all(
+          optionalSubjectsData.map(subject => prisma.optionalSubject.create({ 
+              data: {
+                  ...subject,
+                  gradeId: grade.id,
+              }
+          }))
+      );
+      optionalSubjectsByGrade[grade.id] = createdOptionalSubjects;
+
+      const studentsInGrade = await prisma.student.findMany({ where: { gradeId: grade.id } });
+      for(const student of studentsInGrade) {
+          const chosenSubject = getRandomElement(createdOptionalSubjects);
+          await prisma.student.update({
+              where: { id: student.id },
+              data: {
+                  optionalSubjects: {
+                      connect: { id: chosenSubject.id }
+                  }
+              }
+          });
+      }
+       console.log(`✅ Matières optionnelles créées pour le niveau ${grade.level} et assignées à ${studentsInGrade.length} élèves.`);
+  }
+
+  // --- Create Teachers ---
+  console.log('🧑‍🏫 Création des 90 professeurs...');
+  const createdTeachers = [];
+  const mainSubjectsPlusOptionals = [...createdSubjects, ...Object.values(optionalSubjectsByGrade).flat()];
+
+  for (let i = 0; i < 90; i++) {
+    const { firstName, lastName } = generateName('male');
+    const user = await prisma.user.create({
+      data: {
+        email: `teacher${i + 1}@example.com`,
+        username: `teacher${i + 1}`,
+        password: hashedPassword,
+        name: `${firstName} ${lastName}`,
+        role: 'TEACHER',
+        active: true,
+        firstName: firstName,
+        lastName: lastName,
+      }
+    });
+    
+    // Assign a main subject to each teacher
+    const subjectToTeach = mainSubjectsPlusOptionals[i % mainSubjectsPlusOptionals.length];
+    
+    const teacher = await prisma.teacher.create({
+      data: {
+        userId: user.id,
+        name: firstName,
+        surname: lastName,
+        subjects: {
+          connect: { id: subjectToTeach.id }
+        }
+      }
+    });
+    createdTeachers.push(teacher);
+  }
+  console.log(`✅ ${createdTeachers.length} professeurs créés.`);
+
 
   // --- Create classrooms ---
   console.log('🚪 Création des salles...');
@@ -274,3 +317,4 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
+```
