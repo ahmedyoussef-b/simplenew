@@ -87,22 +87,23 @@ const ShuddlePageClient: React.FC<ShuddlePageClientProps> = ({ initialData }) =>
     useEffect(() => {
         console.log("💧 [ShuddlePageClient] Hydratation des données initiales.");
         dispatch(loadDraftsFromStorage());
-        // We check if an active draft exists in localStorage. If so, we use its data.
-        // Otherwise, we use the fresh data from the server.
         const storedDrafts = localStorage.getItem('scheduleDrafts');
+        let activeDraftFound = false;
+
         if (storedDrafts) {
             const drafts = JSON.parse(storedDrafts);
             const activeDraftFromStorage = drafts.find((d: any) => d.isActive);
             if (activeDraftFromStorage) {
                 console.log("💧 [ShuddlePageClient] Scénario actif trouvé dans le stockage local. Hydratation avec les données du scénario.");
                 dispatch(setInitialData(activeDraftFromStorage.data));
-                return;
+                activeDraftFound = true;
             }
         }
-        // Fallback to initial server data if no active draft is found.
-        console.log("💧 [ShuddlePageClient] Aucun scénario actif local. Hydratation avec les données du serveur.");
-        dispatch(setInitialData(initialData));
 
+        if (!activeDraftFound) {
+            console.log("💧 [ShuddlePageClient] Aucun scénario actif local. Hydratation avec les données du serveur.");
+            dispatch(setInitialData(initialData));
+        }
     }, [dispatch, initialData]);
     
     
