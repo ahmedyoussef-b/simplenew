@@ -1,10 +1,9 @@
-
 // src/app/api/parents/[id]/route.ts
 import prisma from "@/lib/prisma";
 import { notFound, redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth-utils";
 import { Role as AppRole } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, User, ArrowLeft, Mail, Phone, Home } from "lucide-react";
 import Link from "next/link";
@@ -96,61 +95,64 @@ const SingleParentPage = async ({ params }: { params: { id: string } }) => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1 space-y-6">
-            <Card>
+            <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle>Informations Personnelles</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                     <div className="flex items-center gap-4">
-                        <div className="relative w-24 h-24 rounded-full overflow-hidden">
+                     <div className="flex flex-col items-center gap-4">
+                        <div className="relative w-28 h-28 rounded-full overflow-hidden border-2 border-primary/20">
                             <DynamicAvatar 
                                 imageUrl={parent.user?.img || parent.img}
                                 seed={parent.id}
                                 isLCP={true}
                             />
                         </div>
-                         <div className="flex-1">
-                            <p className="font-semibold text-lg">{parent.name} {parent.surname}</p>
-                            <p className="text-sm text-muted-foreground">{parent.user?.username}</p>
+                         <div className="text-center">
+                            <p className="font-semibold text-xl">{parent.name} {parent.surname}</p>
+                            <p className="text-sm text-muted-foreground">@{parent.user?.username}</p>
                         </div>
                     </div>
-                     <div className="flex items-center gap-3 text-sm">
-                        <Mail className="h-4 w-4 text-muted-foreground" />
-                        <span>{parent.user?.email || "Non fourni"}</span>
-                     </div>
-                     <div className="flex items-center gap-3 text-sm">
-                        <Phone className="h-4 w-4 text-muted-foreground" />
-                        <span>{parent.phone || "Non fourni"}</span>
-                     </div>
-                     <div className="flex items-center gap-3 text-sm">
-                        <Home className="h-4 w-4 text-muted-foreground" />
-                        <span>{parent.address || "Non fourni"}</span>
+                     <div className="space-y-3 pt-4 border-t">
+                        <div className="flex items-center gap-3 text-sm">
+                            <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span className="truncate">{parent.user?.email || "Non fourni"}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                            <Phone className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span>{parent.phone || "Non fourni"}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-sm">
+                            <Home className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                            <span>{parent.address || "Non fourni"}</span>
+                        </div>
                      </div>
                 </CardContent>
             </Card>
         </div>
         
         <div className="lg:col-span-2">
-            <Card>
+            <Card className="shadow-lg">
                 <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                         <Users /> 
                         <span>Enfants ({parent.students.length})</span>
                     </CardTitle>
+                    <CardDescription>Liste des enfants associés à ce parent.</CardDescription>
                 </CardHeader>
-                <CardContent className="max-h-96 overflow-y-auto pr-2">
+                <CardContent className="max-h-[600px] overflow-y-auto pr-2">
                     <div className="space-y-3">
                         {parent.students.map((student: ParentWithDetails['students'][number]) => (
-                            <Link key={student.id} href={`/list/students/${student.id}`} className="flex items-center space-x-3 p-2 rounded-md hover:bg-muted transition-colors">
-                                <div className="relative w-10 h-10 rounded-full overflow-hidden">
+                            <Link key={student.id} href={`/list/students/${student.id}`} className="flex items-center space-x-3 p-3 rounded-lg hover:bg-muted transition-colors border">
+                                <div className="relative w-12 h-12 rounded-full overflow-hidden bg-muted/50">
                                     <DynamicAvatar
                                     imageUrl={student.user?.img || student.img}
                                     seed={student.id}
                                     />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-foreground">{student.name} {student.surname}</p>
-                                    <p className="text-xs text-muted-foreground">Classe: {student.class?.name || 'N/A'}</p>
+                                    <p className="text-md font-medium text-foreground">{student.name} {student.surname}</p>
+                                    <p className="text-sm text-muted-foreground">Classe: {student.class?.name || 'N/A'}</p>
                                 </div>
                             </Link>
                         ))}
