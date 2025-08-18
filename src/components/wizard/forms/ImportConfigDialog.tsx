@@ -20,7 +20,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { setAllSubjects } from '@/lib/redux/features/subjects/subjectsSlice';
 import { setAllClasses } from '@/lib/redux/features/classes/classesSlice';
 import { setAllClassrooms } from '@/lib/redux/features/classrooms/classroomsSlice';
-import { localAddTeacher, setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
+import { setAllTeachers } from '@/lib/redux/features/teachers/teachersSlice';
 import { setAllTeacherAssignments, setAssignment } from '@/lib/redux/features/teacherAssignmentsSlice';
 import { Role, UserSex, type Grade, type TeacherWithDetails, type Subject, type ClassWithGrade } from '@/types'; 
 import { selectAllGrades } from '@/lib/redux/features/grades/gradesSlice';

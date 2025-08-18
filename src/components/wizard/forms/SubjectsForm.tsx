@@ -148,8 +148,9 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
     
     try {
       await updateSubject({
-          id: editingSubject.id,
-          ...editValues
+        id: editingSubject.id,
+        ...editValues,
+        name: ''
       }).unwrap();
 
       toast({ title: 'Matière mise à jour', description: `Les valeurs par défaut pour "${editingSubject.name}" ont été modifiées.` });

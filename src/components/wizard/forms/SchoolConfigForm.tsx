@@ -14,7 +14,7 @@ import { updateSchoolConfig, selectSchoolConfig } from '@/lib/redux/features/sch
 import { Loader2 } from 'lucide-react';
 import { ImportConfigDialog } from '@/components/wizard/forms/ImportConfigDialog';
 import { selectAllGrades } from '@/lib/redux/features/grades/gradesSlice';
-import { useCreateGradeMutation, useCreateClassMutation, useCreateSubjectMutation, useCreateTeacherMutation, useCreateClassroomMutation } from '@/lib/redux/api/entityApi'; // Assuming these exist
+import { useCreateGradeMutation, useCreateClassMutation, useCreateSubjectMutation, useCreateTeacherMutation } from '@/lib/redux/api/entityApi'; // Assuming these exist
 
 interface SchoolConfigFormProps {}
 

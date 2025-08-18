@@ -3,7 +3,7 @@
 
 import React, { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '@/hooks/redux-hooks';
-import { Users, BookOpen, AlertCircle, Trash2, Edit, Plus, Check, Hourglass } from 'lucide-react';
+import { Users, BookOpen, AlertCircle, Trash2, Edit, Plus, Check, Hourglass, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   Accordion,
@@ -152,7 +152,7 @@ const TeachersForm: React.FC = () => {
                                                 )}>
                                                   <Hourglass size={14} />
                                                   <span>{workload}h / {TEACHER_HOURS_QUOTA}h</span>
-                                                  {isOverloaded && <AlertTriangle size={14} title="Charge horaire dépassée" />}
+                                                  {isOverloaded && <AlertTriangle size={14}  />}
                                               </div>
                                               <span className="text-sm text-muted-foreground">
                                                   {teacher.subjects.length} matière(s)

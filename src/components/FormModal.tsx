@@ -3,10 +3,10 @@
 
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import type { Dispatch, SetStateAction } from "react";
+import type { Dispatch, SetStateAction, FC } from "react";
 import { useEffect, useState } from "react";
 import { toast } from "@/hooks/use-toast";
-import type { FormContainerProps } from "./FormContainer";
+import type { FormContainerProps } from "@/components/forms/types";
 import {
   useDeleteSubjectMutation,
   useDeleteClassMutation,
@@ -76,13 +76,13 @@ const forms: {
   result: (setOpen, type, data, relatedData) => <ResultForm type={type} data={data} setOpen={setOpen} relatedData={relatedData} />,
 };
 
-const FormModal = ({
+const FormModal: FC<FormContainerProps & { relatedData?: any }> = ({
   table,
   type,
   data,
   id,
   relatedData,
-}: FormContainerProps & { relatedData?: any }) => {
+}) => {
   const sizeClass = type === "create" ? "w-8 h-8" : "w-7 h-7";
   
   const variantClass =

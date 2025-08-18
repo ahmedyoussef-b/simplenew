@@ -1,9 +1,6 @@
 // src/components/FormContainer.tsx
 import FormModal from "./FormModal";
-import type { ComponentProps } from 'react';
-
-// Merge FormModal's props with standard div props to allow className, etc.
-export type FormContainerProps = ComponentProps<typeof FormModal>;
+import type { FormContainerProps } from "@/components/forms/types";
 
 // This is now a simple wrapper component.
 // All data-fetching logic has been moved to the individual pages/forms that need it.
