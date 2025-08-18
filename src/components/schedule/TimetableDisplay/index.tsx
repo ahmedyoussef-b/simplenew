@@ -113,66 +113,67 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
           <Table className="min-w-full border-collapse">
               <TableHeader>
               <TableRow>
-                  <TableHead className="w-20 border">Horaires</TableHead>
-                  {schoolDays.map(day => <TableHead key={day} className="text-center border min-w-32">{day}</TableHead>)}
+                  <TableHead className="w-20 border">Jours</TableHead>
+                  {timeSlots.map(time => <TableHead key={time} className="text-center border min-w-32">{time}</TableHead>)}
               </TableRow>
               </TableHeader>
               <TableBody>
-              {timeSlots.map((time, timeIndex) => (
-                  <TableRow key={time}>
-                  <TableCell className="font-medium bg-muted/50 border h-24">{time}</TableCell>
-                  {schoolDays.map((day, dayIndex) => {
-                      const dayEnum = dayMapping[day as keyof typeof dayMapping];
-                      if (!dayEnum) return null;
-                      
-                      const cellId = `${dayEnum}-${time}`;
-                      const uniqueKey = `${cellId}-${dayIndex}-${timeIndex}`;
+              {schoolDays.map((day, dayIndex) => {
+                  const dayEnum = dayMapping[day as keyof typeof dayMapping];
+                  if (!dayEnum) return null;
+                  return (
+                      <TableRow key={day}>
+                          <TableCell className="font-medium bg-muted/50 border h-24">{day}</TableCell>
+                          {timeSlots.map((time, timeIndex) => {
+                              const cellId = `${dayEnum}-${time}`;
+                              const uniqueKey = `${cellId}-${dayIndex}-${timeIndex}`;
 
-                      if (spannedSlots.has(cellId)) {
-                          return null;
-                      }
+                              if (spannedSlots.has(cellId)) {
+                                  return null;
+                              }
 
-                      const cellData = scheduleGrid[cellId];
-                      
-                      if (cellData) {
-                          return (
-                          <TableCell 
-                            key={uniqueKey} 
-                            rowSpan={cellData.rowSpan} 
-                            className={cn(
-                              "p-0 border align-top relative",
-                              getSubjectColorClass(cellData.lesson.subjectId)
-                            )}
-                          >
-                              <TimetableLessonCell 
-                                  lesson={cellData.lesson} 
-                                  wizardData={wizardData} 
-                                  onDelete={handleDeleteLesson} 
-                                  isEditable={isEditable} 
-                                  fullSchedule={fullSchedule}
-                              />
-                          </TableCell>
-                          );
-                      } else {
-                          return (
-                              <TableCell key={uniqueKey} className="p-0 border align-top">
-                                  <InteractiveEmptyCell
-                                      day={dayEnum}
-                                      timeSlot={time}
-                                      possibleSubjects={possibleSubjectsForClass}
-                                      onAddLesson={handlePlaceLesson}
-                                      wizardData={wizardData}
-                                      fullSchedule={fullSchedule || []}
-                                      isEditable={isEditable}
-                                      setHoveredSubjectId={setHoveredSubjectId}
-                                      hoveredSubjectId={hoveredSubjectId}
-                                  />
-                              </TableCell>
-                          );
-                      }
-                  })}
-                  </TableRow>
-              ))}
+                              const cellData = scheduleGrid[cellId];
+                              
+                              if (cellData) {
+                                  return (
+                                    <TableCell
+                                      key={uniqueKey}
+                                      colSpan={cellData.rowSpan} // Switched from rowSpan to colSpan
+                                      className={cn(
+                                          "p-0 border align-top relative",
+                                          getSubjectColorClass(cellData.lesson.subjectId)
+                                      )}
+                                    >
+                                      <TimetableLessonCell 
+                                          lesson={cellData.lesson} 
+                                          wizardData={wizardData} 
+                                          onDelete={handleDeleteLesson} 
+                                          isEditable={isEditable} 
+                                          fullSchedule={fullSchedule}
+                                      />
+                                    </TableCell>
+                                  );
+                              } else {
+                                  return (
+                                      <TableCell key={uniqueKey} className="p-0 border align-top">
+                                          <InteractiveEmptyCell
+                                              day={dayEnum}
+                                              timeSlot={time}
+                                              possibleSubjects={possibleSubjectsForClass}
+                                              onAddLesson={handlePlaceLesson}
+                                              wizardData={wizardData}
+                                              fullSchedule={fullSchedule || []}
+                                              isEditable={isEditable}
+                                              hoveredSubjectId={hoveredSubjectId || null}
+                                              setHoveredSubjectId={setHoveredSubjectId}
+                                          />
+                                      </TableCell>
+                                  );
+                              }
+                          })}
+                      </TableRow>
+                  );
+              })}
               </TableBody>
           </Table>
           </div>

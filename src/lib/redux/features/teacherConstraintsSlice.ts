@@ -6,7 +6,7 @@ import { Day } from '@/types';
 type TimeString = string; // HH:mm
 
 export interface TeacherConstraint {
-  id: string; // The client-side ID can be a string (e.g., from Date.now().toString())
+  id: string | number; // The client-side ID can be a string (e.g., from Date.now().toString())
   teacherId: string;
   day: Day;
   startTime: TimeString;
@@ -24,9 +24,9 @@ const teacherConstraintsSlice = createSlice({
   initialState,
   reducers: {
     addTeacherConstraint: (state, action: PayloadAction<TeacherConstraint>) => {
-      state.items.push(action.payload);
+      state.items.push(action.payload as TeacherConstraint);
     },
-    removeTeacherConstraint: (state, action: PayloadAction<string>) => {
+    removeTeacherConstraint: (state, action: PayloadAction<string | number>) => {
       state.items = state.items.filter(c => c.id !== action.payload);
     },
     setAllTeacherConstraints(state, action: PayloadAction<TeacherConstraint[]>) {

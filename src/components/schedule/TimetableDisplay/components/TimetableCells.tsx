@@ -127,6 +127,8 @@ interface InteractiveEmptyCellProps {
   wizardData: WizardData;
   fullSchedule: Lesson[];
   isEditable: boolean;
+  hoveredSubjectId: number | null;
+  setHoveredSubjectId: (subjectId: number | null) => void;
 }
 
 export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
@@ -136,7 +138,9 @@ export const InteractiveEmptyCell: React.FC<InteractiveEmptyCellProps> = ({
   onAddLesson,
   wizardData,
   fullSchedule,
-  isEditable
+  isEditable,
+  hoveredSubjectId,
+  setHoveredSubjectId,
 }) => {
     
   const availableRoomsCount = React.useMemo(() => {

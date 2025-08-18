@@ -12,32 +12,42 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from '@/components/ui/dialog';
 import { addTeacherConstraint, removeTeacherConstraint, selectTeacherConstraints } from '@/lib/redux/features/teacherConstraintsSlice';
-import { setAllowedRoomsForSubject, setSubjectTimePreference, selectSubjectRequirements } from '@/lib/redux/features/subjectRequirementsSlice';
 import { selectAllProfesseurs } from '@/lib/redux/features/teachers/teachersSlice';
 import { selectAllMatieres } from '@/lib/redux/features/subjects/subjectsSlice';
 import { selectAllSalles } from '@/lib/redux/features/classrooms/classroomsSlice';
 import { dayLabels } from '@/lib/constants';
 import { TimePreference, TeacherConstraint, Day, Subject, Classroom } from '@/types';
 import { MultiSelectField } from '@/components/forms/MultiSelectField'; // Import the multi-select component
+import { selectSubjectRequirements, setAllowedRoomsForSubject, setSubjectTimePreference } from '@/lib/redux/features/subjectRequirementsSlice';
 
 interface ConstraintsFormProps {}
 
 const ConstraintsForm: React.FC<ConstraintsFormProps> = () => {
   const dispatch = useAppDispatch();
+  const [selectedTeacherId, setSelectedTeacherId] = useState<string>('');
+  const [isTeacherFormOpen, setIsTeacherFormOpen] = useState(false);
+  const [newTeacherConstraint, setNewTeacherConstraint] = useState<{
+    day: string;
+    startTime: string;
+    endTime: string;
+    description: string;
+  }>({
+    day: '',
+    startTime: '',
+    endTime: '',
+    description: ''
+  });
+
+  // Define a local type for TeacherConstraint to allow string or number id before saving
+  type LocalTeacherConstraint = Omit<TeacherConstraint, 'id'> & {
+    id: string | number;
+  };
   const teachers = useAppSelector(selectAllProfesseurs);
   const subjects = useAppSelector(selectAllMatieres);
   const salles = useAppSelector(selectAllSalles);
   const teacherConstraints = useAppSelector(selectTeacherConstraints);
   const subjectRequirements = useAppSelector(selectSubjectRequirements);
   
-  const [selectedTeacherId, setSelectedTeacherId] = useState<string>(teachers[0]?.id || '');
-  const [isTeacherFormOpen, setIsTeacherFormOpen] = useState(false);
-  const [newTeacherConstraint, setNewTeacherConstraint] = useState({
-    day: '',
-    startTime: '',
-    endTime: '',
-    description: ''
-  });
 
   const filteredTeacherConstraints = useMemo(() => {
     if (!selectedTeacherId) return [];
@@ -50,22 +60,22 @@ const ConstraintsForm: React.FC<ConstraintsFormProps> = () => {
       return;
     }
 
-    const newEntry: TeacherConstraint = {
-      id: (-Date.now()).toString(), // Create a temporary unique string ID for client-side
+    const newEntry: LocalTeacherConstraint = {
+      id: (-Date.now()).toString() , // Create a temporary unique string ID for client-side
       teacherId: selectedTeacherId,
       day: newTeacherConstraint.day as Day,
       startTime: newTeacherConstraint.startTime,
       endTime: newTeacherConstraint.endTime,
       description: newTeacherConstraint.description,
-      scheduleDraftId: null,
+      scheduleDraftId: '' ,
     };
 
-    dispatch(addTeacherConstraint(newEntry));
+    dispatch(addTeacherConstraint(newEntry as TeacherConstraint));
     setIsTeacherFormOpen(false);
     setNewTeacherConstraint({ day: '', startTime: '', endTime: '', description: '' });
   };
 
-  const handleDeleteTeacherConstraint = (id: string) => {
+  const handleDeleteTeacherConstraint = (id: string | number) => {
     dispatch(removeTeacherConstraint(id));
   };
 

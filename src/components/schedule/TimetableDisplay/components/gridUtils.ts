@@ -72,18 +72,17 @@ export const buildScheduleGrid = (
     const endMinutes = timeToMinutes(endTimeStr);
     const duration = endMinutes - startMinutes;
     
-    const rowSpan = Math.max(1, Math.round(duration / (wizardData.school.sessionDuration || 60)));
+    // The "rowSpan" now acts as a "colSpan" because the layout is pivoted
+    const colSpan = Math.max(1, Math.round(duration / (wizardData.school.sessionDuration || 60)));
     const cellId = `${lesson.day}-${startTimeStr}`;
     
-    // Check if the slot is already occupied (shouldn't happen with correct logic but good practice)
     if (!scheduleGrid[cellId] && !spannedSlots.has(cellId)) {
-        scheduleGrid[cellId] = { lesson, rowSpan };
+        scheduleGrid[cellId] = { lesson, rowSpan: colSpan };
         
-        // Mark subsequent slots as spanned by this lesson
-        if (rowSpan > 1) {
+        if (colSpan > 1) {
             const startIndex = timeSlots.indexOf(startTimeStr);
             if (startIndex !== -1) {
-                for (let i = 1; i < rowSpan; i++) {
+                for (let i = 1; i < colSpan; i++) {
                     const nextSlotIndex = startIndex + i;
                     if (nextSlotIndex < timeSlots.length) {
                         spannedSlots.add(`${lesson.day}-${timeSlots[nextSlotIndex]}`);
