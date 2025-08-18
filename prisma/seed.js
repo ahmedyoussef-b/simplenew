@@ -223,6 +223,9 @@ async function main() {
             classId: newClass.id,
             gradeId: grade.id,
             parentId: parent.id,
+            address: 'N/A', // Added a placeholder for address
+ bloodType: 'Unknown', // Added a placeholder for bloodType
+ birthday: new Date(), // Added a placeholder for the birthday field
           }
         });
       }

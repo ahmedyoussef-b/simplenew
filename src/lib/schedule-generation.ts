@@ -217,9 +217,28 @@ function placeIndividualLesson(
   let placed = false;
   const shuffledDays = [...(school.schoolDays || [])].sort(() => Math.random() - 0.5);
 
+  const dayOrder: Day[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
+
   for (const day of shuffledDays) {
     if (placed) break;
     const dayEnum = day.toUpperCase() as Day;
+    
+    // Find the previous day
+    const currentDayIndex = dayOrder.indexOf(dayEnum);
+    const previousDay = currentDayIndex > 0 ? dayOrder[currentDayIndex - 1] : null;
+
+    // New constraint check: Was this subject taught to this class yesterday?
+    if (previousDay) {
+        const wasTaughtYesterday = schedule.some(l => 
+            l.classId === classInfo.id &&
+            l.subjectId === subjectInfo.id &&
+            l.day === previousDay
+        );
+        if (wasTaughtYesterday) {
+            continue; // Skip this day for this subject
+        }
+    }
+
     const shuffledTimes = [...timeSlots].sort(() => Math.random() - 0.5);
 
     for (const time of shuffledTimes) {
