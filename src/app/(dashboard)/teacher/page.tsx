@@ -89,6 +89,7 @@ const TeacherPage = async () => {
       _count: {
           subjects: t.subjects.length,
           classes: new Set(t.lessons.map(l => l.classId)).size,
+          lessons: t.lessons.length
       }
   }));
 

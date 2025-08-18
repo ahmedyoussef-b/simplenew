@@ -41,6 +41,7 @@ export async function GET() {
         _count: {
           subjects: t.subjects.length,
           classes: uniqueClasses.length,
+          lessons: t.lessons.length
         }
       };
     });
@@ -140,6 +141,7 @@ export async function POST(request: NextRequest) {
         _count: {
             subjects: newTeacherData.subjects.length,
             classes: 0, 
+            lessons: 0
         }
     };
     

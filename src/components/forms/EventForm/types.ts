@@ -1,9 +1,10 @@
 // src/components/forms/EventForm/types.ts
 import { eventSchema, type EventSchema } from "@/lib/formValidationSchemas";
 import type { Event, Class } from "@/types/index";
-import type { SubmitHandler, FieldErrors, UseFormRegister, UseFormHandleSubmit, UseFormReturn } from "react-hook-form";
+import type { SubmitHandler, FieldErrors, UseFormRegister, UseFormHandleSubmit } from "react-hook-form";
 import type { z } from "zod";
 import type { Dispatch, SetStateAction } from "react";
+import { UseMutation } from "@reduxjs/toolkit/dist/query/react/buildHooks";
 import { MutationDefinition } from "@reduxjs/toolkit/query";
 
 export interface EventFormProps {
@@ -13,11 +14,13 @@ export interface EventFormProps {
 }
 
 export interface UseEventFormProps extends EventFormProps {
-    createEvent: any;
-    updateEvent: any;
+    createEvent: UseMutation<MutationDefinition<any, any, any, any>>;
+    updateEvent: UseMutation<MutationDefinition<any, any, any, any>>;
 }
 
-
-export interface EventFormReturn extends UseFormReturn<z.infer<typeof eventSchema>> {
-    onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+export interface EventFormReturn {
+    register: UseFormRegister<EventSchema>;
+    handleSubmit: UseFormHandleSubmit<EventSchema>;
+    onSubmit: SubmitHandler<EventSchema>;
+    errors: FieldErrors<EventSchema>;
 }

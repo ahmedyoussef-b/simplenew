@@ -19,11 +19,11 @@ const EventForm = ({
   const {
     register,
     handleSubmit,
-    errors,
     onSubmit, // Use the onSubmit from the hook
-  } = useEventForm({ 
-    initialData, 
-    availableClasses, 
+    errors, // Correctly destructure errors
+  } = useEventForm({
+    initialData,
+    availableClasses,
     setOpen,
     createEvent,
     updateEvent
@@ -37,16 +37,16 @@ const EventForm = ({
         {initialData ? "Modifier l'Événement" : "Créer un Nouvel Événement"}
       </h1>
 
-      <FormFields 
+      <FormFields
         register={register}
-        errors={errors}
+        errors={errors} // Pass errors to FormFields
         isLoading={isLoading}
         availableClasses={availableClasses}
         initialData={initialData}
       />
 
       <Button type="submit" disabled={isLoading} className="w-full">
-        {isLoading ? 'Enregistrement...' : 
+        {isLoading ? 'Enregistrement...' :
          (initialData ? "Mettre à jour l'événement" : "Créer l'événement")}
       </Button>
     </form>

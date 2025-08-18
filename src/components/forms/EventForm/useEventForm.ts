@@ -1,6 +1,6 @@
 // src/components/forms/EventForm/useEventForm.ts
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm, type SubmitHandler, type UseFormReturn } from "react-hook-form";
 import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { eventSchema, type EventSchema } from "@/lib/formValidationSchemas";
@@ -14,7 +14,7 @@ const useEventForm = ({
 }: UseEventFormProps): EventFormReturn => {
   const router = useRouter();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<EventSchema>({
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<EventSchema>({
     resolver: zodResolver(eventSchema),
     defaultValues: {
       title: initialData?.title || '',
@@ -35,6 +35,7 @@ const useEventForm = ({
         toast({ title: "Succès", description: "Événement créé avec succès." });
       }
       setOpen(false);
+      reset();
       router.refresh();
     } catch (error: any) {
       toast({
