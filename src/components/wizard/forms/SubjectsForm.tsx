@@ -1,4 +1,3 @@
-
 // src/components/wizard/forms/SubjectsForm.tsx
 'use client';
 
@@ -87,7 +86,6 @@ const SubjectsForm: React.FC<SubjectsFormProps> = () => {
     try {
       await createSubject({
         ...newSubject,
-        requiresRoom: false, // default value
         teachers: [],
       }).unwrap();
 
