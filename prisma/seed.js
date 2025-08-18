@@ -1,3 +1,4 @@
+
 // prisma/seed.js
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
@@ -95,7 +96,9 @@ async function main() {
       password: hashedPassword,
       name: 'Admin Principal',
       role: 'ADMIN',
-      active: true
+      active: true,
+      firstName: 'Admin',
+      lastName: 'Principal',
     }
   });
   await prisma.admin.create({ data: { userId: admin1.id, name: 'Admin', surname: 'Principal' } });
@@ -107,7 +110,9 @@ async function main() {
       password: hashedPassword,
       name: 'Admin Secondaire',
       role: 'ADMIN',
-      active: true
+      active: true,
+      firstName: 'Admin',
+      lastName: 'Secondaire',
     }
   });
   await prisma.admin.create({ data: { userId: admin2.id, name: 'Admin', surname: 'Secondaire' } });
@@ -133,6 +138,8 @@ async function main() {
         name: `${firstName} ${lastName}`,
         role: 'TEACHER',
         active: true,
+        firstName: firstName,
+        lastName: lastName,
       }
     });
     const teacher = await prisma.teacher.create({
@@ -170,8 +177,7 @@ async function main() {
 
       for (let studentNum = 1; studentNum <= 30; studentNum++) {
         const gender = Math.random() > 0.5 ? 'male' : 'female';
-        const { firstName, lastName } = generateName(gender);
-
+        
         // Create Parent First
         const parentName = generateName(gender === 'male' ? 'female' : 'male');
         const parentUser = await prisma.user.create({
@@ -182,6 +188,8 @@ async function main() {
             name: `${parentName.firstName} ${parentName.lastName}`,
             role: 'PARENT',
             active: true,
+            firstName: parentName.firstName,
+            lastName: parentName.lastName,
           }
         });
         const parent = await prisma.parent.create({
@@ -193,6 +201,7 @@ async function main() {
         });
 
         // Create Student
+        const { firstName, lastName } = generateName(gender);
         const studentUser = await prisma.user.create({
           data: {
             email: `student_${level}_${classNum}_${studentNum}@example.com`,
@@ -201,6 +210,8 @@ async function main() {
             name: `${firstName} ${lastName}`,
             role: 'STUDENT',
             active: true,
+            firstName: firstName,
+            lastName: lastName,
           }
         });
         await prisma.student.create({
