@@ -29,6 +29,7 @@ const StudentPage = async () => {
     where: { userId: session.user.id },
     include: {
       class: { include: { grade: true } },
+      optionalSubjects: true, // Fetch enrolled optional subjects
     },
   });
 
@@ -54,8 +55,11 @@ const StudentPage = async () => {
   // Fetch all necessary data for the wizard, which now includes the timetable
   const wizardData = await fetchAllDataForWizard();
   
-  // Filter the schedule for the specific student's class
-  const studentSchedule = wizardData.schedule.filter(l => l.classId === studentClass.id);
+  // Filter the schedule for the specific student's class and optional subjects
+  const studentSchedule = wizardData.schedule.filter(l => 
+      (l.classId === studentClass.id && !l.optionalSubjectId) ||
+      (l.optionalSubjectId && student.optionalSubjects.some(os => os.id === l.optionalSubjectId))
+  );
   
   // Create a specific wizardData object for this student's view
   const studentWizardData: WizardData = {
@@ -79,8 +83,8 @@ const StudentPage = async () => {
         <CardContent>
           <TimetableDisplay 
             wizardData={studentWizardData} 
-            viewMode={"class"} 
-            selectedViewId={student.classId?.toString() || ""} 
+            viewMode={"student"} 
+            selectedViewId={student.id}
           />
         </CardContent>
       </Card>

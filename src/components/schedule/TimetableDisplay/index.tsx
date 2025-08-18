@@ -4,7 +4,7 @@
 import React, { useState, useMemo } from 'react';
 import { Card } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import type { WizardData, Lesson, Subject, Day } from '@/types';
+import type { WizardData, Lesson, Subject, Day, Student } from '@/types';
 import { type Lesson as PrismaLesson } from '@prisma/client';
 import { TimetableLessonCell, InteractiveEmptyCell } from './components/TimetableCells';
 import { formatTimeSimple, getSubjectColorClass } from './components/utils';
@@ -15,12 +15,13 @@ import { useScheduleActions } from '../ScheduleEditor/hooks/useScheduleActions';
 import { useAppSelector } from '@/hooks/redux-hooks';
 import { buildScheduleGrid } from './components/gridUtils';
 import { cn } from '@/lib/utils';
+import prisma from '@/lib/prisma';
 
 
 interface TimetableDisplayProps {
   wizardData: WizardData | null;
   isEditable?: boolean;
-  viewMode: 'class' | 'teacher';
+  viewMode: 'class' | 'teacher' | 'student';
   selectedViewId: string;
 }
 
@@ -37,7 +38,7 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
   const { handlePlaceLesson, handleDeleteLesson } = useScheduleActions(
     wizardData!, // Not null here because of the check below
     fullSchedule,
-    viewMode,
+    viewMode as 'class' | 'teacher',
     selectedViewId
   );
 
@@ -63,14 +64,27 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
   
   const scheduleData = useMemo(() => {
     if (!fullSchedule) return [];
+
     if (viewMode === 'class' && selectedViewId) {
       return fullSchedule.filter(l => l.classId === parseInt(selectedViewId));
     }
     if (viewMode === 'teacher' && selectedViewId) {
       return fullSchedule.filter(l => l.teacherId === selectedViewId);
     }
+    if(viewMode === 'student' && selectedViewId) {
+        const student = wizardData.teachers.find(t => t.id === selectedViewId) as unknown as Student;
+        if (!student) return [];
+
+        const classLessons = fullSchedule.filter(l => l.classId === student.classId && !l.optionalSubjectId);
+        
+        const studentOptionalLessons = fullSchedule.filter(l => 
+            l.optionalSubjectId && student.optionalSubjects?.some(os => os.id === l.optionalSubjectId)
+        );
+
+        return [...classLessons, ...studentOptionalLessons];
+    }
     return [];
-  }, [fullSchedule, viewMode, selectedViewId]);
+  }, [fullSchedule, viewMode, selectedViewId, wizardData.teachers]);
 
   const { scheduleGrid, spannedSlots } = buildScheduleGrid(
     scheduleData, 
@@ -89,7 +103,9 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
         .reduce((acc, l) => {
             const lessonDurationMinutes = (new Date(l.endTime).getTime() - new Date(l.startTime).getTime()) / (1000 * 60);
             const lessonHours = lessonDurationMinutes / 60;
-            acc[l.subjectId] = (acc[l.subjectId] || 0) + lessonHours;
+            if(l.subjectId) {
+              acc[l.subjectId] = (acc[l.subjectId] || 0) + lessonHours;
+            }
             return acc;
         }, {} as Record<number, number>);
 
@@ -127,7 +143,6 @@ const TimetableDisplay: React.FC<TimetableDisplayProps> = ({
                           {timeSlots.map((time, timeIndex) => {
                               const cellId = `${dayEnum}-${time}`;
                               const uniqueKey = `${cellId}-${dayIndex}-${timeIndex}`;
-console.log("cellId , spannedSlots", cellId, spannedSlots)
                               if (spannedSlots.has(cellId)) {
                                   return null;
                               }
@@ -141,7 +156,7 @@ console.log("cellId , spannedSlots", cellId, spannedSlots)
                                       colSpan={cellData.rowSpan} // Switched from rowSpan to colSpan
                                       className={cn(
                                           "p-0 border align-top relative",
-                                          getSubjectColorClass(cellData.lesson.subjectId)
+                                          cellData.lesson.subjectId ? getSubjectColorClass(cellData.lesson.subjectId) : 'bg-gray-100 border-gray-200 text-gray-800'
                                       )}
                                     >
                                       <TimetableLessonCell 
@@ -166,6 +181,8 @@ console.log("cellId , spannedSlots", cellId, spannedSlots)
                                               isEditable={isEditable}
                                               hoveredSubjectId={hoveredSubjectId || null}
                                               setHoveredSubjectId={setHoveredSubjectId}
+                                              viewMode={viewMode as 'class' | 'teacher'}
+                                              selectedViewId={selectedViewId}
                                           />
                                       </TableCell>
                                   );
