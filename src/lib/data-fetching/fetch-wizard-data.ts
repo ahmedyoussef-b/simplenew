@@ -14,8 +14,81 @@ const toSerializable = (obj: any) => {
     }));
 };
 
+const parseJsonFields = (draft: any) => {
+    const parsedData = { ...draft };
+    const fieldsToParse: (keyof WizardData)[] = ['schoolConfig', 'classes', 'subjects', 'teachers', 'classrooms', 'grades'];
+    fieldsToParse.forEach(field => {
+        if (typeof parsedData[field] === 'string') {
+            try {
+                parsedData[field] = JSON.parse(parsedData[field]);
+            } catch (e) {
+                console.warn(`Could not parse JSON for field ${field} in draft ${draft.id}:`, e);
+                // Fallback to empty array or default object if parsing fails
+                parsedData[field] = (field === 'schoolConfig') ? {} : []; 
+            }
+        }
+    });
+
+    // Ensure school config has default values if they are missing after parsing
+    const defaultSchoolConfig = {
+      name: "Collège Riadh 5",
+      startTime: '08:00',
+      endTime: '18:00',
+      sessionDuration: 60,
+      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+    };
+
+    parsedData.school = { ...defaultSchoolConfig, ...(parsedData.schoolConfig || {}) };
+    delete parsedData.schoolConfig; // Remove the redundant field
+
+    return parsedData;
+};
+
 
 export async function fetchAllDataForWizard(): Promise<WizardData> {
+    const session = await getServerSession();
+    const userId = session?.user?.id;
+
+    if (userId) {
+        // 1. Try to find an active draft for the current user
+        const activeDraft = await prisma.scheduleDraft.findFirst({
+            where: { userId, isActive: true },
+            include: {
+                lessons: true,
+                lessonRequirements: true,
+                teacherConstraints: true,
+                subjectRequirements: true,
+                teacherAssignments: { include: { classAssignments: { include: { class: true } } } },
+            },
+        });
+
+        if (activeDraft) {
+            console.log("✅ [Data-Fetching] Active draft found, returning parsed draft data.");
+            const parsedDraft = parseJsonFields(activeDraft);
+            const teacherAssignmentsWithClassIds = parsedDraft.teacherAssignments.map((a: any) => ({
+                ...a,
+                classIds: a.classAssignments.map((ca: any) => ca.classId),
+            }));
+
+            return toSerializable({
+                scheduleDraftId: parsedDraft.id,
+                school: parsedDraft.school,
+                classes: parsedDraft.classes || [],
+                subjects: parsedDraft.subjects || [],
+                teachers: parsedDraft.teachers || [],
+                rooms: parsedDraft.classrooms || [],
+                grades: parsedDraft.grades || [],
+                lessonRequirements: parsedDraft.lessonRequirements || [],
+                teacherConstraints: parsedDraft.teacherConstraints || [],
+                subjectRequirements: parsedDraft.subjectRequirements || [],
+                teacherAssignments: teacherAssignmentsWithClassIds || [],
+                schedule: parsedDraft.lessons || [],
+            });
+        }
+    }
+
+    // 2. If no active draft, or no user, fetch from the "live" tables
+    console.log("ℹ️ [Data-Fetching] No active draft found. Fetching live data from DB.");
     const [
       school,
       classes,
@@ -23,10 +96,6 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       teachersFromDb,
       rooms,
       grades,
-      lessonRequirements,
-      teacherConstraints,
-      subjectRequirements,
-      teacherAssignments,
       lessons
     ] = await Promise.all([
       prisma.school.findFirst(),
@@ -35,25 +104,22 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
       prisma.teacher.findMany({ include: { user: true, subjects: true, lessons: { select: { classId: true }, distinct: ['classId'] } } }),
       prisma.classroom.findMany({orderBy: {name: 'asc'}}),
       prisma.grade.findMany({orderBy: {level: 'asc'}}),
-      prisma.lessonRequirement.findMany(),
-      prisma.teacherConstraint.findMany(),
-      prisma.subjectRequirement.findMany(),
-      prisma.teacherAssignment.findMany(),
       prisma.lesson.findMany() // Fetch the "master" schedule
     ]);
     
-    const teachers: TeacherWithDetails[] = teachersFromDb.map(t => {
-      const classIds = new Set(t.lessons.map(l => l.classId));
-      return {
+    const teachers: TeacherWithDetails[] = await Promise.all(teachersFromDb.map(async (t) => {
+        const classIds = new Set(t.lessons.map(l => l.classId));
+        const totalLessons = await prisma.lesson.count({ where: { teacherId: t.id }});
+        return {
         ...t,
         classes: [],
         _count: {
             subjects: t.subjects.length,
             classes: classIds.size,
-            lessons: lessons.filter(l => l.teacherId === t.id).length
+            lessons: totalLessons
         },
-      };
-    });
+        };
+    }));
 
     const defaultSchoolConfig: SchoolData = {
       id: school?.id ? Number(school.id) : undefined,
@@ -73,10 +139,10 @@ export async function fetchAllDataForWizard(): Promise<WizardData> {
         teachers: teachers,
         rooms: rooms,
         grades: grades,
-        lessonRequirements: lessonRequirements,
-        teacherConstraints: teacherConstraints,
-        subjectRequirements: subjectRequirements,
-        teacherAssignments: teacherAssignments,
+        lessonRequirements: [],
+        teacherConstraints: [],
+        subjectRequirements: [],
+        teacherAssignments: [],
         schedule: lessons,
         scheduleDraftId: null,
     });
