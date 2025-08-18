@@ -31,7 +31,7 @@ export const generateTimeSlots = (startTime: string, endTime: string, sessionDur
         
         // Skip the lunch break entirely.
         if (currentMinute >= lunchStartMinutes && currentMinute < lunchEndMinutes) {
-            currentMinute += sessionDuration;
+            currentMinute = lunchEndMinutes;
             continue;
         }
 

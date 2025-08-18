@@ -13,6 +13,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Prisma } from "@prisma/client";
 import TimetableDisplay from "@/components/schedule/TimetableDisplay";
 import type { WizardData, Lesson, ClassWithGrade, TeacherWithDetails, Subject, Classroom } from "@/types/index";
+import { fetchAllDataForWizard } from "@/lib/data-fetching/fetch-wizard-data";
 
 // Define arguments for the prisma query to ensure type safety and reusability
 const classWithDetailsArgs = Prisma.validator<Prisma.ClassFindUniqueArgs>()({
@@ -65,57 +66,7 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
   }
 
   // --- Fetch data for Timetable ---
-  const [allSubjects, allTeachersFromDb, allClassrooms, allGrades] = await Promise.all([
-    prisma.subject.findMany(),
-    prisma.teacher.findMany({ 
-        include: { 
-            user: true, 
-            subjects: true, 
-            lessons: { select: { classId: true }, distinct: ['classId'] } 
-        } 
-    }),
-    prisma.classroom.findMany(),
-    prisma.grade.findMany(),
-  ]);
-
-   const allTeachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
-      ...t,
-      classes: [], // This can be populated if needed, but not necessary for the wizard object
-      _count: {
-          subjects: t.subjects.length,
-          classes: new Set(t.lessons.map(l => l.classId)).size,
-          lessons: t.lessons.length,
-      }
-  }));
-
-  const wizardData: WizardData = {
-    school: {
-      name: `Classe ${classData.name}`,
-      startTime: '08:00',
-      endTime: '17:00',
-      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
-      sessionDuration: 60,
-      scheduleDraftId: null,
-      schoolConfig: {},
-    },
-    classes: [classData as unknown as ClassWithGrade],
-    subjects: allSubjects as Subject[],
-    teachers: allTeachers,
-    rooms: allClassrooms as Classroom[],
-    grades: allGrades,
-    lessonRequirements: [],
-    teacherConstraints: [],
-    subjectRequirements: [],
-    teacherAssignments: [],
-    schedule: classData.lessons.map(lesson => ({
-        ...lesson,
-        startTime: lesson.startTime.toISOString(),
-        endTime: lesson.endTime.toISOString(),
-        createdAt: lesson.createdAt.toISOString(),
-        updatedAt: lesson.updatedAt.toISOString(),
-    })),
-    scheduleDraftId: null,
-  };
+  const wizardData = await fetchAllDataForWizard();
   // --- End Timetable Data Fetch ---
 
   return (
