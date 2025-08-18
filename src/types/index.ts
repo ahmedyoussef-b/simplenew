@@ -37,7 +37,7 @@ import type { SerializedError } from "@reduxjs/toolkit";
 import type { TeacherSchema, ParentSchema, StudentSchema } from './schemas';
 
 
-export { Role, UserSex, Day, TimePreference } from '@prisma/client';
+export { Role, UserSex, Day, TimePreference, type TeacherSchema } from '@prisma/client';
 
 export type EntityType = 'grade' | 'subject' | 'class' | 'teacher' | 'student' | 'parent' | 'lesson' | 'exam' | 'assignment' | 'event' | 'announcement' | 'result' | 'attendance' | 'quiz';
 

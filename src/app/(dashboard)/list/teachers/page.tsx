@@ -3,8 +3,8 @@
 import { getServerSession } from "@/lib/auth-utils";
 import prisma from "@/lib/prisma";
 import { redirect } from "next/navigation";
-import { Role } from "@prisma/client";
-import { TeacherWithDetails } from "@/types";
+import { Prisma, Role } from "@prisma/client";
+import { TeacherWithDetails, Class } from "@/types";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import TableSearch from "@/components/TableSearch";
 import Link from "next/link";
@@ -26,13 +26,13 @@ const TeachersPage = async ({ searchParams }: { searchParams: { q?: string, p?: 
     const q = searchParams?.q || "";
     const p = parseInt(searchParams?.p || "1") || 1;
 
-    const query = {
+    const query: Prisma.TeacherWhereInput = {
         OR: [
             { name: { contains: q, mode: 'insensitive' } },
             { surname: { contains: q, mode: 'insensitive' } },
             { user: { email: { contains: q, mode: 'insensitive' } } },
-            { phone: { contains: q, mode: 'insensitive' } } as any, // Cast to any to avoid type issue on optional field
-            { address: { contains: q, mode: 'insensitive' } } as any,
+            { phone: { contains: q, mode: 'insensitive' } },
+            { address: { contains: q, mode: 'insensitive' } },
             { user: { username: { contains: q, mode: 'insensitive' } } },
             { subjects: { some: { name: { contains: q, mode: 'insensitive' } } } },
         ],
@@ -44,33 +44,36 @@ const TeachersPage = async ({ searchParams }: { searchParams: { q?: string, p?: 
             include: {
               user: true, 
               subjects: true,
-              lessons: {
+              lessons: { 
                   select: {
                       class: true
                   },
                   distinct: ['classId']
-              }
+              },
             },
             orderBy: [{ surname: 'asc' }, {name: 'asc'}],
             take: ITEM_PER_PAGE,
             skip: ITEM_PER_PAGE * (p - 1),
-          }),
-          prisma.teacher.count({ where: query }),
+        }),
+        prisma.teacher.count({ where: query }), 
     ]);
         
-    const teachersWithCount: TeacherWithDetails[] = teachersFromDb.map(t => {
-        const uniqueClasses = t.lessons.map(l => l.class);
+    const teachersWithCount: TeacherWithDetails[] = await Promise.all(teachersFromDb.map(async (t) => {
+        const uniqueClasses = Array.from(new Map(t.lessons.map((l: any) => [l.class.id, l.class])).values());
+        const totalLessons = await prisma.lesson.count({ where: { teacherId: t.id }});
+
         return {
             ...t,
-            user: t.user, // Ensure user is passed
-            subjects: t.subjects, // Ensure subjects are passed
-            classes: uniqueClasses, // Pass the derived classes
+            user: t.user,
+            subjects: t.subjects,
+            classes: uniqueClasses as Class[],
             _count: {
               subjects: t.subjects.length,
               classes: uniqueClasses.length,
+              lessons: totalLessons,
             },
         };
-    });
+    }));
 
     return (
       <div className="bg-background p-4 md:p-6 rounded-lg flex-1 m-4 mt-0">
