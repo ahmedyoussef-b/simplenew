@@ -3,7 +3,7 @@ import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { getServerSession } from "@/lib/auth-utils";
 import { Role as AppRole } from "@/types";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Users, ArrowLeft } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +11,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import FormContainer from "@/components/FormContainer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Prisma } from "@prisma/client";
-
+import TimetableDisplay from "@/components/schedule/TimetableDisplay";
+import type { WizardData, Lesson, ClassWithGrade, TeacherWithDetails, Subject, Classroom } from "@/types/index";
 
 // Define arguments for the prisma query to ensure type safety and reusability
 const classWithDetailsArgs = Prisma.validator<Prisma.ClassFindUniqueArgs>()({
@@ -23,6 +24,13 @@ const classWithDetailsArgs = Prisma.validator<Prisma.ClassFindUniqueArgs>()({
         user: true,
       },
       orderBy: [{ surname: 'asc' }, { name: 'asc' }],
+    },
+    lessons: {
+      include: {
+        subject: true,
+        teacher: { include: { user: true }},
+        classroom: true,
+      }
     },
     _count: {
       select: { students: true, lessons: true },
@@ -55,6 +63,60 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
   if (!classData) {
     notFound();
   }
+
+  // --- Fetch data for Timetable ---
+  const [allSubjects, allTeachersFromDb, allClassrooms, allGrades] = await Promise.all([
+    prisma.subject.findMany(),
+    prisma.teacher.findMany({ 
+        include: { 
+            user: true, 
+            subjects: true, 
+            lessons: { select: { classId: true }, distinct: ['classId'] } 
+        } 
+    }),
+    prisma.classroom.findMany(),
+    prisma.grade.findMany(),
+  ]);
+
+   const allTeachers: TeacherWithDetails[] = allTeachersFromDb.map(t => ({
+      ...t,
+      classes: [], // This can be populated if needed, but not necessary for the wizard object
+      _count: {
+          subjects: t.subjects.length,
+          classes: new Set(t.lessons.map(l => l.classId)).size,
+          lessons: t.lessons.length,
+      }
+  }));
+
+  const wizardData: WizardData = {
+    school: {
+      name: `Classe ${classData.name}`,
+      startTime: '08:00',
+      endTime: '17:00',
+      schoolDays: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'],
+      sessionDuration: 60,
+      scheduleDraftId: null,
+      schoolConfig: {},
+    },
+    classes: [classData as unknown as ClassWithGrade],
+    subjects: allSubjects as Subject[],
+    teachers: allTeachers,
+    rooms: allClassrooms as Classroom[],
+    grades: allGrades,
+    lessonRequirements: [],
+    teacherConstraints: [],
+    subjectRequirements: [],
+    teacherAssignments: [],
+    schedule: classData.lessons.map(lesson => ({
+        ...lesson,
+        startTime: lesson.startTime.toISOString(),
+        endTime: lesson.endTime.toISOString(),
+        createdAt: lesson.createdAt.toISOString(),
+        updatedAt: lesson.updatedAt.toISOString(),
+    })),
+    scheduleDraftId: null,
+  };
+  // --- End Timetable Data Fetch ---
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -117,6 +179,21 @@ const SingleClassPage = async ({ params }: { params: { id: string } }) => {
                             </Link>
                         ))}
                     </div>
+                </CardContent>
+            </Card>
+        </div>
+         <div className="lg:col-span-2">
+            <Card>
+                <CardHeader>
+                    <CardTitle>Emploi du Temps</CardTitle>
+                    <CardDescription>Aperçu hebdomadaire des cours pour la classe {classData.name}.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <TimetableDisplay
+                        wizardData={wizardData}
+                        viewMode={"class"}
+                        selectedViewId={classData.id.toString()}
+                    />
                 </CardContent>
             </Card>
         </div>
