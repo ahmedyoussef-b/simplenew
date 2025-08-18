@@ -9,6 +9,8 @@ import DynamicAvatar from '@/components/DynamicAvatar';
 import { useState } from 'react';
 import MessageModal from '@/components/messaging/MessageModal';
 import { Role as AppRole, ParentWithDetails } from '@/types';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface ParentCardProps {
   parent: ParentWithDetails;
@@ -26,61 +28,57 @@ const ParentCard: React.FC<ParentCardProps> = ({ parent, userRole, isLCP = false
 
   return (
     <>
-      <div className="book">
-        {/* Front Cover */}
-        <div className="cover">
-          <div className="relative h-28 w-28 rounded-full overflow-hidden border-2 border-primary/20">
-            <DynamicAvatar 
-              imageUrl={parent.img || parent.user?.img}
-              seed={parent.id || parent.user?.email || Math.random().toString(36).substring(7)}
-              isLCP={isLCP}
-            />
+      <Card className="flex flex-col overflow-hidden shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
+        <CardHeader className="p-0 relative h-20 bg-gradient-to-r from-primary/20 to-accent/20">
+          <div className="absolute top-5 left-1/2 -translate-x-1/2 transform">
+            <div className="relative h-24 w-24 rounded-full overflow-hidden border-4 border-background bg-background shadow-lg">
+              <DynamicAvatar
+                imageUrl={parent.img || parent.user?.img}
+                seed={parent.id || parent.user?.email}
+                alt={`Avatar de ${fullName}`}
+                isLCP={isLCP}
+              />
+            </div>
           </div>
-          <h3 className="text-xl font-bold text-primary mt-3 truncate w-full">{fullName}</h3>
+        </CardHeader>
+        <CardContent className="flex flex-col flex-grow items-center text-center p-4 pt-16">
+          <h3 className="text-lg font-bold text-foreground truncate w-full">{fullName}</h3>
           <p className="text-sm text-muted-foreground">Parent</p>
-        </div>
+          <p className="text-xs text-muted-foreground truncate w-full mt-1">{parent.user?.email}</p>
 
-        {/* Inside the book */}
-        <div className="flex flex-col h-full w-full justify-between items-center text-center">
-            {/* Details */}
-            <div className="w-full">
-                <h4 className="font-bold text-md truncate">{fullName}</h4>
-                <p className="text-xs text-muted-foreground truncate mb-2">{parent.user?.email}</p>
-                <hr className="border-t border-border my-2" />
-
-                <div className="text-left mt-2">
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">Enfants:</p>
-                    <div className="flex flex-wrap gap-1 justify-center">
-                        {parent.students.slice(0, 2).map(student => (
-                        <Badge key={student.id} variant="secondary" className="text-xs">{student.name} {student.surname}</Badge>
-                        ))}
-                        {parent.students.length > 2 && (
-                        <Badge variant="outline" className="text-xs">+{ parent.students.length - 2 }</Badge>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Actions */}
-            <div className="w-full mt-auto pt-2 border-t border-border/50 flex justify-center space-x-2">
-                <Link href={viewLink} passHref>
-                    <button className="p-2 hover:bg-accent rounded-full transition-colors text-muted-foreground hover:text-accent-foreground" title="Voir les détails">
-                    <Eye size={18} />
-                    </button>
-                </Link>
-                {canMessage && parent.user?.id && (
-                    <button onClick={() => setIsMessageModalOpen(true)} className="p-2 hover:bg-accent rounded-full transition-colors text-blue-500 hover:text-accent-foreground" title="Envoyer un message">
-                        <MessageSquare size={18} />
-                    </button>
-                )}
-                {userRole === AppRole.ADMIN && (
-                    <FormContainer table="parent" type="delete" id={parent.id} />
+          <div className="mt-4 w-full border-t pt-3">
+            <p className="text-xs font-semibold text-muted-foreground mb-2">Enfants:</p>
+            <div className="flex flex-wrap gap-1 justify-center">
+              {parent.students.slice(0, 2).map(student => (
+                <Badge key={student.id} variant="secondary" className="text-xs">{student.name} {student.surname}</Badge>
+              ))}
+              {parent.students.length > 2 && (
+                <Badge variant="outline" className="text-xs">+{parent.students.length - 2}</Badge>
+              )}
+               {parent.students.length === 0 && (
+                  <p className="text-xs text-muted-foreground italic">Aucun enfant</p>
                 )}
             </div>
-        </div>
-      </div>
+          </div>
+        </CardContent>
+        <CardFooter className="bg-muted/50 p-2 flex justify-center space-x-1">
+          <Link href={viewLink} passHref>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-accent-foreground" title="Voir les détails">
+              <Eye size={18} />
+            </Button>
+          </Link>
+          {canMessage && parent.user?.id && (
+            <Button variant="ghost" size="icon" onClick={() => setIsMessageModalOpen(true)} className="text-blue-500 hover:text-accent-foreground" title="Envoyer un message">
+              <MessageSquare size={18} />
+            </Button>
+          )}
+          {userRole === AppRole.ADMIN && (
+            <FormContainer table="parent" type="delete" id={parent.id} />
+          )}
+        </CardFooter>
+      </Card>
       {canMessage && parent.user?.id && (
-        <MessageModal 
+        <MessageModal
           isOpen={isMessageModalOpen}
           onClose={() => setIsMessageModalOpen(false)}
           recipientName={fullName}
