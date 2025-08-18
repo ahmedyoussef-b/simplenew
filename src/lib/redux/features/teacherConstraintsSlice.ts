@@ -6,7 +6,7 @@ import { Day } from '@/types';
 type TimeString = string; // HH:mm
 
 export interface TeacherConstraint {
-  id: string;
+  id: string; // The client-side ID can be a string (e.g., from Date.now().toString())
   teacherId: string;
   day: Day;
   startTime: TimeString;

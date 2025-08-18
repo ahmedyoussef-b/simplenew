@@ -57,7 +57,7 @@ const ConstraintsForm: React.FC<ConstraintsFormProps> = () => {
       startTime: newTeacherConstraint.startTime,
       endTime: newTeacherConstraint.endTime,
       description: newTeacherConstraint.description,
-      scheduleDraftId: null
+      scheduleDraftId: null,
     };
 
     dispatch(addTeacherConstraint(newEntry));
