@@ -35,6 +35,9 @@ const subjectsData = [
     { name: 'Musique', weeklyHours: 1, coefficient: 1 },
     { name: 'Art', weeklyHours: 1, coefficient: 1 },
     { name: 'Éducation Sportive', weeklyHours: 2, coefficient: 1 },
+    { name: 'Allemand', weeklyHours: 2, coefficient: 1 },
+    { name: 'Italien', weeklyHours: 2, coefficient: 1 },
+    { name: 'Espagnol', weeklyHours: 2, coefficient: 1 },
 ];
 
 // --- HELPER FUNCTIONS ---
