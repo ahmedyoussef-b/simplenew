@@ -96,7 +96,7 @@ async function main() {
   console.log('👤 Création des administrateurs...');
   const admin1 = await prisma.user.create({
     data: {
-      email: 'admin@example.com',
+      email: 'amin@example.com',
       username: 'admin',
       password: hashedPassword,
       name: 'Admin Principal',
@@ -110,7 +110,7 @@ async function main() {
 
   const admin2 = await prisma.user.create({
     data: {
-      email: 'admin2@example.com',
+      email: 'amin2@example.com',
       username: 'admin2',
       password: hashedPassword,
       name: 'Admin Secondaire',
@@ -212,31 +212,50 @@ async function main() {
   // --- Create Optional Subjects & Assign them to students from 2nd year onwards ---
   console.log('📚 Création des matières optionnelles et assignation aux élèves...');
   const optionalSubjectsByGrade = {};
-  for(const grade of createdGrades.filter(g => g.level >= 2)) {
-      const createdOptionalSubjects = await Promise.all(
-          optionalSubjectsData.map(subject => prisma.optionalSubject.create({ 
-              data: {
-                  ...subject,
-                  gradeId: grade.id,
-              }
-          }))
-      );
-      optionalSubjectsByGrade[grade.id] = createdOptionalSubjects;
+  // ... (previous code)
 
-      const studentsInGrade = await prisma.student.findMany({ where: { gradeId: grade.id } });
-      for(const student of studentsInGrade) {
-          const chosenSubject = getRandomElement(createdOptionalSubjects);
-          await prisma.student.update({
-              where: { id: student.id },
-              data: {
-                  optionalSubjects: {
-                      connect: { id: chosenSubject.id }
-                  }
-              }
+for (const grade of createdGrades.filter(g => g.level >= 2)) {
+  console.log(`🌱 Assigning optional subjects to students in grade ${grade.level}...`);
+  const createdOptionalSubjects = await Promise.all(
+      optionalSubjectsData.map(async (subjectData) => { // Added async here
+          // Check if the subject already exists
+          const existingSubject = await prisma.optionalSubject.findUnique({
+              where: { name: subjectData.name },
           });
-      }
-       console.log(`✅ Matières optionnelles créées pour le niveau ${grade.level} et assignées à ${studentsInGrade.length} élèves.`);
+
+          if (existingSubject) {
+              console.log(`Subject "${subjectData.name}" already exists. Skipping creation.`);
+              return existingSubject; // Return the existing subject
+          } else {
+              // If it doesn't exist, create it
+              return prisma.optionalSubject.create({
+                  data: {
+                      ...subjectData,
+                      gradeId: grade.id, // Assign the subject to the current grade
+                  },
+              });
+          }
+      })
+  );
+
+  // Connect the created or existing optional subjects to students in this grade
+  const studentsInGrade = await prisma.student.findMany({ where: { gradeId: grade.id } });
+  for (const student of studentsInGrade) {
+      const chosenSubject = getRandomElement(createdOptionalSubjects);
+      await prisma.student.update({
+          where: { id: student.id },
+          data: {
+              optionalSubjects: {
+                  connect: { id: chosenSubject.id }
+              }
+          }
+      });
   }
+  console.log(`✅ Matières optionnelles créées pour le niveau ${grade.level} et assignées à ${studentsInGrade.length} élèves.`);
+}
+
+// ... (rest of the code)
+
 
   // --- Create Teachers ---
   console.log('🧑‍🏫 Création des 90 professeurs...');
@@ -317,4 +336,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-```
