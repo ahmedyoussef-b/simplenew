@@ -39,6 +39,7 @@ export default async function ServerClassesPage({
     let teacherName: string | undefined = undefined;
 
     if (teacherId && typeof teacherId === 'string') {
+        // Correctly initialize `whereClause.lessons` before using it
         whereClause.lessons = {
             some: {
                 teacherId: teacherId,
