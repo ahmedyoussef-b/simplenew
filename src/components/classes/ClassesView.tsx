@@ -30,7 +30,10 @@ const ClassesView: React.FC<ClassesViewProps> = ({ grades, classes, userRole, in
   
   const handleGradeSelect = (gradeId: number) => {
     setSelectedGradeId(gradeId);
-    router.push(`/list/classes?viewGradeId=${gradeId}`);
+    // The timeout allows the animation to play before the component re-renders with the new view.
+    setTimeout(() => {
+        router.push(`/list/classes?viewGradeId=${gradeId}`);
+    }, 500); // 500ms should be enough for the animation to be noticeable
   };
   
   const handleBackToGrades = () => {
