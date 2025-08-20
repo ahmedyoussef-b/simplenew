@@ -11,6 +11,7 @@ import { Loader2, Sparkles, User, LogIn } from 'lucide-react';
 import Link from 'next/link';
 import { useAppSelector } from '@/hooks/redux-hooks';
 import { selectCurrentUser } from '@/lib/redux/features/auth/authSlice';
+import { useRouter } from 'next/navigation';
 
 export default function AccueilZenPage() {
   const [greeting, setGreeting] = useState('');
@@ -19,6 +20,16 @@ export default function AccueilZenPage() {
   const [isLoadingGreeting, setIsLoadingGreeting] = useState(true);
   const { toast } = useToast();
   const currentUser = useAppSelector(selectCurrentUser);
+  const router = useRouter();
+
+  useEffect(() => {
+    // If user is logged in, redirect them to their dashboard after a short delay
+    if (currentUser?.role) {
+      setTimeout(() => {
+        router.push(`/${currentUser.role.toLowerCase()}`);
+      }, 500); // 0.5 second delay
+    }
+  }, [currentUser, router]);
 
   useEffect(() => {
     const storedName = localStorage.getItem('accueilZenName');

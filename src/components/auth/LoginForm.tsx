@@ -36,8 +36,8 @@ export default function LoginForm() {
           title: "Connexion réussie!",
           description: "Vous allez être redirigé vers votre tableau de bord."
         });
-        // Force a full page reload to ensure the session cookie is sent on the next request.
-        window.location.href = '/dashboard';
+        // Redirect to the accueil page, which will then handle role-based redirection.
+        window.location.href = '/accueil';
     }
     if (isError) {
       const apiError = loginErrorData as any;
