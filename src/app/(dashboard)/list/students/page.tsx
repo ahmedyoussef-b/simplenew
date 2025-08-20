@@ -32,6 +32,7 @@ const StudentListPage = async ({
   const teacherIdParam = searchParams?.teacherId;
   if (teacherIdParam) {
     const teacherId = Array.isArray(teacherIdParam) ? teacherIdParam[0] : teacherIdParam;
+    // Only apply this filter if the user is a teacher or admin for security
     if (userRole === AppRole.TEACHER || userRole === AppRole.ADMIN) { 
       conditions.push({ class: { lessons: { some: { teacherId: teacherId } } } });
     }
@@ -55,6 +56,8 @@ const StudentListPage = async ({
     });
   }
   
+  // If the user is a teacher and no specific teacher is being searched for,
+  // filter to only show students in their classes.
   if (userRole === AppRole.TEACHER && currentUserId && !teacherIdParam) {
     conditions.push({
       class: {
@@ -63,6 +66,7 @@ const StudentListPage = async ({
     });
   }
   
+  // Combine all conditions with AND
   if(conditions.length > 0) {
     where.AND = conditions;
   }
