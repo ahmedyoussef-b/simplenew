@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 /**
  * A component to display a user's avatar, falling back to a placeholder image from DiceBear.
  * @param {{
- *  seed?: string;
+ *  seed?: string | null;
  *  imageUrl?: string | null;
  *  alt?: string;
  *  className?: string;
@@ -15,14 +15,15 @@ import { cn } from "@/lib/utils";
  * }} props
  */
 const DynamicAvatar = ({ 
-  seed = 'default-seed', 
+  seed = null, 
   imageUrl = null, 
   alt = "User avatar", 
   className = '', 
   isLCP = false 
 }) => {
   
-  const finalImageUrl = imageUrl || `https://api.dicebear.com/8.x/avataaars/svg?seed=${seed}`;
+  const finalSeed = seed || 'default-avatar-seed';
+  const finalImageUrl = imageUrl || `https://api.dicebear.com/8.x/avataaars/svg?seed=${finalSeed}`;
   const hint = imageUrl ? {} : { 'data-ai-hint': 'avatar portrait' };
 
   return (
@@ -31,7 +32,7 @@ const DynamicAvatar = ({
       alt={alt}
       fill
       sizes="(max-width: 768px) 50vw, 33vw"
-      className={cn('object-top object-top', className)}
+      className={cn('object-cover object-top', className)}
       priority={isLCP}
       {...hint}
     />
